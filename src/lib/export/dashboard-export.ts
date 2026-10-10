@@ -69,12 +69,13 @@ export async function buildXlsx(result: DashboardResult, meta: ExportMeta): Prom
 
   // Synthèse : contexte, indicateurs et constats.
   const summary = wb.addWorksheet(sheetName("Synthèse", used));
-  summary.columns = [{ width: 34 }, { width: 22 }, { width: 70 }];
+  summary.columns = [{ width: 34 }, { width: 22 }, { width: 50 }, { width: 50 }, { width: 40 }];
   summary.addRow([result.title]).font = { bold: true, size: 14 };
   for (const [label, value] of [
     ["Organisation", meta.organization],
     ["Fichier source", result.fileName],
     ["Lignes analysées", result.profile.rowCount.toLocaleString("fr-FR")],
+    ["Période couverte", result.period ? `${result.period.from} → ${result.period.to}` : "Pas de colonne de date"],
     ["Dashboard créé le", dateFr(meta.createdAt)],
     ["Exporté le", dateFr(meta.exportedAt)],
     ["Mode IA", meta.aiMode === "strict" ? "Strict (noms et types de colonnes uniquement)" : "Standard (données pseudonymisées)"],
@@ -84,9 +85,10 @@ export async function buildXlsx(result: DashboardResult, meta: ExportMeta): Prom
   }
 
   summary.addRow([]);
-  header(summary.addRow(["Indicateur", "Valeur", "Calcul"]));
+  header(summary.addRow(["Indicateur", "Valeur", "Calcul", "Définition", "Données manquantes"]));
   for (const k of result.kpis) {
-    const row = summary.addRow([k.label, k.value, k.formula]);
+    const quality = (k.quality ?? []).map((q) => `${q.missing} ligne(s) sans valeur pour « ${q.column} », ignorée(s)`).join(" ; ");
+    const row = summary.addRow([k.label, k.value ?? "Donnée indisponible", k.formula, k.description, quality]);
     row.getCell(2).numFmt = NUM_FMT[k.format];
   }
 

@@ -85,6 +85,62 @@ export type Database = {
           },
         ]
       }
+      dashboard_versions: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          dashboard_id: string;
+          file_name: string;
+          id: string;
+          organization_id: string;
+          period_end: string | null;
+          period_start: string | null;
+          result: Json;
+          row_count: number;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          dashboard_id: string;
+          file_name: string;
+          id?: string;
+          organization_id: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          result: Json;
+          row_count: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["dashboard_versions"]["Insert"]>;
+        Relationships: [];
+      };
+      dashboard_shares: {
+        Row: {
+          access: string;
+          created_at: string;
+          created_by: string | null;
+          dashboard_id: string;
+          enabled: boolean;
+          expires_at: string | null;
+          id: string;
+          organization_id: string;
+          revoked_at: string | null;
+          token_hash: string;
+        };
+        Insert: {
+          access: string;
+          created_at?: string;
+          created_by?: string | null;
+          dashboard_id: string;
+          enabled?: boolean;
+          expires_at?: string | null;
+          id?: string;
+          organization_id: string;
+          revoked_at?: string | null;
+          token_hash: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["dashboard_shares"]["Insert"]>;
+        Relationships: [];
+      };
       dashboards: {
         Row: {
           ai_mode: string;
@@ -153,7 +209,9 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      shared_dashboard: { Args: { share_token: string }; Returns: Json };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

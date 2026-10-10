@@ -98,6 +98,22 @@ Vérifier la disponibilité du modèle dans la région choisie avant la mise en 
 
 L'IA choisit les indicateurs clés et définit les mesures métier (marge, taux de marge…). Le moteur (`src/lib/engine/complete.ts`) ajoute ensuite tout ce que les colonnes permettent de calculer : un indicateur par colonne numérique (somme, ou moyenne pour les taux et prix unitaires), le nombre de clients, commerciaux ou produits distincts, l'évolution mensuelle de chaque mesure et la ventilation de chaque mesure par chaque dimension (jusqu'à 18 indicateurs et 48 graphiques). Les graphiques sont regroupés par section (évolutions, puis une section par dimension).
 
+## Filtres, actualisation et historique (US-02, US-08, US-09)
+
+- **Filtres** : période et valeurs par dimension ; tous les chiffres sont recalculés sur les lignes retenues, sans appel à l'IA. Le fichier source reste dans le navigateur et n'est lu par le serveur que le temps du calcul.
+- **Actualisation** : « Mettre à jour le dashboard avec ce fichier » vérifie les colonnes et leurs types (`compatibilityProblems`), conserve KPI, graphiques et personnalisation, et n'enregistre rien en cas d'erreur : la dernière version valide reste affichée. La date de dernière actualisation réussie est affichée.
+- **Historique** : chaque création et actualisation réussie est conservée dans `dashboard_versions` (ajout seul) ; une version précédente se consulte en lecture seule et se compare à la version actuelle, indicateur par indicateur.
+
+## Fiabilité des KPI (US-03)
+
+Chaque indicateur affiche sa définition, sa formule, la période couverte, les filtres appliqués et le nombre de lignes. Une valeur absente ou non conforme n'est jamais remplacée par zéro : elle est ignorée et signalée sur l'indicateur et dans l'export Excel.
+
+## Partage par lien sécurisé (US-01)
+
+- Jeton aléatoire de 256 bits ; seul son hachage SHA-256 est enregistré (`dashboard_shares`) et le lien n'est affiché qu'à sa création.
+- Activer / désactiver, niveau d'accès (consultation seule, ou consultation et téléchargement), révocation définitive (un déclencheur empêche toute réactivation).
+- La page `/partage/[jeton]` lit le dashboard par la fonction `shared_dashboard` (SECURITY DEFINER, exécutable sans compte par conception) : elle ne renvoie que les résultats calculés, sans contexte envoyé à l'IA, structure ni listes de filtres. Les données sources ne sont jamais conservées. En-têtes `no-referrer` et `noindex`.
+
 ## Personnalisation de l'affichage
 
 « Personnaliser l'affichage » permet de cocher les indicateurs, graphiques et sections à afficher (constats, analyse des variations, et dans l'analyse : explications et/ou suggestions). Chaque graphique peut changer de type (barres, courbe, secteurs, tableau) et masquer des catégories ou des périodes. Les valeurs ne sont jamais recalculées : on masque, on ne modifie pas. La sélection est mémorisée dans le navigateur et s'applique au PDF et aux exports Excel / CSV (paramètre `vue`, positions des catégories uniquement, jamais leurs noms).

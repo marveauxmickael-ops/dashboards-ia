@@ -2,6 +2,7 @@ import { canEdit, getWorkspace } from "@/lib/auth/session";
 import { FiltersSchema, NO_FILTERS } from "@/lib/filters";
 import { ImportError, MAX_FILE_BYTES } from "@/lib/ingest/parse";
 import { IncompatibleFileError, recomputeDashboard, type DashboardResult } from "@/lib/pipeline";
+import { saveVersion } from "@/lib/dashboards/versions";
 import type { Json } from "@/lib/supabase/database.types";
 
 export const maxDuration = 120;
@@ -45,7 +46,7 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
   }
 
   const { supabase, user, organization } = workspace;
-  const { data: dashboard } = await supabase.from("dashboards").select("id, ai_mode, result").eq("id", id).maybeSingle();
+  const { data: dashboard } = await supabase.from("dashboards").select("id, ai_mode, result, created_at, updated_at").eq("id", id).maybeSingle();
   if (!dashboard) return Response.json({ error: "Dashboard introuvable." }, { status: 404 });
   const mode = dashboard.ai_mode === "strict" ? "strict" : "standard";
 
@@ -67,14 +68,19 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
   }
 
   if (action === "reimport") {
+    // Dashboard créé avant l'historique : sa version d'origine est conservée avant d'être remplacée.
+    const { count } = await supabase.from("dashboard_versions").select("id", { count: "exact", head: true }).eq("dashboard_id", id);
+    if (count === 0) await saveVersion(workspace, id, dashboard.result as unknown as DashboardResult, dashboard.updated_at ?? dashboard.created_at);
     const { error } = await supabase
       .from("dashboards")
       .update({ result: result as unknown as Json, file_name: result.fileName, row_count: result.profile.rowCount, updated_at: new Date().toISOString() })
       .eq("id", id);
+    // En cas d'échec, la dernière version valide reste en place : rien n'a été modifié.
     if (error) {
       console.error("Mise à jour du dashboard en échec", error.code);
-      return Response.json({ error: "La mise à jour n'a pas pu être enregistrée." }, { status: 500 });
+      return Response.json({ error: "La mise à jour n'a pas pu être enregistrée : la version précédente reste affichée." }, { status: 500 });
     }
+    await saveVersion(workspace, id, result);
     if (result.analysis?.writtenBy === "ai") {
       await supabase.from("ai_calls").insert({
         organization_id: organization.id,
@@ -89,5 +95,5 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
     }
   }
 
-  return Response.json({ result });
+  return Response.json({ result, refreshedAt: action === "reimport" ? new Date().toISOString() : null });
 }

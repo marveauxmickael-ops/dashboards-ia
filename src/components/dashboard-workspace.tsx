@@ -38,6 +38,8 @@ export function DashboardWorkspace({
   canReimport = false,
   initialFile = null,
   recompute = recomputeOnServer,
+  reloadAfterReimport = false,
+  tools = true,
 }: {
   initial: DashboardResult;
   dashboardId?: string | null;
@@ -45,13 +47,17 @@ export function DashboardWorkspace({
   canReimport?: boolean;
   initialFile?: File | null;
   recompute?: Recompute;
+  /** Recharge la page après une mise à jour (historique et date d'actualisation à jour). */
+  reloadAfterReimport?: boolean;
+  /** false : consultation seule (version précédente, lien partagé), sans fichier source ni filtres. */
+  tools?: boolean;
 }) {
   const [base, setBase] = useState(initial);
   const [shown, setShown] = useState(initial);
   const [file, setFile] = useState<File | null>(initialFile);
   const [busy, setBusy] = useState<RecomputeAction | null>(null);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
-  const supported = !!base.spec && !!base.filterOptions;
+  const supported = tools && !!base.spec && !!base.filterOptions;
 
   async function run(action: RecomputeAction, filters: Filters, source = file) {
     if (!source) return;
@@ -70,6 +76,10 @@ export function DashboardWorkspace({
       return;
     }
     if (action === "reimport") {
+      if (reloadAfterReimport) {
+        window.location.reload();
+        return;
+      }
       setBase(outcome.result);
       setMessage({ tone: "success", text: `Dashboard mis à jour avec ${outcome.result.fileName} (${outcome.result.profile.rowCount.toLocaleString("fr-FR")} lignes).` });
     }

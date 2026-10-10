@@ -13,6 +13,8 @@ export interface ComputedKpi {
   value: number | null;
   format: ValueFormat;
   formula: string;
+  /** Qualité des données (US-03) : lignes sans valeur ou non numériques, ignorées dans le calcul. */
+  quality?: { column: string; missing: number; invalid: number }[];
 }
 
 export interface ComputedChart {
@@ -151,14 +153,31 @@ export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile:
       ? "number"
       : byId.get(measureId)!.format;
 
-  const kpis: ComputedKpi[] = spec.kpis.map((k: Kpi) => ({
-    id: k.id,
-    label: k.label,
-    description: k.description,
-    value: valueOf(rows, k.measure, k.aggregation),
-    format: formatOf(k.measure, k.aggregation),
-    formula: formulaOf(k.measure, k.aggregation),
-  }));
+  // Colonnes sources d'une mesure (une mesure dérivée remonte à ses deux opérandes).
+  const columnsOf = (measureId: string): string[] => {
+    if (measureId === "rows") return [];
+    const m = byId.get(measureId)!;
+    return m.column !== null ? [m.column] : [...new Set([...columnsOf(m.left!), ...columnsOf(m.right!)])];
+  };
+  const invalidByColumn = new Map(profile.columns.map((c) => [c.name, c.invalid]));
+  // Une valeur absente ou illisible n'est jamais remplacée par zéro : elle est ignorée et signalée.
+  const qualityOf = (measureId: string) =>
+    columnsOf(measureId)
+      .map((column) => ({ column, missing: rows.filter((r) => r[column] === null).length, invalid: invalidByColumn.get(column) ?? 0 }))
+      .filter((q) => q.missing > 0 || q.invalid > 0);
+
+  const kpis: ComputedKpi[] = spec.kpis.map((k: Kpi) => {
+    const quality = qualityOf(k.measure);
+    return {
+      id: k.id,
+      label: k.label,
+      description: k.description,
+      value: valueOf(rows, k.measure, k.aggregation),
+      format: formatOf(k.measure, k.aggregation),
+      formula: formulaOf(k.measure, k.aggregation),
+      ...(quality.length > 0 ? { quality } : {}),
+    };
+  });
 
   const charts: ComputedChart[] = spec.charts.map((c) => {
     const chronological = dateColumns.has(c.dimension);

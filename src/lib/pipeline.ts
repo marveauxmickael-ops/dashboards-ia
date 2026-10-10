@@ -8,7 +8,7 @@ import { buildAiContext, type AiContext } from "@/lib/privacy/ai-context";
 import { Pseudonymizer } from "@/lib/privacy/pseudonymize";
 import type { DashboardSpec } from "@/lib/ai/spec";
 import { applyFilters, filterOptions, isFiltered, type FilterOptions, type Filters } from "@/lib/filters";
-import type { AiMode, DatasetProfile } from "@/lib/types";
+import type { AiMode, DatasetProfile, TypedRow } from "@/lib/types";
 
 // Cycle complet : import → profilage → pseudonymisation (aller) → conception par l'IA
 // → validation → calcul sur les vraies données → ré-identification (retour) → dashboard en clair.
@@ -34,6 +34,8 @@ export interface DashboardResult {
   filterOptions?: FilterOptions;
   /** Filtres appliqués à ce résultat (absent : dashboard complet). */
   filters?: Filters;
+  /** Période couverte par les lignes calculées (mois AAAA-MM), si le fichier a une date. */
+  period?: { from: string; to: string } | null;
   issues: string[];
   tokensUsed: number;
   durationMs: number;
@@ -90,6 +92,7 @@ export async function generateDashboard(input: {
     analysis,
     spec,
     filterOptions: filterOptions(profile, rows),
+    period: periodOf(profile, rows),
     issues,
     tokensUsed: pseudo.size,
     durationMs: Date.now() - started,
@@ -121,10 +124,8 @@ export async function recomputeDashboard(input: {
 
   const raw = await parseFile(input.fileName, input.data);
   const { profile, rows: allRows } = profileDataset(raw);
-  const missing = requiredColumns(spec).filter((name) => !profile.columns.some((c) => c.name === name && c.role !== "ignored"));
-  if (missing.length > 0) {
-    throw new IncompatibleFileError(`Ce fichier n'a pas la même structure que le dashboard : colonne(s) manquante(s) ${missing.map((m) => `« ${m} »`).join(", ")}.`);
-  }
+  const problems = compatibilityProblems(spec, previous.profile, profile);
+  if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
 
   const options = filterOptions(profile, allRows);
   const rows = applyFilters(allRows, input.filters, options);
@@ -150,16 +151,38 @@ export async function recomputeDashboard(input: {
     analysis,
     filterOptions: options,
     filters: isFiltered(input.filters) ? input.filters : undefined,
+    period: periodOf(profile, rows),
     issues: [],
     durationMs: Date.now() - started,
   };
 }
 
-function requiredColumns(spec: DashboardSpec): string[] {
-  const columns = new Set<string>();
-  for (const m of spec.measures) if (m.column) columns.add(m.column);
-  for (const c of spec.charts) columns.add(c.dimension);
-  return [...columns];
+const ROLE_LABEL: Record<string, string> = { measure: "numérique", date: "date", dimension: "catégorie", ignored: "exclue" };
+
+/** Colonnes manquantes ou de type différent par rapport au fichier d'origine (US-02). */
+export function compatibilityProblems(spec: DashboardSpec, before: DatasetProfile, after: DatasetProfile): string[] {
+  const needed = new Set<string>();
+  for (const m of spec.measures) if (m.column) needed.add(m.column);
+  for (const c of spec.charts) needed.add(c.dimension);
+  const problems: string[] = [];
+  for (const name of needed) {
+    const expected = before.columns.find((c) => c.name === name);
+    const actual = after.columns.find((c) => c.name === name);
+    if (!actual || actual.role === "ignored") {
+      problems.push(`colonne « ${name} » manquante`);
+    } else if (expected && expected.role !== actual.role) {
+      problems.push(`colonne « ${name} » de type ${ROLE_LABEL[actual.role]} au lieu de ${ROLE_LABEL[expected.role]}`);
+    }
+  }
+  return problems;
+}
+
+/** Premier et dernier mois couverts par les lignes, d'après la colonne de date. */
+export function periodOf(profile: DatasetProfile, rows: TypedRow[]): { from: string; to: string } | null {
+  const date = profile.columns.find((c) => c.role === "date")?.name;
+  if (!date) return null;
+  const months = rows.map((r) => r[date]).filter((v): v is string => typeof v === "string").map((v) => v.slice(0, 7)).sort();
+  return months.length > 0 ? { from: months[0], to: months.at(-1)! } : null;
 }
 
 function pseudonymizationKey(): string {

@@ -7,7 +7,7 @@ export function safeNextPath(next: string | null | undefined, fallback = "/"): s
   return next;
 }
 
-export const PUBLIC_PATHS = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/auth/confirm", "/demo/"];
+export const PUBLIC_PATHS = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/auth/confirm", "/demo/", "/partage/"];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p.endsWith("/") ? p : `${p}/`));

@@ -2,6 +2,7 @@ import { AiError } from "@/lib/ai/gateway";
 import { canEdit, getWorkspace } from "@/lib/auth/session";
 import { ImportError, MAX_FILE_BYTES } from "@/lib/ingest/parse";
 import { generateDashboard } from "@/lib/pipeline";
+import { saveVersion } from "@/lib/dashboards/versions";
 import type { Json } from "@/lib/supabase/database.types";
 
 // La région d'exécution (Paris) est fixée pour tout le projet dans vercel.json.
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
     .select("id")
     .single();
   if (saveError) console.error("Enregistrement du dashboard en échec", saveError.code);
+  else await saveVersion(workspace, saved.id, result);
 
   // Journal des appels IA : métadonnées uniquement, jamais le contenu.
   const calls = [result.ai, ...(result.analysis?.writtenBy === "ai" ? [result.analysis] : [])];

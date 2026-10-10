@@ -24,6 +24,7 @@ import { allowedChartTypes, analysisView, chartTypeOf, EMPTY_VIEW, ViewSchema, v
 import { AnalysisPanel } from "./analysis-panel";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
+import { describeFilters, isFiltered } from "@/lib/filters";
 
 const PALETTE = ["#0d5c70", "#3b8ea5", "#7fb7c7", "#c08a3e", "#8c6bb1", "#5f8f5a", "#b5545c"];
 
@@ -60,6 +61,8 @@ export function DashboardView({
     view.hiddenKpis.length + view.hiddenCharts.length +
     [view.hideInsights, view.hideAnalysis, view.hideExplanations, view.hideSuggestions].filter(Boolean).length +
     Object.values(view.hiddenCategories).reduce((n, l) => n + l.length, 0);
+  const periodLabel = result.period ? (result.period.from === result.period.to ? formatPeriod(result.period.from) : `${formatPeriod(result.period.from)} → ${formatPeriod(result.period.to)}`) : "Pas de colonne de date";
+  const filtersLabel = result.filters && isFiltered(result.filters) ? describeFilters(result.filters, formatPeriod).join(" · ") : "Aucun (toutes les lignes)";
   const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
   return (
@@ -67,7 +70,7 @@ export function DashboardView({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{result.title}</h2>
         <p className="text-sm text-slate-500">
-          {result.fileName} · {result.profile.rowCount.toLocaleString("fr-FR")} lignes
+          {result.fileName} · {result.profile.rowCount.toLocaleString("fr-FR")} lignes{result.period && ` · ${periodLabel}`}
         </p>
       </div>
 
@@ -145,12 +148,34 @@ export function DashboardView({
               <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />
               <p className="pr-6 text-sm font-medium text-slate-600">{k.label}</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{formatValue(k.value, k.format)}</p>
+              {k.value === null && <p className="mt-1 text-xs text-amber-800">Donnée indisponible : aucune valeur exploitable, rien n&apos;est estimé.</p>}
               <p className="mt-2 text-xs text-slate-500">{k.description}</p>
+              {k.quality?.map((q) => (
+                <p key={q.column} className="mt-1 text-xs text-amber-800">
+                  {q.missing.toLocaleString("fr-FR")} ligne(s) sans valeur exploitable pour « {q.column} »
+                  {q.invalid > 0 && ` (dont ${q.invalid.toLocaleString("fr-FR")} non conforme(s))`}, ignorée(s) dans le calcul.
+                </p>
+              ))}
               {/* Dans le PDF, le calcul est affiché en clair à la place du lien. */}
               <p className="mt-2 hidden font-mono text-[11px] text-slate-600 print:block">Calcul : {k.formula}</p>
               <details className="mt-2 text-xs text-slate-500 print:hidden">
-                <summary className="cursor-pointer text-teal-800">Voir le calcul</summary>
-                <code className="mt-1 block rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-700">{k.formula}</code>
+                <summary className="cursor-pointer text-teal-800">Comment est-il calculé ?</summary>
+                <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 rounded bg-slate-50 px-2 py-1.5 text-slate-700">
+                  <dt className="font-medium">Définition</dt>
+                  <dd>{k.description}</dd>
+                  <dt className="font-medium">Formule</dt>
+                  <dd className="font-mono text-[11px]">{k.formula}</dd>
+                  <dt className="font-medium">Période</dt>
+                  <dd>{periodLabel}</dd>
+                  <dt className="font-medium">Filtres</dt>
+                  <dd>{filtersLabel}</dd>
+                  <dt className="font-medium">Lignes</dt>
+                  <dd>
+                    {result.profile.rowCount.toLocaleString("fr-FR")} ligne(s) de {result.fileName}
+                  </dd>
+                  <dt className="font-medium">Source</dt>
+                  <dd>Calculé par le moteur sur les données importées ; l&apos;IA ne fournit aucune valeur.</dd>
+                </dl>
               </details>
             </article>
           ))}

@@ -23,3 +23,10 @@ describe("isPublicPath", () => {
     for (const p of ["/", "/dashboards", "/dashboards/123", "/reinitialiser", "/connexion-piege"]) expect(isPublicPath(p)).toBe(false);
   });
 });
+
+describe("pages de partage", () => {
+  it("sont publiques (le jeton fait office d'autorisation)", () => {
+    expect(isPublicPath("/partage/abc")).toBe(true);
+    expect(isPublicPath("/partagex")).toBe(false);
+  });
+});
