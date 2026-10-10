@@ -1,5 +1,6 @@
 import { designDashboard, type DesignResult } from "@/lib/ai/gateway";
 import { explainVariations, type AnalysisResult } from "@/lib/analysis";
+import { completeSpec } from "@/lib/engine/complete";
 import { checkInsights, computeDashboard, validateSpec, type CheckedInsight, type ComputedChart, type ComputedKpi } from "@/lib/engine/compute";
 import { parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
@@ -47,7 +48,10 @@ export async function generateDashboard(input: {
   const design = await designDashboard(aiContext);
 
   // Retour : validation, calcul sur les vraies données, vérification des chiffres cités, ré-identification.
-  const { spec, issues } = validateSpec(design.spec, profile);
+  // L'IA choisit les indicateurs clés ; le moteur ajoute ensuite tout ce que les colonnes permettent de calculer.
+  const validated = validateSpec(design.spec, profile);
+  const { issues } = validated;
+  const spec = completeSpec(validated.spec, profile);
   const { kpis, charts } = computeDashboard(spec, rows, profile);
   const clear = (text: string) => {
     const result = pseudo.reidentify(text);

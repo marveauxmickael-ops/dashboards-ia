@@ -94,6 +94,10 @@ Vérifier la disponibilité du modèle dans la région choisie avant la mise en 
 4. En mode strict, sans IA configurée ou en cas d'échec, les explications sont rédigées par des règles, sans modèle.
 5. Les avis « Utile / Pas utile » sur les suggestions sont enregistrés dans `analysis_feedback` (RLS par organisation).
 
+## Complétion automatique du dashboard
+
+L'IA choisit les indicateurs clés et définit les mesures métier (marge, taux de marge…). Le moteur (`src/lib/engine/complete.ts`) ajoute ensuite tout ce que les colonnes permettent de calculer : un indicateur par colonne numérique (somme, ou moyenne pour les taux et prix unitaires), le nombre de clients, commerciaux ou produits distincts, l'évolution mensuelle de chaque mesure et la ventilation de chaque mesure par chaque dimension (jusqu'à 18 indicateurs et 48 graphiques). Les graphiques sont regroupés par section (évolutions, puis une section par dimension).
+
 ## Personnalisation de l'affichage
 
 « Personnaliser l'affichage » permet de cocher les indicateurs, graphiques et sections à afficher (constats, analyse des variations, et dans l'analyse : explications et/ou suggestions). Chaque graphique peut changer de type (barres, courbe, secteurs, tableau) et masquer des catégories ou des périodes. Les valeurs ne sont jamais recalculées : on masque, on ne modifie pas. La sélection est mémorisée dans le navigateur et s'applique au PDF et aux exports Excel / CSV (paramètre `vue`, positions des catégories uniquement, jamais leurs noms).

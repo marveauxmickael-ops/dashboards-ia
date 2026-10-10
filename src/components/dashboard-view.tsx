@@ -83,9 +83,13 @@ export function DashboardView({ result, dashboardId, exportable = false }: { res
             />
             <CheckGroup
               legend="Graphiques"
+              groups={groupCharts(result.charts).map((g) => ({ title: g.title, ids: g.charts.map((c) => c.id) }))}
               items={result.charts.map((c) => ({ id: c.id, label: c.title, checked: !hiddenCharts.has(c.id) }))}
               onToggle={(id) => setView({ ...view, hiddenCharts: toggle(view.hiddenCharts, id) })}
               onAll={(on) => setView({ ...view, hiddenCharts: on ? [] : result.charts.map((c) => c.id) })}
+              onGroup={(ids, on) =>
+                setView({ ...view, hiddenCharts: on ? view.hiddenCharts.filter((x) => !ids.includes(x)) : [...new Set([...view.hiddenCharts, ...ids])] })
+              }
             />
             <CheckGroup
               legend="Sections"
@@ -112,7 +116,7 @@ export function DashboardView({ result, dashboardId, exportable = false }: { res
       )}
 
       {kpis.length > 0 && (
-        <section aria-label="Indicateurs clés" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <section aria-label="Indicateurs clés" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {kpis.map((k) => (
             <article key={k.id} className="group relative rounded-xl border border-slate-200 bg-white p-4">
               <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />
@@ -151,20 +155,23 @@ export function DashboardView({ result, dashboardId, exportable = false }: { res
 
       {!view.hideAnalysis && hasAnalysis && result.analysis && <AnalysisPanel analysis={analysisView(result.analysis, view)} dashboardId={dashboardId} />}
 
-      {charts.length > 0 && (
-        <section aria-label="Graphiques" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {charts.map((c) => (
-            <ChartCard
-              key={c.id}
-              chart={c}
-              view={view}
-              onHide={() => setView({ ...view, hiddenCharts: [...view.hiddenCharts, c.id] })}
-              onType={(type) => setView({ ...view, chartTypes: { ...view.chartTypes, [c.id]: type } })}
-              onCategories={(hidden) => setView({ ...view, hiddenCategories: { ...view.hiddenCategories, [c.id]: hidden } })}
-            />
-          ))}
+      {groupCharts(charts).map((group) => (
+        <section key={group.title} aria-label={group.title} className="flex flex-col gap-3">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{group.title}</h3>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {group.charts.map((c) => (
+              <ChartCard
+                key={c.id}
+                chart={c}
+                view={view}
+                onHide={() => setView({ ...view, hiddenCharts: [...view.hiddenCharts, c.id] })}
+                onType={(type) => setView({ ...view, chartTypes: { ...view.chartTypes, [c.id]: type } })}
+                onCategories={(hidden) => setView({ ...view, hiddenCategories: { ...view.hiddenCategories, [c.id]: hidden } })}
+              />
+            ))}
+          </div>
         </section>
-      )}
+      ))}
 
       {kpis.length === 0 && charts.length === 0 && (
         <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">
@@ -236,18 +243,26 @@ function useDashboardView(dashboardId?: string | null): [ViewState, (v: ViewStat
   return [stored ?? local, setView];
 }
 
+type CheckItem = { id: string; label: string; checked: boolean; disabled?: boolean; indent?: boolean };
+
 function CheckGroup({
   legend,
   items,
+  groups,
   onToggle,
   onAll,
+  onGroup,
 }: {
   legend: string;
-  items: { id: string; label: string; checked: boolean; disabled?: boolean; indent?: boolean }[];
+  items: CheckItem[];
+  /** Sous-groupes facultatifs (ex. graphiques par section), chacun cochable d'un coup. */
+  groups?: { title: string; ids: string[] }[];
   onToggle: (id: string) => void;
   onAll: (on: boolean) => void;
+  onGroup?: (ids: string[], on: boolean) => void;
 }) {
   if (items.length === 0) return null;
+  const byId = new Map(items.map((i) => [i.id, i]));
   return (
     <fieldset className="min-w-0 rounded-lg border border-slate-200 bg-white p-3">
       <legend className="px-1 text-sm font-semibold text-slate-900">{legend}</legend>
@@ -259,24 +274,58 @@ function CheckGroup({
           Tout décocher
         </button>
       </div>
-      <ul className="flex flex-col gap-1.5">
-        {items.map((item) => (
-          <li key={item.id} className={item.indent ? "pl-6" : undefined}>
-            <label className={`flex items-start gap-2 text-sm ${item.disabled ? "cursor-not-allowed text-slate-400" : "cursor-pointer text-slate-800"}`}>
-              <input
-                type="checkbox"
-                checked={item.checked && !item.disabled}
-                disabled={item.disabled}
-                onChange={() => onToggle(item.id)}
-                className="mt-0.5 size-4 accent-teal-800"
-              />
-              <span className="min-w-0">{item.label}</span>
-            </label>
-          </li>
-        ))}
-      </ul>
+      {groups && onGroup ? (
+        <div className="flex max-h-80 flex-col gap-3 overflow-y-auto pr-1">
+          {groups.map((g) => {
+            const groupItems = g.ids.map((id) => byId.get(id)).filter((x): x is CheckItem => !!x);
+            const allOn = groupItems.every((x) => x.checked);
+            return (
+              <div key={g.title}>
+                <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <input type="checkbox" checked={allOn} onChange={() => onGroup(g.ids, !allOn)} className="size-3.5 accent-teal-800" />
+                  {g.title}
+                </label>
+                <CheckList items={groupItems} onToggle={onToggle} />
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <CheckList items={items} onToggle={onToggle} />
+      )}
     </fieldset>
   );
+}
+
+function CheckList({ items, onToggle }: { items: CheckItem[]; onToggle: (id: string) => void }) {
+  return (
+    <ul className="mt-1 flex flex-col gap-1.5">
+      {items.map((item) => (
+        <li key={item.id} className={item.indent ? "pl-6" : undefined}>
+          <label className={`flex items-start gap-2 text-sm ${item.disabled ? "cursor-not-allowed text-slate-400" : "cursor-pointer text-slate-800"}`}>
+            <input
+              type="checkbox"
+              checked={item.checked && !item.disabled}
+              disabled={item.disabled}
+              onChange={() => onToggle(item.id)}
+              className="mt-0.5 size-4 accent-teal-800"
+            />
+            <span className="min-w-0">{item.label}</span>
+          </label>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Sections de graphiques : évolutions dans le temps d'abord, puis une section par dimension. */
+function groupCharts(charts: ComputedChart[]): { title: string; charts: ComputedChart[] }[] {
+  const groups = new Map<string, ComputedChart[]>();
+  for (const c of charts) {
+    const title = c.chronological ? "Évolutions dans le temps" : c.dimension ? `Par ${c.dimension}` : "Graphiques";
+    groups.set(title, [...(groups.get(title) ?? []), c]);
+  }
+  return [...groups].map(([title, list]) => ({ title, charts: list })).sort((a, b) => Number(b.title.startsWith("Évolutions")) - Number(a.title.startsWith("Évolutions")));
 }
 
 function HideButton({ label, onClick }: { label: string; onClick: () => void }) {

@@ -23,6 +23,8 @@ export interface ComputedChart {
   format: ValueFormat;
   formula: string;
   chronological: boolean;
+  /** Colonne de regroupement (absente des dashboards créés avant la complétion automatique). */
+  dimension?: string;
   data: { category: string; value: number | null }[];
   /** Catégories regroupées sous « Autres » (au-delà de la limite). */
   othersCount: number;
@@ -183,6 +185,7 @@ export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile:
       format: formatOf(c.measure, c.aggregation),
       formula: `${formulaOf(c.measure, c.aggregation)} par ${c.dimension}${c.granularity && chronological ? ` (${c.granularity})` : ""}`,
       chronological,
+      dimension: c.dimension,
       data,
       othersCount,
     };
