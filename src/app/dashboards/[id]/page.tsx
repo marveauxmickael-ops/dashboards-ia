@@ -5,7 +5,7 @@ import { DashboardWorkspace } from "@/components/dashboard-workspace";
 import { PrivacyPanel } from "@/components/privacy-panel";
 import { SharePanel } from "@/components/share-panel";
 import { VersionComparison, VersionHistory } from "@/components/version-history";
-import { canEdit, requireWorkspace } from "@/lib/auth/session";
+import { canEdit, canManage, requireWorkspace } from "@/lib/auth/session";
 import type { DashboardResult } from "@/lib/pipeline";
 import { deleteDashboard } from "../actions";
 import type { ShareState } from "./share-actions";
@@ -48,7 +48,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
 
   return (
     <>
-      <AppHeader organization={organization.name} email={user.email} />
+      <AppHeader organization={organization.name} email={user.email} manage={canManage(role)} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 print:hidden">
           <Link href="/dashboards" className="text-teal-800 underline">
@@ -82,10 +82,10 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
               </Link>
             </p>
             <VersionComparison previous={selectedResult} current={result} />
-            <DashboardWorkspace key={selected.id} initial={selectedResult} exportable={false} tools={false} />
+            <DashboardWorkspace key={selected.id} initial={selectedResult} exportable={false} tools={false} branding={organization.branding} />
           </>
         ) : (
-          <DashboardWorkspace initial={result} dashboardId={dashboard.id} canReimport={canEdit(role)} reloadAfterReimport />
+          <DashboardWorkspace initial={result} dashboardId={dashboard.id} canReimport={canEdit(role)} reloadAfterReimport branding={organization.branding} />
         )}
         {canEdit(role) && <SharePanel dashboardId={dashboard.id} initial={share ? (share as ShareState) : null} />}
         <VersionHistory dashboardId={dashboard.id} versions={versions ?? []} selectedId={selected?.id ?? null} />

@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { chartPalette, readableOnWhite, textOn, type Branding } from "@/lib/branding";
 import type { ValueFormat } from "@/lib/engine/compute";
 import type { DashboardResult } from "@/lib/pipeline";
 
@@ -10,6 +11,8 @@ export interface ExportMeta {
   createdAt: Date;
   exportedAt: Date;
   aiMode: string;
+  /** Charte graphique : logo en tête de la synthèse et couleur des en-têtes. */
+  branding?: Branding;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -35,6 +38,13 @@ const NUM_FMT: Record<ValueFormat, string> = {
 
 const dateFr = (d: Date) =>
   new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Paris" }).format(d);
+
+/** Dimensions d'un PNG encodé en data URL (en-tête IHDR), sans le décoder entièrement. */
+function pngSize(dataUrl: string): { width: number; height: number } | null {
+  const bytes = Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1, dataUrl.indexOf(",") + 1 + 40), "base64");
+  if (bytes.length < 24 || bytes.toString("ascii", 12, 16) !== "IHDR") return null;
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
 
 /** Nom de fichier lisible et sûr : « tableau-de-bord-de-l-activite-2026-10-10 ». */
 export function exportFileName(title: string, exportedAt: Date, extension: "xlsx" | "csv"): string {
@@ -62,15 +72,26 @@ export async function buildXlsx(result: DashboardResult, meta: ExportMeta): Prom
   wb.creator = "Dashboards IA";
   wb.created = meta.exportedAt;
   const used = new Set<string>();
+  const brand = chartPalette(meta.branding)[0];
+  const argb = (hex: string) => `FF${hex.slice(1).toUpperCase()}`;
   const header = (row: ExcelJS.Row) => {
-    row.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0D5C70" } };
+    row.font = { bold: true, color: { argb: argb(textOn(brand)) } };
+    row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: argb(brand) } };
   };
 
   // Synthèse : contexte, indicateurs et constats.
   const summary = wb.addWorksheet(sheetName("Synthèse", used));
   summary.columns = [{ width: 34 }, { width: 22 }, { width: 50 }, { width: 50 }, { width: 40 }];
-  summary.addRow([result.title]).font = { bold: true, size: 14 };
+  summary.addRow([result.title]).font = { bold: true, size: 14, color: { argb: argb(readableOnWhite(brand)) } };
+  const logo = meta.branding?.logo;
+  const size = logo ? pngSize(logo) : null;
+  if (logo && size) {
+    // Logo à droite du titre, hauteur limitée à 48 px.
+    const scale = Math.min(1, 48 / size.height, 200 / size.width);
+    const image = wb.addImage({ base64: logo, extension: "png" });
+    summary.addImage(image, { tl: { col: 2, row: 0 }, ext: { width: size.width * scale, height: size.height * scale } });
+    summary.getRow(1).height = 40;
+  }
   for (const [label, value] of [
     ["Organisation", meta.organization],
     ["Fichier source", result.fileName],

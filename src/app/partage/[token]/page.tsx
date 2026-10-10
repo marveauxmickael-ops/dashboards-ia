@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardWorkspace } from "@/components/dashboard-workspace";
+import { parseBranding } from "@/lib/branding";
 import { loadSharedDashboard } from "@/lib/dashboards/shared";
 
 export const metadata: Metadata = { title: "Dashboard partagé", robots: { index: false, follow: false } };
@@ -40,7 +41,7 @@ export default async function SharedDashboardPage({ params }: PageProps<"/partag
           </div>
         )}
       </div>
-      <DashboardWorkspace initial={shared.result} exportable={false} tools={false} />
+      <DashboardWorkspace initial={shared.result} exportable={false} tools={false} branding={parseBranding(shared.branding)} />
     </main>
   );
 }

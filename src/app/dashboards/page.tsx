@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
-import { requireWorkspace } from "@/lib/auth/session";
+import { canManage, requireWorkspace } from "@/lib/auth/session";
 
 export const metadata = { title: "Mes dashboards — Dashboards IA" };
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Paris" });
 
 export default async function DashboardsPage() {
-  const { supabase, organization, user } = await requireWorkspace();
+  const { supabase, organization, user, role } = await requireWorkspace();
   const { data: dashboards, error } = await supabase
     .from("dashboards")
     .select("id, title, file_name, row_count, ai_mode, created_at")
@@ -16,7 +16,7 @@ export default async function DashboardsPage() {
 
   return (
     <>
-      <AppHeader organization={organization.name} email={user.email} />
+      <AppHeader organization={organization.name} email={user.email} manage={canManage(role)} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Mes dashboards</h1>

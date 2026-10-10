@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { isFiltered, NO_FILTERS, type Filters } from "@/lib/filters";
+import type { Branding } from "@/lib/branding";
 import type { DashboardResult } from "@/lib/pipeline";
 import { DashboardView } from "./dashboard-view";
 import { FiltersBar } from "./filters-bar";
@@ -40,6 +41,7 @@ export function DashboardWorkspace({
   recompute = recomputeOnServer,
   reloadAfterReimport = false,
   tools = true,
+  branding,
 }: {
   initial: DashboardResult;
   dashboardId?: string | null;
@@ -51,6 +53,7 @@ export function DashboardWorkspace({
   reloadAfterReimport?: boolean;
   /** false : consultation seule (version précédente, lien partagé), sans fichier source ni filtres. */
   tools?: boolean;
+  branding?: Branding;
 }) {
   const [base, setBase] = useState(initial);
   const [shown, setShown] = useState(initial);
@@ -87,7 +90,7 @@ export function DashboardWorkspace({
   }
 
   return (
-    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable}>
+    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable} branding={branding}>
       {supported && (
         <section aria-label="Fichier source" className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm print:hidden">
           <div className="flex flex-wrap items-center gap-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { Branding } from "@/lib/branding";
 import type { DashboardResult } from "@/lib/pipeline";
 import type { AiMode } from "@/lib/types";
 import { DashboardWorkspace, recomputeOnServer, type Recompute } from "./dashboard-workspace";
@@ -31,6 +32,7 @@ export function Studio({
   demoFileUrl = "/demo/ventes-demo.csv",
   exportable = true,
   recompute = recomputeOnServer,
+  branding,
 }: {
   generateDashboard?: (file: File, mode: AiMode) => Promise<GenerateOutcome>;
   demoFileUrl?: string;
@@ -38,6 +40,8 @@ export function Studio({
   exportable?: boolean;
   /** Recalcul (filtres, mise à jour) ; la démo navigateur le fait localement. */
   recompute?: Recompute;
+  /** Charte graphique de l'organisation (logo, couleurs). */
+  branding?: Branding;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<AiMode>("standard");
@@ -150,6 +154,7 @@ export function Studio({
             canReimport={!!state.dashboardId}
             initialFile={file}
             recompute={recompute}
+            branding={branding}
           />
           <PrivacyPanel result={state.result} />
           <p className="text-xs text-slate-500 print:hidden">

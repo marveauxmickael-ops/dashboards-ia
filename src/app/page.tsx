@@ -1,12 +1,12 @@
 import { AppHeader } from "@/components/app-header";
 import { Studio } from "@/components/studio";
-import { requireWorkspace } from "@/lib/auth/session";
+import { canManage, requireWorkspace } from "@/lib/auth/session";
 
 export default async function Home() {
-  const { organization, user } = await requireWorkspace();
+  const { organization, user, role } = await requireWorkspace();
   return (
     <>
-      <AppHeader organization={organization.name} email={user.email} />
+      <AppHeader organization={organization.name} email={user.email} manage={canManage(role)} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
         <header className="flex flex-col gap-2 print:hidden">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Votre fichier devient un tableau de bord</h1>
@@ -19,7 +19,7 @@ export default async function Home() {
             Prototype : utilisez uniquement des données fictives. Le traitement IA n&apos;est pas encore hébergé en Union européenne.
           </p>
         </header>
-        <Studio />
+        <Studio branding={organization.branding} />
       </main>
     </>
   );

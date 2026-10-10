@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 export interface SharedDashboard {
   title: string;
   organization: string;
+  branding?: unknown;
   access: ShareAccess;
   refreshed_at: string;
   result: DashboardResult;

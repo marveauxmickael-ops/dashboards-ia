@@ -34,6 +34,19 @@ describe("export Excel", () => {
   });
 });
 
+describe("export Excel avec charte graphique", () => {
+  it("place le logo sur la synthèse et colore les en-têtes à la couleur de la charte", async () => {
+    const result = await demoResult();
+    const logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load((await buildXlsx(result, { ...meta, branding: { logo, colors: ["#e30613"] } })) as unknown as ArrayBuffer);
+    const summary = wb.getWorksheet("Synthèse")!;
+    expect(summary.getImages()).toHaveLength(1);
+    const headerRow = summary.getRows(1, summary.rowCount)!.find((r) => r.getCell(1).value === "Indicateur")!;
+    expect((headerRow.getCell(1).fill as ExcelJS.FillPattern).fgColor?.argb).toBe("FFE30613");
+  });
+});
+
 describe("export CSV", () => {
   it("neutralise les formules et utilise la virgule décimale", async () => {
     const result = await demoResult();

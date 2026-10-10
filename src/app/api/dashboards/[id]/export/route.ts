@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/d
   // L'export reprend la sélection affichée à l'écran (éléments cochés), sans modifier aucune valeur.
   const saved = dashboard.result as unknown as DashboardResult;
   const result = applyView(saved, decodeView(request.nextUrl.searchParams.get("vue"), saved));
-  const meta = { organization: workspace.organization.name, createdAt: new Date(dashboard.created_at), exportedAt: new Date(), aiMode: dashboard.ai_mode };
+  const meta = { organization: workspace.organization.name, createdAt: new Date(dashboard.created_at), exportedAt: new Date(), aiMode: dashboard.ai_mode, branding: workspace.organization.branding };
   const fileName = exportFileName(dashboard.title, meta.exportedAt, format);
   const headers = {
     "Content-Disposition": `attachment; filename="${fileName}"`,

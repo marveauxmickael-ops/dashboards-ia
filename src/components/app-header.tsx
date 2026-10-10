@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/(auth)/actions";
 
-export function AppHeader({ organization, email }: { organization: string; email: string }) {
+export function AppHeader({ organization, email, manage = false }: { organization: string; email: string; manage?: boolean }) {
   return (
     <header className="border-b border-slate-200 bg-white print:hidden">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -16,6 +16,11 @@ export function AppHeader({ organization, email }: { organization: string; email
             <Link href="/dashboards" className="hover:text-teal-800">
               Mes dashboards
             </Link>
+            {manage && (
+              <Link href="/organisation/charte" className="hover:text-teal-800">
+                Charte graphique
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm text-slate-600">

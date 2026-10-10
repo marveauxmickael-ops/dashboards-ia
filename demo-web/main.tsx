@@ -1,6 +1,9 @@
 // Démo autonome : tout le cycle (import, pseudonymisation, conception, calcul, ré-identification)
 // s'exécute dans le navigateur. Aucun fichier n'est envoyé à un serveur.
+import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { BrandSettings } from "@/components/brand-settings";
+import { NO_BRANDING, type Branding } from "@/lib/branding";
 import { Studio } from "@/components/studio";
 import { ImportError } from "@/lib/ingest/parse";
 import type { Recompute } from "@/components/dashboard-workspace";
@@ -27,6 +30,7 @@ const recomputeInBrowser: Recompute = async ({ file, previous, filters, action }
 };
 
 function App() {
+  const [branding, setBranding] = useState<Branding>(NO_BRANDING);
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
       <header className="flex flex-col gap-2 print:hidden">
@@ -40,7 +44,20 @@ function App() {
           Tout s&apos;exécute dans votre navigateur : aucun fichier n&apos;est envoyé. La conception utilise le mode démonstration, sans appel à Claude.
         </p>
       </header>
-      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} />
+      <details className="rounded-xl border border-slate-200 bg-white p-4 print:hidden">
+        <summary className="cursor-pointer text-sm font-semibold text-slate-800">Charte graphique (logo et couleurs)</summary>
+        <div className="mt-4">
+          <BrandSettings
+            initial={branding}
+            organization="votre organisation"
+            onSave={async (b) => {
+              setBranding(b);
+              return { ok: true };
+            }}
+          />
+        </div>
+      </details>
+      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} />
     </main>
   );
 }

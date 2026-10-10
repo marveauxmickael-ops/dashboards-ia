@@ -24,9 +24,9 @@ import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, moveChart, o
 import { AnalysisPanel } from "./analysis-panel";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
+import { chartPalette, readableOnWhite, type Branding } from "@/lib/branding";
 import { describeFilters, isFiltered } from "@/lib/filters";
 
-const PALETTE = ["#0d5c70", "#3b8ea5", "#7fb7c7", "#c08a3e", "#8c6bb1", "#5f8f5a", "#b5545c"];
 
 const STATUS: Record<InsightStatus, { label: string; className: string }> = {
   verified: { label: "Chiffres vérifiés", className: "bg-emerald-50 text-emerald-800 ring-emerald-200" },
@@ -41,6 +41,7 @@ export function DashboardView({
   dashboardId,
   exportable = false,
   children,
+  branding,
 }: {
   result: DashboardResult;
   /** Dashboard enregistré (non filtré), auquel se rapportent les exports Excel et CSV. */
@@ -49,7 +50,11 @@ export function DashboardView({
   exportable?: boolean;
   /** Outils affichés sous le titre (fichier source, filtres, questions). */
   children?: ReactNode;
+  /** Charte graphique de l'organisation : logo et couleurs. */
+  branding?: Branding;
 }) {
+  const palette = chartPalette(branding);
+  const accent = readableOnWhite(palette[0]);
   const [view, setView] = useDashboardView(dashboardId);
   const [customizing, setCustomizing] = useState(false);
   const hiddenKpis = new Set(view.hiddenKpis);
@@ -69,8 +74,16 @@ export function DashboardView({
 
   return (
     <div id="dashboard-print-root" className={`flex flex-col ${compactLayout ? "gap-3" : "gap-6"}`}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className={`font-semibold tracking-tight text-slate-900 ${compactLayout ? "text-xl" : "text-2xl"}`}>{result.title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 pb-2" style={{ borderColor: palette[0] }}>
+        <div className="flex min-w-0 items-center gap-3">
+          {branding?.logo && (
+            // eslint-disable-next-line @next/next/no-img-element -- logo enregistré en data URL
+            <img src={branding.logo} alt="Logo" className={`${compactLayout ? "max-h-8" : "max-h-12"} max-w-40 object-contain`} />
+          )}
+          <h2 className={`font-semibold tracking-tight ${compactLayout ? "text-xl" : "text-2xl"}`} style={{ color: accent }}>
+            {result.title}
+          </h2>
+        </div>
         <p className="text-sm text-slate-500">
           {result.fileName} · {result.profile.rowCount.toLocaleString("fr-FR")} lignes{result.period && ` · ${periodLabel}`}
         </p>
@@ -169,7 +182,11 @@ export function DashboardView({
           className={`kpi-grid ${compactLayout ? "grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}
         >
           {kpis.map((k) => (
-            <article key={k.id} className={`group relative rounded-xl border border-slate-200 bg-white print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-4"}`}>
+            <article
+              key={k.id}
+              className={`group relative rounded-xl border border-t-[3px] border-slate-200 bg-white print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-4"}`}
+              style={{ borderTopColor: palette[0] }}
+            >
               <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />
               <p className="pr-6 text-sm font-medium text-slate-600">{k.label}</p>
               <p className={`mt-1 font-semibold tabular-nums text-slate-900 ${compactLayout ? "text-lg" : "text-2xl"}`}>{formatValue(k.value, k.format)}</p>
@@ -241,7 +258,9 @@ export function DashboardView({
         const siblings = group.charts.map((c) => c.id);
         return (
           <section key={group.title} aria-label={group.title} className={`flex flex-col ${compactLayout ? "gap-2" : "gap-3"}`}>
-            <h3 className={`font-semibold uppercase tracking-wide text-slate-500 ${compactLayout ? "text-xs" : "text-sm"}`}>{group.title}</h3>
+            <h3 className={`font-semibold uppercase tracking-wide ${compactLayout ? "text-xs" : "text-sm"}`} style={{ color: accent }}>
+              {group.title}
+            </h3>
             <div className={`chart-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${compactLayout ? "gap-2" : "gap-3"}`}>
               {group.charts.map((c, i) => (
                 <ChartCard
@@ -251,6 +270,7 @@ export function DashboardView({
                   size={chartSizeOf(c.id, view)}
                   collapsed={view.collapsedCharts.includes(c.id)}
                   compactLayout={compactLayout}
+                  palette={palette}
                   onHide={() => setView({ ...view, hiddenCharts: [...view.hiddenCharts, c.id] })}
                   onType={(type) => setView({ ...view, chartTypes: { ...view.chartTypes, [c.id]: type } })}
                   onCategories={(hidden) => setView({ ...view, hiddenCategories: { ...view.hiddenCategories, [c.id]: hidden } })}
@@ -543,6 +563,7 @@ function ChartCard({
   size,
   collapsed,
   compactLayout,
+  palette,
   onHide,
   onType,
   onCategories,
@@ -557,6 +578,7 @@ function ChartCard({
   size: ChartSize;
   collapsed: boolean;
   compactLayout: boolean;
+  palette: string[];
   onHide: () => void;
   onType: (type: ChartType) => void;
   onCategories: (hidden: string[]) => void;
@@ -726,7 +748,7 @@ function ChartCard({
                       <XAxis dataKey="label" tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} minTickGap={8} />
                       <YAxis tickFormatter={compact} tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} axisLine={false} width={small ? 38 : 48} />
                       <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
-                      <Line type="monotone" dataKey="value" stroke={PALETTE[0]} strokeWidth={2} dot={{ r: small ? 2 : 3 }} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="value" stroke={palette[0]} strokeWidth={2} dot={{ r: small ? 2 : 3 }} isAnimationActive={false} />
                     </LineChart>
                   ) : type === "pie" ? (
                     <PieChart>
@@ -734,7 +756,7 @@ function ChartCard({
                       <Legend verticalAlign="bottom" iconType="circle" iconSize={small ? 8 : 10} wrapperStyle={{ fontSize: small ? 10 : 12 }} />
                       <Pie data={data} dataKey="value" nameKey="label" innerRadius="45%" outerRadius="75%" paddingAngle={2} isAnimationActive={false}>
                         {data.map((d, i) => (
-                          <Cell key={d.category} fill={PALETTE[i % PALETTE.length]} />
+                          <Cell key={d.category} fill={palette[i % palette.length]} />
                         ))}
                       </Pie>
                     </PieChart>
@@ -744,7 +766,7 @@ function ChartCard({
                       <XAxis dataKey="label" tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} minTickGap={8} />
                       <YAxis tickFormatter={compact} tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} axisLine={false} width={small ? 38 : 48} />
                       <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
-                      <Bar dataKey="value" fill={PALETTE[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                      <Bar dataKey="value" fill={palette[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
                     </BarChart>
                   ) : (
                     <BarChart data={data} layout="vertical" margin={{ top: 0, right: small ? 40 : 56, bottom: 0, left: 0 }}>
@@ -752,7 +774,7 @@ function ChartCard({
                       <XAxis type="number" tickFormatter={compact} tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} />
                       <YAxis type="category" dataKey="label" width={labelWidth} tick={{ fontSize: font, fill: "#334155" }} tickLine={false} axisLine={false} />
                       <Tooltip formatter={(v) => [`${fmt(v)}${share(v)}`, chart.measureLabel]} />
-                      <Bar dataKey="value" fill={PALETTE[0]} radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                      <Bar dataKey="value" fill={palette[0]} radius={[0, 4, 4, 0]} isAnimationActive={false}>
                         <LabelList dataKey="value" position="right" formatter={(v: unknown) => (typeof v === "number" ? compact(v) : "")} style={{ fontSize: font, fill: "#334155" }} />
                       </Bar>
                     </BarChart>

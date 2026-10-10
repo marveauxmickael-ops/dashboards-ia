@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { parseBranding, type Branding } from "@/lib/branding";
 import { createClient } from "@/lib/supabase/server";
 
 export type Role = "owner" | "admin" | "editor" | "viewer";
@@ -6,7 +7,7 @@ export type Role = "owner" | "admin" | "editor" | "viewer";
 export interface Workspace {
   supabase: Awaited<ReturnType<typeof createClient>>;
   user: { id: string; email: string };
-  organization: { id: string; name: string };
+  organization: { id: string; name: string; branding: Branding };
   role: Role;
 }
 
@@ -24,7 +25,7 @@ export async function getWorkspace(): Promise<Workspace | null> {
   // Le prototype gère une organisation par utilisateur : la première (la plus ancienne).
   const { data: membership } = await supabase
     .from("memberships")
-    .select("role, organizations(id, name)")
+    .select("role, organizations(id, name, branding)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -34,7 +35,7 @@ export async function getWorkspace(): Promise<Workspace | null> {
   return {
     supabase,
     user: { id: user.id, email: user.email ?? "" },
-    organization: membership.organizations,
+    organization: { ...membership.organizations, branding: parseBranding(membership.organizations.branding) },
     role: membership.role as Role,
   };
 }
@@ -44,6 +45,11 @@ export async function requireWorkspace(): Promise<Workspace> {
   const workspace = await getWorkspace();
   if (!workspace) redirect("/connexion");
   return workspace;
+}
+
+/** Gestion de l'organisation (charte graphique, membres) : propriétaire ou administrateur. */
+export function canManage(role: Role): boolean {
+  return role === "owner" || role === "admin";
 }
 
 export function canEdit(role: Role): boolean {

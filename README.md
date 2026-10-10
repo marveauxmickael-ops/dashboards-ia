@@ -114,6 +114,10 @@ Chaque indicateur affiche sa définition, sa formule, la période couverte, les 
 - Activer / désactiver, niveau d'accès (consultation seule, ou consultation et téléchargement), révocation définitive (un déclencheur empêche toute réactivation).
 - La page `/partage/[jeton]` lit le dashboard par la fonction `shared_dashboard` (SECURITY DEFINER, exécutable sans compte par conception) : elle ne renvoie que les résultats calculés, sans contexte envoyé à l'IA, structure ni listes de filtres. Les données sources ne sont jamais conservées. En-têtes `no-referrer` et `noindex`.
 
+## Charte graphique
+
+Page « Charte graphique » (propriétaire ou administrateur) : import du logo (PNG, JPEG, WebP ou SVG, réencodé en PNG redimensionné dans le navigateur, sans script ni métadonnées), couleurs détectées automatiquement dans le logo puis ajustables. Logo et couleurs s'appliquent à tous les dashboards de l'organisation : écran, PDF, export Excel (logo et en-têtes) et liens partagés. Une couleur trop claire est assombrie pour les textes (contraste ≥ 4,5:1) ; les couleurs de signification (hausse, baisse, alertes) ne changent pas.
+
 ## Personnalisation de l'affichage
 
 « Personnaliser l'affichage » permet de cocher les indicateurs, graphiques et sections à afficher (constats, analyse des variations, et dans l'analyse : explications et/ou suggestions). Chaque graphique peut changer de type (barres, courbe, secteurs, tableau) et masquer des catégories ou des périodes. Les valeurs ne sont jamais recalculées : on masque, on ne modifie pas. La sélection est mémorisée dans le navigateur et s'applique au PDF et aux exports Excel / CSV (paramètre `vue`, positions des catégories uniquement, jamais leurs noms).

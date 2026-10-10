@@ -195,11 +195,13 @@ export type Database = {
       };
       organizations: {
         Row: {
+          branding: Json;
           created_at: string;
           id: string;
           name: string;
         };
         Insert: {
+          branding?: Json;
           created_at?: string;
           id?: string;
           name: string;

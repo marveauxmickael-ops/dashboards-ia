@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { parseBranding } from "@/lib/branding";
 import { loadSharedDashboard } from "@/lib/dashboards/shared";
 import { buildCsv, buildXlsx, exportFileName } from "@/lib/export/dashboard-export";
 
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/p
   if (!shared || shared.access !== "view_export") return Response.json({ error: "Lien indisponible." }, { status: 404 });
 
   const format = request.nextUrl.searchParams.get("format") === "csv" ? "csv" : "xlsx";
-  const meta = { organization: shared.organization, createdAt: new Date(shared.refreshed_at), exportedAt: new Date(), aiMode: "standard" };
+  const meta = { organization: shared.organization, createdAt: new Date(shared.refreshed_at), exportedAt: new Date(), aiMode: "standard", branding: parseBranding(shared.branding) };
   const headers = {
     "Content-Disposition": `attachment; filename="${exportFileName(shared.title, meta.exportedAt, format)}"`,
     "Cache-Control": "private, no-store",
