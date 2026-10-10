@@ -8,10 +8,12 @@ const TYPE_THRESHOLD = 0.9;
 const SENSITIVE_HEADER = /sant[ée]|maladie|m[ée]dical|handicap|religion|confession|syndic|politi|origine|ethni|orientation|sexualit|biom[ée]tri|g[ée]n[ée]tique|casier|condamnation/i;
 // Identifiants directs : supprimés avant l'IA.
 const DIRECT_ID_HEADER = /e-?mail|courriel|t[ée]l[ée]phone|phone|portable|mobile|iban|bic|adresse|address|s[ée]curit[ée] sociale|\bnir\b|ssn|passeport|password|mot de passe/i;
-// Personnes ou entités identifiables : remplacées par des jetons.
 // Champs de saisie libre : peuvent contenir n'importe quelle donnée personnelle.
 const FREE_TEXT_HEADER = /comment|remarque|\bnotes?\b|observation|description|descriptif|motif|message/i;
-const PERSON_HEADER =/\bnom\b|name|pr[ée]nom|client|contact|commercial|vendeur|salari[ée]|employ[ée]|collaborateur|fournisseur|soci[ée]t[ée]|entreprise|raison sociale|\bid\b|identifiant|siret|siren/i;
+// Personnes ou entités identifiables : remplacées par des jetons.
+const PERSON_HEADER = /\bnom\b|name|pr[ée]nom|client|contact|commercial|vendeur|salari[ée]|employ[ée]|collaborateur|fournisseur|soci[ée]t[ée]|entreprise|raison sociale|\bid\b|identifiant|siret|siren/i;
+// Classifications qui mentionnent une personne sans l'identifier (« Segment client », « Type de contact ») : transmises.
+const CLASSIFICATION_HEADER = /segment|type|cat[ée]gor|canal|statut|r[ée]gion|secteur|taille|famille|gamme|niveau/i;
 
 export function profileDataset(ds: RawDataset): { profile: DatasetProfile; rows: TypedRow[] } {
   const columns = ds.columns.map((name) => profileColumn(name, ds.rows.map((r) => r[name])));
@@ -87,7 +89,7 @@ function profileColumn(name: string, values: (string | number | null)[]): Column
   } else if (type === "text") {
     treatment = "exclude";
     reason = "Texte libre : peut contenir des données personnelles, exclu de l'IA.";
-  } else if (type === "category" && PERSON_HEADER.test(name)) {
+  } else if (type === "category" && PERSON_HEADER.test(name) && !CLASSIFICATION_HEADER.test(name)) {
     treatment = "tokenize";
     reason = "Personne ou entité identifiable : remplacée par des jetons avant l'IA.";
   } else {

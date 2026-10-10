@@ -4,12 +4,16 @@ import type { Chart, DashboardSpec, Insight, Kpi, Measure } from "./spec";
 // Concepteur de secours, sans appel à un modèle : il permet de faire tourner la démo sans clé d'API.
 // Il reçoit exactement le même contexte pseudonymisé que Claude et renvoie le même format.
 
-const REVENUE = /chiffre|\bca\b|montant|vente|revenu|recette|prix/i;
+// Chiffre d'affaires : par ordre de préférence, en écartant les prix unitaires et les ventes additionnelles.
+const REVENUE_PRIORITY = [/\bca\b|chiffre/i, /montant|vente|revenu|recette/i];
 const COST = /co[uû]t|achat|charge|d[ée]pense/i;
+const MARGIN = /marge/i;
+const SECONDARY = /unitaire|additionnel|compl[ée]mentaire|upsell/i;
+const ADD_ON = /additionnel|compl[ée]mentaire|upsell/i;
 const MONEY = /chiffre|\bca\b|montant|prix|co[uû]t|marge|achat|charge|vente|revenu|€|\bht\b|\bttc\b|eur/i;
 
 export function buildDemoSpec(ctx: AiContext): DashboardSpec {
-  const measureCols = ctx.columns.filter((c) => c.role === "measure").slice(0, 4);
+  const measureCols = ctx.columns.filter((c) => c.role === "measure");
   const dateCol = ctx.columns.find((c) => c.role === "date");
   const dims = ctx.columns.filter((c) => c.role === "dimension" && c.distinct > 1);
 
@@ -22,23 +26,33 @@ export function buildDemoSpec(ctx: AiContext): DashboardSpec {
     right: null,
     format: MONEY.test(c.name) ? "currency" : "number",
   }));
-  const revenue = measures.find((m) => REVENUE.test(m.label)) ?? measures[0];
-  const cost = measures.find((m) => m !== revenue && COST.test(m.label));
-  if (revenue && cost) {
-    measures.push(
-      { id: "marge", label: "Marge", column: null, operation: "difference", left: revenue.id, right: cost.id, format: "currency" },
-      { id: "taux_marge", label: "Taux de marge", column: null, operation: "ratio", left: "marge", right: revenue.id, format: "percent" },
-    );
+  const primary = measures.filter((m) => !SECONDARY.test(m.label));
+  const revenue = REVENUE_PRIORITY.map((re) => primary.find((m) => re.test(m.label))).find(Boolean) ?? primary[0] ?? measures[0];
+  const cost = primary.find((m) => m !== revenue && COST.test(m.label));
+  const marginColumn = primary.find((m) => m !== revenue && MARGIN.test(m.label));
+  const addOn = measures.find((m) => ADD_ON.test(m.label) && !MARGIN.test(m.label) && m.format === "currency");
+
+  // Marge : la colonne du fichier si elle existe, sinon CA − coûts.
+  let marginId: string | null = null;
+  if (revenue && marginColumn) {
+    marginId = marginColumn.id;
+  } else if (revenue && cost) {
+    measures.push({ id: "marge", label: "Marge", column: null, operation: "difference", left: revenue.id, right: cost.id, format: "currency" });
+    marginId = "marge";
+  }
+  if (revenue && marginId) {
+    measures.push({ id: "taux_marge", label: "Taux de marge", column: null, operation: "ratio", left: marginId, right: revenue.id, format: "percent" });
   }
 
   const kpis: Kpi[] = [];
   if (revenue) kpis.push({ id: "k_total", label: `${revenue.label} total`, description: `Somme de ${revenue.label} sur la période.`, measure: revenue.id, aggregation: "sum" });
-  if (cost) {
+  if (revenue && marginId) {
     kpis.push(
-      { id: "k_marge", label: "Marge", description: `${revenue!.label} moins ${cost.label}.`, measure: "marge", aggregation: "sum" },
-      { id: "k_taux", label: "Taux de marge", description: "Marge rapportée au chiffre d'affaires.", measure: "taux_marge", aggregation: "sum" },
+      { id: "k_marge", label: "Marge", description: marginColumn ? `Somme de ${marginColumn.label}.` : `${revenue.label} moins ${cost!.label}.`, measure: marginId, aggregation: "sum" },
+      { id: "k_taux", label: "Taux de marge", description: `Marge rapportée à ${revenue.label}.`, measure: "taux_marge", aggregation: "sum" },
     );
   }
+  if (addOn) kpis.push({ id: "k_additionnel", label: addOn.label, description: `Somme de ${addOn.label} sur la période.`, measure: addOn.id, aggregation: "sum" });
   kpis.push({ id: "k_lignes", label: "Nombre de lignes", description: "Nombre d'enregistrements dans le fichier.", measure: "rows", aggregation: "count" });
   if (revenue) kpis.push({ id: "k_moyenne", label: `${revenue.label} moyen`, description: `Valeur moyenne de ${revenue.label} par ligne.`, measure: revenue.id, aggregation: "avg" });
 

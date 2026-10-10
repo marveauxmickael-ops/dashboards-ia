@@ -104,3 +104,21 @@ describe("cycle complet", () => {
     expect(result.issues).toEqual([]);
   });
 });
+
+describe("choix des indicateurs du concepteur de démonstration", () => {
+  it("prend le CA plutôt que le prix unitaire et utilise la colonne de marge du fichier", async () => {
+    const csv = [
+      "Date;Commercial;Segment client;Catégorie;Prix unitaire HT;CA HT;Coût d'achat HT;Marge HT;CA vente additionnelle HT",
+      ...Array.from({ length: 30 }, (_, i) => `0${(i % 9) + 1}/0${(i % 3) + 1}/2026;Vendeur ${i % 3};${i % 2 ? "PME" : "ETI"};Cat ${i % 4};10,00;100,00;60,00;40,00;5,00`),
+    ].join("\n");
+    const data = new TextEncoder().encode(csv).buffer as ArrayBuffer;
+    const r = await generateDashboard({ fileName: "ventes.csv", data, mode: "standard", organizationId: "org-1" });
+    const kpi = Object.fromEntries(r.kpis.map((k) => [k.id, k.value]));
+    expect(kpi.k_total).toBe(3000);
+    expect(kpi.k_marge).toBe(1200);
+    expect(kpi.k_taux).toBeCloseTo(0.4);
+    expect(kpi.k_additionnel).toBe(150);
+    expect(r.profile.columns.find((c) => c.name === "Segment client")?.treatment).toBe("send");
+    expect(r.profile.columns.find((c) => c.name === "Commercial")?.treatment).toBe("tokenize");
+  });
+});

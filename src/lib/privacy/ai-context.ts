@@ -9,7 +9,7 @@ import type { Pseudonymizer } from "./pseudonymize";
 export const MIN_GROUP_SIZE = 5;
 const MAX_GROUPS = 15;
 const SAMPLE_SIZE = 15;
-const MAX_BREAKDOWN_DIMENSIONS = 4;
+const MAX_BREAKDOWN_DIMENSIONS = 6;
 
 export interface AiColumn {
   name: string;
