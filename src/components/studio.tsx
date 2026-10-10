@@ -1,0 +1,129 @@
+"use client";
+
+import { useState } from "react";
+import type { DashboardResult } from "@/lib/pipeline";
+import type { AiMode } from "@/lib/types";
+import { DashboardView } from "./dashboard-view";
+import { PrivacyPanel } from "./privacy-panel";
+
+type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult };
+
+export function Studio() {
+  const [file, setFile] = useState<File | null>(null);
+  const [mode, setMode] = useState<AiMode>("standard");
+  const [state, setState] = useState<State>({ status: "idle" });
+
+  async function generate(selected: File) {
+    setState({ status: "loading", fileName: selected.name });
+    const body = new FormData();
+    body.append("file", selected);
+    body.append("mode", mode);
+    try {
+      const response = await fetch("/api/dashboard", { method: "POST", body });
+      const json = await response.json();
+      if (!response.ok) setState({ status: "error", message: json.error ?? "La génération a échoué." });
+      else setState({ status: "done", result: json as DashboardResult });
+    } catch {
+      setState({ status: "error", message: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez." });
+    }
+  }
+
+  async function loadDemo() {
+    const response = await fetch("/demo/ventes-demo.csv");
+    const demo = new File([await response.blob()], "ventes-demo.csv", { type: "text/csv" });
+    setFile(demo);
+    await generate(demo);
+  }
+
+  const loading = state.status === "loading";
+
+  return (
+    <div className="flex flex-col gap-8">
+      <form
+        className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (file) void generate(file);
+        }}
+      >
+        <div className="flex flex-col gap-2">
+          <label htmlFor="file" className="text-sm font-medium text-slate-800">
+            Fichier CSV ou Excel (20 Mo maximum)
+          </label>
+          <input
+            id="file"
+            type="file"
+            accept=".csv,.xlsx"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-800 hover:file:bg-slate-200"
+          />
+        </div>
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm font-medium text-slate-800">Données transmises à l&apos;IA</legend>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {(
+              [
+                ["standard", "Standard", "Structure, agrégats et extrait pseudonymisés"],
+                ["strict", "Strict", "Noms et types de colonnes uniquement"],
+              ] as const
+            ).map(([value, label, hint]) => (
+              <label
+                key={value}
+                className={`flex flex-1 cursor-pointer flex-col rounded-lg border p-3 text-sm ${mode === value ? "border-teal-700 bg-teal-50" : "border-slate-200"}`}
+              >
+                <span className="flex items-center gap-2 font-medium text-slate-900">
+                  <input id={`mode-${value}`} type="radio" name="mode" value={value} checked={mode === value} onChange={() => setMode(value)} />
+                  {label}
+                </span>
+                <span className="mt-1 text-slate-600">{hint}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            type="submit"
+            disabled={!file || loading}
+            className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Générer le dashboard
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => void loadDemo()}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-50"
+          >
+            Essayer avec le fichier de démonstration
+          </button>
+        </div>
+      </form>
+
+      {state.status === "loading" && (
+        <p role="status" className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
+          Analyse de {state.fileName} : pseudonymisation, conception par l&apos;IA puis calcul des indicateurs…
+        </p>
+      )}
+      {state.status === "error" && (
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+          {state.message}
+        </p>
+      )}
+      {state.status === "done" && (
+        <>
+          <DashboardView result={state.result} />
+          <PrivacyPanel result={state.result} />
+          <p className="text-xs text-slate-500">
+            Généré en{" "}
+            {state.result.durationMs < 1000
+              ? "moins d'une seconde"
+              : `${(state.result.durationMs / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} s`}
+            .
+          </p>
+        </>
+      )}
+    </div>
+  );
+}

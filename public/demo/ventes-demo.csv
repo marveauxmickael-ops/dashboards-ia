@@ -1,0 +1,642 @@
+Date;Client;Email contact;Commercial;Région;Produit;Montant HT;Coût;Commentaire
+03/01/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Île-de-France;Logiciel de caisse;1 463,49;596,09;Remise accordée suite à négociation
+24/09/2026;Librairie Le Phare;contact@librairielephare.example;Camille Lefèvre;Île-de-France;Formation;1 354,53;759,36;Remise accordée suite à négociation
+25/09/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Sud-Ouest;Logiciel de caisse;1 725,13;738,88;
+14/07/2026;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Nord-Est;Logiciel de caisse;1 705,93;818,33;
+20/05/2026;Brasserie du Port;contact@brasserieduport.example;Camille Lefèvre;Île-de-France;Formation;1 489,80;811,16;
+22/11/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Île-de-France;Matériel;1 612,47;1 140,61;
+25/02/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Hugo Bernard;Ouest;Logiciel de caisse;2 206,95;1 009,48;
+03/09/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Hugo Bernard;Île-de-France;Matériel;1 725,69;1 348,64;Client satisfait, à relancer en fin d'année
+07/11/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Hugo Bernard;Nord-Est;Formation;965,21;500,04;Remise accordée suite à négociation
+20/07/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Léa Martin;Nord-Est;Maintenance annuelle;391,89;108,78;Remise accordée suite à négociation
+21/03/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Inès Robert;Nord-Est;Logiciel de caisse;1 015,88;486,93;
+08/02/2026;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Sud-Est;Matériel;2 975,80;2 096,86;
+01/02/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Nord-Est;Maintenance annuelle;584,64;166,79;Client satisfait, à relancer en fin d'année
+07/05/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Inès Robert;Sud-Ouest;Maintenance annuelle;861,60;244,80;Client satisfait, à relancer en fin d'année
+01/09/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Inès Robert;Nord-Est;Formation;977,32;586,15;Retard de livraison signalé par le client
+16/01/2026;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Sud-Ouest;Logiciel de caisse;1 408,89;628,87;
+09/04/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Nathan Petit;Sud-Est;Formation;941,16;492,25;
+21/08/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Nord-Est;Formation;608,26;367,76;Retard de livraison signalé par le client
+16/10/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Sud-Est;Logiciel de caisse;2 020,85;822,82;
+16/04/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Île-de-France;Maintenance annuelle;653,75;179,24;
+16/01/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Nord-Est;Matériel;2 338,31;1 788,32;
+25/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Île-de-France;Formation;741,56;415,16;
+10/11/2025;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Nord-Est;Matériel;2 274,66;1 817,67;
+21/02/2026;Transports Rivière;contact@transportsriviere.example;Inès Robert;Sud-Ouest;Matériel;2 379,61;1 703,80;Retard de livraison signalé par le client
+05/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Île-de-France;Formation;709,51;351,87;Retard de livraison signalé par le client
+11/12/2025;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Sud-Est;Formation;1 465,36;744,48;Remise accordée suite à négociation
+05/11/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Nord-Est;Matériel;2 594,40;1 797,48;Remise accordée suite à négociation
+25/08/2026;Atelier Lumière;contact@atelierlumiere.example;Léa Martin;Sud-Ouest;Formation;856,21;482,38;Retard de livraison signalé par le client
+13/07/2026;Opticien Clair Regard;contact@opticienclairregard.example;Hugo Bernard;Île-de-France;Logiciel de caisse;1 649,50;756,47;
+23/11/2025;Agence Horizon;contact@agencehorizon.example;Inès Robert;Sud-Ouest;Logiciel de caisse;1 245,48;514,67;
+04/03/2026;Garage du Centre;contact@garageducentre.example;Léa Martin;Ouest;Matériel;1 271,31;943,68;Retard de livraison signalé par le client
+07/01/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Camille Lefèvre;Ouest;Matériel;729,54;586,88;
+23/09/2026;Librairie Le Phare;contact@librairielephare.example;Inès Robert;Île-de-France;Logiciel de caisse;2 076,56;922,63;Retard de livraison signalé par le client
+21/11/2025;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Sud-Ouest;Maintenance annuelle;815,92;254,39;
+21/12/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Sud-Est;Maintenance annuelle;1 200,09;378,72;Retard de livraison signalé par le client
+02/12/2025;Transports Rivière;contact@transportsriviere.example;Hugo Bernard;Sud-Ouest;Formation;2 015,77;1 049,79;Client satisfait, à relancer en fin d'année
+27/01/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Hugo Bernard;Ouest;Formation;1 130,39;683,80;Retard de livraison signalé par le client
+03/04/2026;Atelier Lumière;contact@atelierlumiere.example;Nathan Petit;Sud-Est;Formation;1 364,61;772,17;Retard de livraison signalé par le client
+05/11/2025;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Camille Lefèvre;Île-de-France;Formation;736,22;382,25;Retard de livraison signalé par le client
+14/02/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Inès Robert;Ouest;Matériel;1 620,17;1 225,83;Client satisfait, à relancer en fin d'année
+15/11/2025;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Léa Martin;Nord-Est;Maintenance annuelle;459,77;151,53;Remise accordée suite à négociation
+24/04/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Sud-Est;Maintenance annuelle;836,40;255,28;
+10/09/2026;Garage du Centre;contact@garageducentre.example;Léa Martin;Nord-Est;Formation;1 287,02;777,23;
+12/07/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Hugo Bernard;Nord-Est;Matériel;2 807,50;2 182,45;
+02/11/2025;Brasserie du Port;contact@brasserieduport.example;Nathan Petit;Nord-Est;Logiciel de caisse;2 098,98;940,30;
+16/10/2025;Brasserie du Port;contact@brasserieduport.example;Inès Robert;Ouest;Matériel;1 469,64;1 076,49;Retard de livraison signalé par le client
+26/12/2025;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Ouest;Maintenance annuelle;637,72;205,66;Client satisfait, à relancer en fin d'année
+02/02/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Inès Robert;Ouest;Matériel;1 961,00;1 458,05;Remise accordée suite à négociation
+12/11/2025;Librairie Le Phare;contact@librairielephare.example;Inès Robert;Ouest;Logiciel de caisse;2 248,44;971,44;Client satisfait, à relancer en fin d'année
+02/11/2025;Opticien Clair Regard;contact@opticienclairregard.example;Nathan Petit;Sud-Est;Logiciel de caisse;2 228,87;1 047,92;
+10/10/2025;Opticien Clair Regard;contact@opticienclairregard.example;Léa Martin;Sud-Est;Maintenance annuelle;400,85;109,93;
+25/10/2025;Atelier Lumière;contact@atelierlumiere.example;Nathan Petit;Ouest;Matériel;2 461,28;1 988,55;Client satisfait, à relancer en fin d'année
+16/11/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Nathan Petit;Sud-Est;Formation;932,26;482,02;Remise accordée suite à négociation
+09/09/2026;Atelier Lumière;contact@atelierlumiere.example;Nathan Petit;Sud-Est;Maintenance annuelle;815,30;263,28;
+23/07/2026;Opticien Clair Regard;contact@opticienclairregard.example;Nathan Petit;Ouest;Matériel;1 488,88;1 106,15;
+25/12/2025;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Sud-Ouest;Maintenance annuelle;728,81;212,07;
+09/04/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Hugo Bernard;Nord-Est;Maintenance annuelle;600,65;167,41;Remise accordée suite à négociation
+20/11/2025;Salon Éclat;contact@saloneclat.example;Léa Martin;Nord-Est;Formation;N/A;492,04;Client satisfait, à relancer en fin d'année
+17/12/2025;Ferronnerie Durand;contact@ferronneriedurand.example;Nathan Petit;Île-de-France;Logiciel de caisse;2 521,98;1 047,06;Retard de livraison signalé par le client
+07/09/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Camille Lefèvre;Nord-Est;Logiciel de caisse;2 262,37;962,48;
+05/03/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Inès Robert;Sud-Ouest;Logiciel de caisse;1 395,62;658,25;
+16/08/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Île-de-France;Matériel;1 872,96;1 381,87;
+24/01/2026;Atelier Lumière;contact@atelierlumiere.example;Nathan Petit;Sud-Ouest;Matériel;2 538,13;1 748,81;
+13/07/2026;Transports Rivière;contact@transportsriviere.example;Inès Robert;Ouest;Formation;688,15;410,61;Remise accordée suite à négociation
+21/07/2026;Transports Rivière;contact@transportsriviere.example;Hugo Bernard;Île-de-France;Maintenance annuelle;517,54;164,06;Remise accordée suite à négociation
+08/11/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Camille Lefèvre;Ouest;Formation;1 011,67;594,50;
+16/03/2026;Transports Rivière;contact@transportsriviere.example;Léa Martin;Ouest;Formation;962,68;532,42;Retard de livraison signalé par le client
+21/02/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Inès Robert;Sud-Ouest;Maintenance annuelle;657,42;194,20;Client satisfait, à relancer en fin d'année
+01/04/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Camille Lefèvre;Ouest;Formation;714,02;375,94;
+10/02/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Sud-Ouest;Matériel;1 915,57;1 381,16;Client satisfait, à relancer en fin d'année
+13/07/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Sud-Est;Formation;1 467,74;829,38;
+11/04/2026;Transports Rivière;contact@transportsriviere.example;Hugo Bernard;Sud-Est;Logiciel de caisse;1 462,42;690,34;Remise accordée suite à négociation
+18/01/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Nord-Est;Maintenance annuelle;429,18;130,30;Remise accordée suite à négociation
+08/06/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Nord-Est;Logiciel de caisse;1 345,87;638,01;Client satisfait, à relancer en fin d'année
+06/09/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Léa Martin;Sud-Est;Logiciel de caisse;2 156,44;928,46;Retard de livraison signalé par le client
+03/02/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Sud-Ouest;Logiciel de caisse;1 462,94;720,30;Client satisfait, à relancer en fin d'année
+23/11/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Inès Robert;Sud-Ouest;Matériel;2 418,47;1 693,13;Client satisfait, à relancer en fin d'année
+13/04/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Sud-Ouest;Maintenance annuelle;873,88;251,03;
+01/06/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Île-de-France;Maintenance annuelle;661,18;180,20;Retard de livraison signalé par le client
+22/04/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Sud-Est;Formation;563,33;322,71;
+26/11/2025;Garage du Centre;contact@garageducentre.example;Nathan Petit;Nord-Est;Logiciel de caisse;2 049,44;985,32;Client satisfait, à relancer en fin d'année
+22/01/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Hugo Bernard;Sud-Ouest;Matériel;1 649,21;1 140,94;Remise accordée suite à négociation
+12/02/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Nord-Est;Matériel;3 077,14;2 529,75;
+09/01/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Léa Martin;Sud-Est;Logiciel de caisse;1 884,68;787,65;Retard de livraison signalé par le client
+17/01/2026;Garage du Centre;contact@garageducentre.example;Camille Lefèvre;Sud-Ouest;Formation;1 346,73;768,99;
+10/06/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Hugo Bernard;Sud-Est;Maintenance annuelle;366,92;120,76;
+03/09/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;1 450,27;667,61;
+16/08/2026;Garage du Centre;contact@garageducentre.example;Inès Robert;Île-de-France;Maintenance annuelle;224,60;61,66;Remise accordée suite à négociation
+18/03/2026;Garage du Centre;contact@garageducentre.example;Camille Lefèvre;Nord-Est;Matériel;2 662,98;1 901,46;Client satisfait, à relancer en fin d'année
+03/09/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Île-de-France;Formation;773,46;445,99;
+23/12/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;2 247,56;1 058,58;Retard de livraison signalé par le client
+28/11/2025;Ferronnerie Durand;contact@ferronneriedurand.example;Léa Martin;Sud-Est;Matériel;2 831,20;2 148,71;
+17/03/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Sud-Ouest;Maintenance annuelle;434,81;125,09;Client satisfait, à relancer en fin d'année
+04/12/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Ouest;Formation;643,60;348,66;
+18/04/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Camille Lefèvre;Sud-Est;Matériel;1 125,80;767,88;
+13/04/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Léa Martin;Sud-Ouest;Matériel;2 963,03;2 031,46;
+13/02/2026;Transports Rivière;contact@transportsriviere.example;Nathan Petit;Île-de-France;Matériel;2 689,72;1 923,51;
+16/09/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Nord-Est;Maintenance annuelle;646,59;192,23;
+23/11/2025;Brasserie du Port;contact@brasserieduport.example;Inès Robert;Sud-Est;Logiciel de caisse;2 345,67;1 133,48;
+04/05/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Sud-Est;Formation;889,67;470,41;
+26/04/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Nord-Est;Maintenance annuelle;803,90;217,44;
+16/05/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Camille Lefèvre;Île-de-France;Formation;756,47;425,31;
+27/03/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Inès Robert;Sud-Est;Formation;874,06;458,91;Remise accordée suite à négociation
+01/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Île-de-France;Maintenance annuelle;505,00;137,49;Remise accordée suite à négociation
+07/12/2025;Brasserie du Port;contact@brasserieduport.example;Léa Martin;Ouest;Maintenance annuelle;610,64;165,15;
+11/06/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Nathan Petit;Sud-Est;Matériel;2 090,96;1 675,64;
+22/11/2025;Garage du Centre;contact@garageducentre.example;Léa Martin;Île-de-France;Matériel;3 125,21;2 315,12;
+16/12/2025;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Sud-Ouest;Matériel;2 979,68;2 294,13;Retard de livraison signalé par le client
+16/02/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Léa Martin;Sud-Est;Maintenance annuelle;899,41;255,14;Retard de livraison signalé par le client
+07/09/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;1 847,48;776,89;Retard de livraison signalé par le client
+09/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Sud-Ouest;Matériel;1 654,92;1 150,20;Retard de livraison signalé par le client
+28/07/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Hugo Bernard;Île-de-France;Maintenance annuelle;586,83;164,08;
+04/05/2026;Agence Horizon;contact@agencehorizon.example;Hugo Bernard;Sud-Est;Formation;800,25;439,77;
+15/10/2025;Opticien Clair Regard;contact@opticienclairregard.example;Camille Lefèvre;Sud-Ouest;Matériel;1 756,79;1 242,40;Retard de livraison signalé par le client
+01/12/2025;Agence Horizon;contact@agencehorizon.example;Léa Martin;Nord-Est;Formation;1 851,63;1 025,82;Client satisfait, à relancer en fin d'année
+23/06/2026;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Île-de-France;Maintenance annuelle;427,62;120,52;Remise accordée suite à négociation
+27/05/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Île-de-France;Logiciel de caisse;1 780,91;850,49;
+20/08/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Inès Robert;Nord-Est;Maintenance annuelle;465,60;127,53;
+22/04/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Sud-Est;Formation;627,80;369,78;Client satisfait, à relancer en fin d'année
+14/04/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Ouest;Maintenance annuelle;738,29;232,35;Retard de livraison signalé par le client
+25/01/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Sud-Est;Matériel;1 409,09;975,47;
+19/02/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Léa Martin;Ouest;Maintenance annuelle;561,97;171,46;Remise accordée suite à négociation
+12/08/2026;Opticien Clair Regard;contact@opticienclairregard.example;Hugo Bernard;Nord-Est;Formation;437,54;237,62;Remise accordée suite à négociation
+25/10/2025;Atelier Lumière;contact@atelierlumiere.example;Léa Martin;Nord-Est;Formation;1 376,50;815,41;Retard de livraison signalé par le client
+22/05/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Île-de-France;Maintenance annuelle;871,27;258,83;Remise accordée suite à négociation
+20/08/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Camille Lefèvre;Nord-Est;Logiciel de caisse;1 229,35;535,70;Retard de livraison signalé par le client
+09/08/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Sud-Est;Formation;440,30;234,40;
+06/01/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Sud-Est;Matériel;815,56;559,01;Client satisfait, à relancer en fin d'année
+17/08/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Hugo Bernard;Île-de-France;Matériel;1 049,50;774,67;
+06/06/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Camille Lefèvre;Ouest;Formation;982,60;564,32;Client satisfait, à relancer en fin d'année
+01/06/2026;Agence Horizon;contact@agencehorizon.example;Léa Martin;Île-de-France;Maintenance annuelle;640,46;193,75;Remise accordée suite à négociation
+01/11/2025;Opticien Clair Regard;contact@opticienclairregard.example;Inès Robert;Sud-Est;Formation;965,10;497,44;
+22/12/2025;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Île-de-France;Formation;1 093,64;594,20;
+17/08/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Camille Lefèvre;Sud-Est;Formation;461,86;278,41;Retard de livraison signalé par le client
+06/12/2025;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Nord-Est;Matériel;2 686,04;1 922,46;Client satisfait, à relancer en fin d'année
+27/07/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Nathan Petit;Nord-Est;Logiciel de caisse;1 951,63;928,73;
+16/06/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Léa Martin;Sud-Est;Matériel;1 740,85;1 243,21;
+11/10/2025;Garage du Centre;contact@garageducentre.example;Nathan Petit;Ouest;Formation;724,37;378,74;Client satisfait, à relancer en fin d'année
+10/08/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Camille Lefèvre;Nord-Est;Maintenance annuelle;445,03;123,85;
+19/05/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Ouest;Logiciel de caisse;1 134,49;472,73;Retard de livraison signalé par le client
+12/08/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Nord-Est;Logiciel de caisse;1 361,79;630,14;Remise accordée suite à négociation
+13/05/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;2 051,85;974,45;Retard de livraison signalé par le client
+25/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Nathan Petit;Ouest;Maintenance annuelle;313,63;85,23;
+28/04/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Île-de-France;Matériel;2 477,97;2 007,68;Remise accordée suite à négociation
+14/12/2025;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Léa Martin;Ouest;Matériel;2 583,30;1 824,00;
+10/09/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Nathan Petit;Île-de-France;Matériel;1 102,51;884,96;Client satisfait, à relancer en fin d'année
+18/08/2026;Transports Rivière;contact@transportsriviere.example;Camille Lefèvre;Île-de-France;Maintenance annuelle;534,62;175,55;
+15/04/2026;Transports Rivière;contact@transportsriviere.example;Léa Martin;Nord-Est;Maintenance annuelle;383,49;121,79;Client satisfait, à relancer en fin d'année
+10/04/2026;Brasserie du Port;contact@brasserieduport.example;Léa Martin;Sud-Ouest;Logiciel de caisse;1 326,22;639,81;Remise accordée suite à négociation
+22/06/2026;Opticien Clair Regard;contact@opticienclairregard.example;Inès Robert;Sud-Est;Maintenance annuelle;461,44;132,95;Remise accordée suite à négociation
+27/06/2026;Transports Rivière;contact@transportsriviere.example;Hugo Bernard;Sud-Est;Logiciel de caisse;1 972,91;873,08;
+18/02/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Camille Lefèvre;Ouest;Formation;761,15;401,47;
+09/02/2026;Librairie Le Phare;contact@librairielephare.example;Camille Lefèvre;Nord-Est;Formation;1 427,93;753,85;Client satisfait, à relancer en fin d'année
+13/12/2025;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Sud-Ouest;Maintenance annuelle;602,82;179,35;
+22/05/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Hugo Bernard;Ouest;Maintenance annuelle;650,72;200,51;Remise accordée suite à négociation
+10/12/2025;Fromagerie Bellevue;contact@fromageriebellevue.example;Camille Lefèvre;Île-de-France;Maintenance annuelle;839,35;244,77;Remise accordée suite à négociation
+13/06/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Sud-Est;Formation;1 156,65;633,71;Remise accordée suite à négociation
+22/12/2025;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Ouest;Maintenance annuelle;516,94;167,99;Client satisfait, à relancer en fin d'année
+17/03/2026;Brasserie du Port;contact@brasserieduport.example;Hugo Bernard;Sud-Ouest;Matériel;2 178,26;1 536,95;
+19/04/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Inès Robert;Nord-Est;Maintenance annuelle;563,41;180,15;Remise accordée suite à négociation
+26/05/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Inès Robert;Sud-Est;Logiciel de caisse;1 278,05;529,36;Remise accordée suite à négociation
+11/03/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Île-de-France;Matériel;2 344,48;1 791,03;
+01/07/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Nord-Est;Maintenance annuelle;734,50;231,70;Retard de livraison signalé par le client
+10/04/2026;Brasserie du Port;contact@brasserieduport.example;Inès Robert;Ouest;Maintenance annuelle;775,37;244,32;
+07/10/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Inès Robert;Ouest;Formation;1 060,33;575,38;
+01/06/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Île-de-France;Matériel;2 414,50;1 938,49;
+07/08/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Sud-Est;Formation;795,98;435,92;Retard de livraison signalé par le client
+04/04/2026;Garage du Centre;contact@garageducentre.example;Nathan Petit;Ouest;Logiciel de caisse;1 947,31;788,72;Retard de livraison signalé par le client
+11/02/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Camille Lefèvre;Nord-Est;Logiciel de caisse;2 351,11;967,86;Client satisfait, à relancer en fin d'année
+19/02/2026;Garage du Centre;contact@garageducentre.example;Camille Lefèvre;Île-de-France;Formation;689,02;394,53;
+23/10/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Ouest;Formation;908,14;451,53;Client satisfait, à relancer en fin d'année
+01/11/2025;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Nathan Petit;Ouest;Matériel;656,41;523,17;
+11/08/2026;Librairie Le Phare;contact@librairielephare.example;Nathan Petit;Ouest;Matériel;433,71;323,22;
+28/10/2025;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Hugo Bernard;Sud-Ouest;Formation;818,71;437,32;Client satisfait, à relancer en fin d'année
+19/05/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Camille Lefèvre;Nord-Est;Formation;1 122,52;656,26;
+24/06/2026;Atelier Lumière;contact@atelierlumiere.example;Nathan Petit;Île-de-France;Matériel;2 244,03;1 568,75;
+15/04/2026;Salon Éclat;contact@saloneclat.example;Hugo Bernard;Île-de-France;Formation;1 317,58;688,28;
+28/07/2026;Opticien Clair Regard;contact@opticienclairregard.example;Camille Lefèvre;Sud-Ouest;Matériel;2 315,89;1 773,99;
+26/07/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Nathan Petit;Île-de-France;Matériel;2 114,61;1 737,45;Remise accordée suite à négociation
+20/04/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Nathan Petit;Nord-Est;Matériel;972,88;666,69;Retard de livraison signalé par le client
+19/09/2026;Opticien Clair Regard;contact@opticienclairregard.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;1 590,60;750,91;Client satisfait, à relancer en fin d'année
+24/04/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;2 372,68;1 151,41;Client satisfait, à relancer en fin d'année
+03/09/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Nord-Est;Maintenance annuelle;591,74;168,64;Retard de livraison signalé par le client
+11/12/2025;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Nord-Est;Matériel;1 165,75;839,55;
+21/09/2026;Brasserie du Port;contact@brasserieduport.example;Camille Lefèvre;Sud-Est;Matériel;2 346,38;1 664,91;
+16/01/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Camille Lefèvre;Ouest;Formation;987,36;592,09;Client satisfait, à relancer en fin d'année
+24/01/2026;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Ouest;Logiciel de caisse;2 253,49;1 053,05;
+15/03/2026;Atelier Lumière;contact@atelierlumiere.example;Hugo Bernard;Île-de-France;Formation;1 319,53;657,79;
+07/08/2026;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Sud-Est;Logiciel de caisse;1 384,40;652,02;Client satisfait, à relancer en fin d'année
+02/04/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Nathan Petit;Sud-Est;Formation;1 150,59;621,62;Retard de livraison signalé par le client
+06/04/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Léa Martin;Nord-Est;Logiciel de caisse;2 228,01;917,62;
+18/11/2025;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Nord-Est;Formation;838,91;452,06;
+05/03/2026;Salon Éclat;contact@saloneclat.example;Léa Martin;Ouest;Matériel;2 808,06;2 105,40;Retard de livraison signalé par le client
+21/05/2026;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Île-de-France;Matériel;1 234,97;979,67;
+25/09/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Camille Lefèvre;Sud-Ouest;Formation;580,74;299,01;
+04/03/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Camille Lefèvre;Île-de-France;Matériel;1 270,95;874,49;
+05/11/2025;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Ouest;Formation;729,10;394,66;
+06/04/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Ouest;Logiciel de caisse;1 955,98;912,25;Retard de livraison signalé par le client
+17/11/2025;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Nathan Petit;Sud-Ouest;Maintenance annuelle;476,67;141,40;Remise accordée suite à négociation
+25/02/2026;Salon Éclat;contact@saloneclat.example;Inès Robert;Sud-Ouest;Matériel;666,62;482,25;Retard de livraison signalé par le client
+03/05/2026;Salon Éclat;contact@saloneclat.example;Léa Martin;Sud-Ouest;Formation;636,64;317,12;
+17/02/2026;Librairie Le Phare;contact@librairielephare.example;Camille Lefèvre;Sud-Est;Maintenance annuelle;700,43;196,31;
+23/10/2025;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Inès Robert;Île-de-France;Maintenance annuelle;384,66;119,43;
+20/02/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Inès Robert;Nord-Est;Logiciel de caisse;1 948,87;951,71;Remise accordée suite à négociation
+07/05/2026;Brasserie du Port;contact@brasserieduport.example;Nathan Petit;Nord-Est;Matériel;1 634,00;1 310,44;
+27/10/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;2 318,26;1 080,88;
+16/08/2026;Salon Éclat;contact@saloneclat.example;Léa Martin;Sud-Est;Matériel;467,23;369,87;
+17/03/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Île-de-France;Formation;1 188,01;628,14;Retard de livraison signalé par le client
+23/11/2025;Brasserie du Port;contact@brasserieduport.example;Inès Robert;Sud-Est;Logiciel de caisse;1 623,59;690,04;Retard de livraison signalé par le client
+16/11/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Inès Robert;Nord-Est;Logiciel de caisse;1 926,66;924,57;
+21/11/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Sud-Est;Maintenance annuelle;446,13;138,99;Remise accordée suite à négociation
+19/03/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Nathan Petit;Nord-Est;Maintenance annuelle;831,77;252,06;Remise accordée suite à négociation
+09/07/2026;Garage du Centre;contact@garageducentre.example;Inès Robert;Sud-Est;Formation;998,52;596,64;
+26/01/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;1 578,86;646,19;Retard de livraison signalé par le client
+06/09/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Sud-Est;Logiciel de caisse;1 619,12;656,38;
+16/12/2025;Transports Rivière;contact@transportsriviere.example;Hugo Bernard;Nord-Est;Logiciel de caisse;2 487,84;1 227,14;
+18/12/2025;Atelier Lumière;contact@atelierlumiere.example;Hugo Bernard;Nord-Est;Matériel;3 233,55;2 257,41;Client satisfait, à relancer en fin d'année
+02/07/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Nord-Est;Matériel;1 505,47;1 223,55;
+13/02/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Sud-Ouest;Maintenance annuelle;552,96;179,97;
+04/09/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Ouest;Logiciel de caisse;1 229,41;590,56;Client satisfait, à relancer en fin d'année
+18/12/2025;Librairie Le Phare;contact@librairielephare.example;Nathan Petit;Sud-Ouest;Logiciel de caisse;2 610,91;1 206,67;Retard de livraison signalé par le client
+15/06/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Inès Robert;Sud-Est;Matériel;1 786,12;1 367,90;
+20/07/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Île-de-France;Formation;1 283,55;719,46;
+23/02/2026;Agence Horizon;contact@agencehorizon.example;Hugo Bernard;Île-de-France;Logiciel de caisse;2 359,99;1 161,36;
+08/05/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Inès Robert;Île-de-France;Matériel;1 872,99;1 299,42;
+11/01/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Nathan Petit;Île-de-France;Formation;692,11;402,83;Remise accordée suite à négociation
+22/07/2026;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Nord-Est;Logiciel de caisse;1 987,00;970,94;Client satisfait, à relancer en fin d'année
+19/09/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Léa Martin;Ouest;Maintenance annuelle;765,15;237,08;Client satisfait, à relancer en fin d'année
+21/11/2025;Opticien Clair Regard;contact@opticienclairregard.example;Nathan Petit;Île-de-France;Maintenance annuelle;898,96;264,95;
+08/05/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Sud-Est;Matériel;2 245,85;1 832,33;Client satisfait, à relancer en fin d'année
+06/10/2025;Transports Rivière;contact@transportsriviere.example;Léa Martin;Île-de-France;Maintenance annuelle;550,92;162,62;
+27/04/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Léa Martin;Sud-Ouest;Logiciel de caisse;926,88;378,92;Remise accordée suite à négociation
+20/08/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Hugo Bernard;Sud-Est;Maintenance annuelle;377,45;114,00;Retard de livraison signalé par le client
+13/08/2026;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Île-de-France;Maintenance annuelle;217,31;70,25;Retard de livraison signalé par le client
+19/06/2026;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Île-de-France;Matériel;2 382,57;1 838,92;
+16/01/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Île-de-France;Matériel;930,42;711,82;Client satisfait, à relancer en fin d'année
+16/07/2026;Transports Rivière;contact@transportsriviere.example;Camille Lefèvre;Île-de-France;Formation;818,83;494,73;
+21/10/2025;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Île-de-France;Formation;1 177,83;587,77;
+13/11/2025;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Nord-Est;Matériel;866,10;637,64;
+03/05/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Léa Martin;Sud-Est;Logiciel de caisse;1 097,70;528,52;
+02/03/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Ouest;Maintenance annuelle;479,93;131,22;Client satisfait, à relancer en fin d'année
+21/10/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Inès Robert;Sud-Ouest;Formation;1 431,05;809,64;
+04/12/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Nathan Petit;Sud-Est;Logiciel de caisse;2 849,27;1 336,39;
+28/02/2026;Salon Éclat;contact@saloneclat.example;Nathan Petit;Sud-Ouest;Matériel;3 152,29;2 202,29;
+24/12/2025;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Sud-Ouest;Maintenance annuelle;1 026,39;305,97;Remise accordée suite à négociation
+20/09/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Nord-Est;Maintenance annuelle;468,41;154,47;Remise accordée suite à négociation
+21/06/2026;Garage du Centre;contact@garageducentre.example;Camille Lefèvre;Sud-Ouest;Formation;668,00;333,19;
+09/01/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Nathan Petit;Ouest;Logiciel de caisse;1 746,19;737,19;Retard de livraison signalé par le client
+26/12/2025;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Nathan Petit;Ouest;Logiciel de caisse;1 795,51;750,50;Remise accordée suite à négociation
+04/04/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Sud-Est;Maintenance annuelle;414,49;123,83;
+26/04/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Nord-Est;Formation;565,76;317,51;
+16/09/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Hugo Bernard;Sud-Est;Matériel;2 225,93;1 704,56;Remise accordée suite à négociation
+24/10/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Inès Robert;Sud-Est;Logiciel de caisse;1 287,72;601,81;Retard de livraison signalé par le client
+13/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Ouest;Maintenance annuelle;247,10;78,47;
+23/09/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Nathan Petit;Ouest;Logiciel de caisse;955,21;438,86;Client satisfait, à relancer en fin d'année
+24/09/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Sud-Ouest;Logiciel de caisse;970,90;468,92;
+05/05/2026;Atelier Lumière;contact@atelierlumiere.example;Léa Martin;Sud-Ouest;Formation;523,21;306,50;
+03/09/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Nord-Est;Maintenance annuelle;577,01;185,24;
+03/08/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Hugo Bernard;Ouest;Matériel;1 524,42;1 160,32;Client satisfait, à relancer en fin d'année
+06/08/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Île-de-France;Maintenance annuelle;246,34;71,64;Client satisfait, à relancer en fin d'année
+16/06/2026;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Nord-Est;Matériel;1 304,50;1 075,07;
+04/08/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Nord-Est;Maintenance annuelle;494,39;136,72;Client satisfait, à relancer en fin d'année
+12/11/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Sud-Ouest;Maintenance annuelle;436,04;127,20;
+15/01/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Léa Martin;Île-de-France;Formation;673,46;339,77;Remise accordée suite à négociation
+21/02/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Hugo Bernard;Île-de-France;Logiciel de caisse;1 948,20;934,19;
+20/04/2026;Brasserie du Port;contact@brasserieduport.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;1 481,38;647,71;Retard de livraison signalé par le client
+12/05/2026;Garage du Centre;contact@garageducentre.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;1 905,80;845,49;Remise accordée suite à négociation
+28/10/2025;Ferronnerie Durand;contact@ferronneriedurand.example;Nathan Petit;Île-de-France;Maintenance annuelle;717,87;230,87;
+23/08/2026;Garage du Centre;contact@garageducentre.example;Inès Robert;Sud-Est;Formation;701,82;362,94;
+27/03/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Hugo Bernard;Nord-Est;Matériel;1 417,64;1 005,02;
+06/03/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Sud-Ouest;Matériel;1 128,71;829,75;Client satisfait, à relancer en fin d'année
+05/03/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Nathan Petit;Nord-Est;Maintenance annuelle;792,08;234,79;Retard de livraison signalé par le client
+27/05/2026;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Île-de-France;Matériel;2 538,75;1 717,34;
+20/12/2025;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Sud-Est;Matériel;3 987,83;3 243,71;Client satisfait, à relancer en fin d'année
+12/04/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Ouest;Maintenance annuelle;526,59;144,78;
+10/02/2026;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Ouest;Maintenance annuelle;897,91;253,11;Client satisfait, à relancer en fin d'année
+07/01/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Sud-Est;Formation;851,39;513,33;
+21/11/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Ouest;Matériel;973,04;800,03;
+14/02/2026;Atelier Lumière;contact@atelierlumiere.example;Hugo Bernard;Ouest;Logiciel de caisse;1 948,96;859,03;Retard de livraison signalé par le client
+07/12/2025;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Ouest;Matériel;3 608,61;2 668,51;Retard de livraison signalé par le client
+08/09/2026;Librairie Le Phare;contact@librairielephare.example;Inès Robert;Sud-Ouest;Logiciel de caisse;2 249,79;932,01;Client satisfait, à relancer en fin d'année
+24/07/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Sud-Est;Formation;1 294,96;643,85;Client satisfait, à relancer en fin d'année
+13/03/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Sud-Ouest;Maintenance annuelle;721,08;235,72;Client satisfait, à relancer en fin d'année
+22/08/2026;Atelier Lumière;contact@atelierlumiere.example;Nathan Petit;Sud-Ouest;Matériel;1 004,54;686,23;Client satisfait, à relancer en fin d'année
+02/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Île-de-France;Matériel;934,76;699,57;Client satisfait, à relancer en fin d'année
+11/04/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Ouest;Formation;573,05;333,01;Remise accordée suite à négociation
+28/01/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;1 401,05;586,24;
+04/10/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Ouest;Formation;549,51;306,19;
+26/04/2026;Atelier Lumière;contact@atelierlumiere.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 090,23;517,20;Client satisfait, à relancer en fin d'année
+01/10/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Nathan Petit;Nord-Est;Matériel;2 153,11;1 770,06;
+15/06/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Île-de-France;Logiciel de caisse;1 915,81;800,00;
+08/09/2026;Transports Rivière;contact@transportsriviere.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;1 318,15;579,99;
+13/05/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Île-de-France;Maintenance annuelle;580,09;168,20;Client satisfait, à relancer en fin d'année
+11/12/2025;Brasserie du Port;contact@brasserieduport.example;Nathan Petit;Sud-Est;Formation;1 870,83;1 068,62;Client satisfait, à relancer en fin d'année
+05/08/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Nathan Petit;Ouest;Matériel;759,87;618,85;Client satisfait, à relancer en fin d'année
+02/05/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Sud-Est;Matériel;1 513,03;1 026,73;Retard de livraison signalé par le client
+08/01/2026;Opticien Clair Regard;contact@opticienclairregard.example;Léa Martin;Sud-Est;Maintenance annuelle;533,19;175,22;Retard de livraison signalé par le client
+19/03/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Nord-Est;Matériel;2 416,21;1 758,20;
+23/03/2026;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Nord-Est;Logiciel de caisse;1 593,34;713,57;Remise accordée suite à négociation
+04/08/2026;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Île-de-France;Maintenance annuelle;270,61;83,12;
+08/07/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Nathan Petit;Sud-Est;Maintenance annuelle;640,96;205,56;
+14/11/2025;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Sud-Est;Logiciel de caisse;1 061,84;484,22;
+16/10/2025;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;2 174,12;1 008,24;
+15/05/2026;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Nord-Est;Logiciel de caisse;1 457,99;704,58;Remise accordée suite à négociation
+11/11/2025;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Ouest;Matériel;3 010,96;2 333,45;Remise accordée suite à négociation
+06/08/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Sud-Ouest;Formation;850,47;450,70;Retard de livraison signalé par le client
+02/03/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 388,43;600,47;
+15/12/2025;Garage du Centre;contact@garageducentre.example;Camille Lefèvre;Île-de-France;Matériel;2 393,14;1 748,73;Remise accordée suite à négociation
+23/05/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Camille Lefèvre;Sud-Est;Formation;918,31;522,76;
+09/03/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Camille Lefèvre;Ouest;Logiciel de caisse;2 094,68;897,67;
+24/05/2026;Opticien Clair Regard;contact@opticienclairregard.example;Camille Lefèvre;Ouest;Formation;973,46;573,26;
+09/10/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Sud-Est;Maintenance annuelle;N/A;176,86;
+22/12/2025;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Ouest;Formation;763,77;441,93;
+11/06/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Nathan Petit;Sud-Ouest;Maintenance annuelle;470,01;132,33;
+25/09/2026;Salon Éclat;contact@saloneclat.example;Nathan Petit;Île-de-France;Logiciel de caisse;1 943,07;811,38;
+14/03/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Nord-Est;Formation;874,16;509,04;Retard de livraison signalé par le client
+04/12/2025;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Île-de-France;Formation;795,47;453,84;Remise accordée suite à négociation
+03/04/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Camille Lefèvre;Ouest;Formation;540,43;321,08;Remise accordée suite à négociation
+22/10/2025;Fromagerie Bellevue;contact@fromageriebellevue.example;Léa Martin;Nord-Est;Logiciel de caisse;1 531,52;686,06;Client satisfait, à relancer en fin d'année
+03/02/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Camille Lefèvre;Nord-Est;Formation;787,62;448,47;
+17/06/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Camille Lefèvre;Nord-Est;Formation;1 330,69;726,24;
+24/11/2025;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 088,20;534,97;
+25/11/2025;Salon Éclat;contact@saloneclat.example;Léa Martin;Sud-Ouest;Logiciel de caisse;1 305,10;540,63;
+14/02/2026;Librairie Le Phare;contact@librairielephare.example;Nathan Petit;Nord-Est;Logiciel de caisse;2 108,08;936,30;
+19/08/2026;Agence Horizon;contact@agencehorizon.example;Hugo Bernard;Ouest;Formation;811,43;416,96;Remise accordée suite à négociation
+15/02/2026;Transports Rivière;contact@transportsriviere.example;Léa Martin;Sud-Ouest;Maintenance annuelle;438,84;123,94;
+19/12/2025;Salon Éclat;contact@saloneclat.example;Hugo Bernard;Sud-Est;Matériel;2 771,59;2 072,05;Client satisfait, à relancer en fin d'année
+14/05/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Ouest;Formation;845,78;424,59;Remise accordée suite à négociation
+01/04/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;1 677,79;811,72;
+22/05/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Camille Lefèvre;Ouest;Logiciel de caisse;1 715,94;834,09;Client satisfait, à relancer en fin d'année
+08/08/2026;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Île-de-France;Formation;391,37;201,84;Remise accordée suite à négociation
+19/02/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Nathan Petit;Île-de-France;Matériel;834,76;649,01;Retard de livraison signalé par le client
+01/01/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Sud-Est;Matériel;2 052,15;1 500,56;Retard de livraison signalé par le client
+17/02/2026;Garage du Centre;contact@garageducentre.example;Léa Martin;Sud-Ouest;Logiciel de caisse;2 325,01;1 128,18;Retard de livraison signalé par le client
+07/05/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Ouest;Matériel;1 987,95;1 420,57;
+19/12/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Sud-Est;Formation;741,63;372,73;
+06/05/2026;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;1 789,37;876,27;Client satisfait, à relancer en fin d'année
+13/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Sud-Est;Maintenance annuelle;228,37;64,97;
+20/12/2025;Transports Rivière;contact@transportsriviere.example;Léa Martin;Nord-Est;Logiciel de caisse;1 795,77;781,34;Remise accordée suite à négociation
+14/11/2025;Agence Horizon;contact@agencehorizon.example;Hugo Bernard;Ouest;Maintenance annuelle;791,08;250,04;
+04/03/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Sud-Est;Logiciel de caisse;2 290,86;996,47;
+14/11/2025;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Sud-Ouest;Maintenance annuelle;343,94;95,17;
+17/11/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Nord-Est;Maintenance annuelle;698,99;225,07;
+25/02/2026;Librairie Le Phare;contact@librairielephare.example;Inès Robert;Île-de-France;Maintenance annuelle;737,63;207,60;
+06/07/2026;Transports Rivière;contact@transportsriviere.example;Camille Lefèvre;Ouest;Matériel;2 260,48;1 754,40;Client satisfait, à relancer en fin d'année
+26/04/2026;Transports Rivière;contact@transportsriviere.example;Inès Robert;Nord-Est;Matériel;725,32;588,96;Client satisfait, à relancer en fin d'année
+22/03/2026;Transports Rivière;contact@transportsriviere.example;Inès Robert;Île-de-France;Maintenance annuelle;513,46;148,06;
+27/03/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Sud-Ouest;Logiciel de caisse;2 207,68;958,53;
+25/08/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Nathan Petit;Sud-Ouest;Formation;304,66;151,63;
+18/07/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Sud-Est;Matériel;1 922,99;1 583,10;Retard de livraison signalé par le client
+17/10/2025;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Inès Robert;Sud-Ouest;Matériel;726,97;495,19;Retard de livraison signalé par le client
+01/09/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Hugo Bernard;Île-de-France;Logiciel de caisse;1 854,57;909,88;Remise accordée suite à négociation
+12/08/2026;Librairie Le Phare;contact@librairielephare.example;Inès Robert;Sud-Ouest;Maintenance annuelle;188,64;59,13;
+25/07/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Nathan Petit;Sud-Ouest;Matériel;1 541,43;1 119,45;Retard de livraison signalé par le client
+05/05/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Sud-Est;Maintenance annuelle;626,21;183,87;Client satisfait, à relancer en fin d'année
+19/11/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Ouest;Logiciel de caisse;1 595,97;721,12;Retard de livraison signalé par le client
+21/04/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Inès Robert;Sud-Est;Maintenance annuelle;667,74;213,64;
+19/07/2026;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Sud-Ouest;Matériel;1 942,84;1 365,16;Client satisfait, à relancer en fin d'année
+22/01/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Île-de-France;Formation;1 186,92;599,37;
+03/02/2026;Brasserie du Port;contact@brasserieduport.example;Nathan Petit;Nord-Est;Formation;909,07;455,55;
+08/01/2026;Librairie Le Phare;contact@librairielephare.example;Nathan Petit;Nord-Est;Maintenance annuelle;377,74;107,55;
+14/09/2026;Salon Éclat;contact@saloneclat.example;Nathan Petit;Sud-Ouest;Maintenance annuelle;755,64;217,97;
+26/06/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Sud-Est;Logiciel de caisse;2 039,04;995,17;
+01/01/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Nathan Petit;Sud-Est;Maintenance annuelle;877,73;276,31;Remise accordée suite à négociation
+28/04/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Nathan Petit;Île-de-France;Matériel;2 174,31;1 571,82;
+18/06/2026;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;1 343,30;610,42;Client satisfait, à relancer en fin d'année
+26/06/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Inès Robert;Ouest;Matériel;2 590,29;1 957,41;
+03/07/2026;Garage du Centre;contact@garageducentre.example;Nathan Petit;Ouest;Matériel;3 195,84;2 210,50;
+13/03/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Sud-Ouest;Maintenance annuelle;378,80;103,99;Retard de livraison signalé par le client
+05/06/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Nord-Est;Matériel;1 963,48;1 582,40;Remise accordée suite à négociation
+08/01/2026;Brasserie du Port;contact@brasserieduport.example;Nathan Petit;Île-de-France;Matériel;1 022,97;778,98;Remise accordée suite à négociation
+08/12/2025;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Île-de-France;Formation;1 351,98;798,26;Remise accordée suite à négociation
+06/06/2026;Transports Rivière;contact@transportsriviere.example;Léa Martin;Sud-Ouest;Logiciel de caisse;1 928,17;835,74;
+03/03/2026;Opticien Clair Regard;contact@opticienclairregard.example;Camille Lefèvre;Île-de-France;Formation;1 379,83;807,78;Retard de livraison signalé par le client
+26/08/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Inès Robert;Île-de-France;Formation;757,62;425,26;Remise accordée suite à négociation
+20/11/2025;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Île-de-France;Logiciel de caisse;1 233,64;600,86;Client satisfait, à relancer en fin d'année
+24/01/2026;Agence Horizon;contact@agencehorizon.example;Léa Martin;Sud-Est;Maintenance annuelle;507,91;144,18;Remise accordée suite à négociation
+17/07/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Ouest;Logiciel de caisse;2 173,37;951,74;Retard de livraison signalé par le client
+08/09/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Ouest;Formation;1 199,04;663,36;Client satisfait, à relancer en fin d'année
+03/10/2025;Brasserie du Port;contact@brasserieduport.example;Camille Lefèvre;Nord-Est;Logiciel de caisse;1 715,73;700,46;
+24/06/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Sud-Ouest;Formation;481,83;255,54;
+10/09/2026;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Île-de-France;Matériel;1 585,72;1 165,77;
+26/10/2025;Salon Éclat;contact@saloneclat.example;Nathan Petit;Île-de-France;Maintenance annuelle;890,54;266,92;
+01/03/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Inès Robert;Sud-Ouest;Maintenance annuelle;690,74;198,22;Retard de livraison signalé par le client
+18/01/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Île-de-France;Formation;598,78;343,55;
+23/07/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Inès Robert;Nord-Est;Formation;923,94;501,06;Remise accordée suite à négociation
+18/08/2026;Librairie Le Phare;contact@librairielephare.example;Nathan Petit;Île-de-France;Maintenance annuelle;461,65;135,61;
+18/09/2026;Salon Éclat;contact@saloneclat.example;Léa Martin;Sud-Est;Formation;1 402,87;705,40;Client satisfait, à relancer en fin d'année
+13/06/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;2 073,17;879,89;Remise accordée suite à négociation
+24/09/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Inès Robert;Île-de-France;Maintenance annuelle;568,36;159,35;
+18/05/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Île-de-France;Matériel;2 597,75;1 955,28;Retard de livraison signalé par le client
+16/07/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Léa Martin;Sud-Ouest;Matériel;2 893,78;2 165,95;
+25/11/2025;Salon Éclat;contact@saloneclat.example;Hugo Bernard;Sud-Est;Formation;873,71;493,72;Remise accordée suite à négociation
+06/06/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Hugo Bernard;Ouest;Maintenance annuelle;605,15;168,34;
+19/04/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Nord-Est;Matériel;2 746,55;2 261,08;Remise accordée suite à négociation
+04/03/2026;Opticien Clair Regard;contact@opticienclairregard.example;Hugo Bernard;Ouest;Logiciel de caisse;1 009,78;444,96;
+27/05/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Inès Robert;Nord-Est;Matériel;727,91;522,56;
+11/10/2025;Fromagerie Bellevue;contact@fromageriebellevue.example;Inès Robert;Sud-Est;Logiciel de caisse;1 165,94;514,59;
+09/05/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Ouest;Formation;522,40;314,95;
+05/03/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Île-de-France;Matériel;2 671,76;1 887,27;
+03/01/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Sud-Ouest;Formation;1 050,56;593,87;
+17/12/2025;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Camille Lefèvre;Nord-Est;Logiciel de caisse;3 037,01;1 272,71;Remise accordée suite à négociation
+23/11/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Nord-Est;Matériel;912,99;738,37;Remise accordée suite à négociation
+05/02/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Inès Robert;Ouest;Logiciel de caisse;2 326,16;1 055,58;Client satisfait, à relancer en fin d'année
+08/09/2026;Brasserie du Port;contact@brasserieduport.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;1 606,16;731,86;Retard de livraison signalé par le client
+20/03/2026;Garage du Centre;contact@garageducentre.example;Inès Robert;Sud-Est;Logiciel de caisse;1 234,92;577,72;Remise accordée suite à négociation
+16/01/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Hugo Bernard;Nord-Est;Logiciel de caisse;2 274,76;1 112,15;
+25/08/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Nathan Petit;Nord-Est;Formation;648,94;325,56;Client satisfait, à relancer en fin d'année
+18/11/2025;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Nathan Petit;Nord-Est;Formation;697,72;394,95;
+18/07/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Nathan Petit;Sud-Est;Formation;1 251,41;756,80;
+13/09/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Ouest;Logiciel de caisse;1 746,29;840,23;
+16/03/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Inès Robert;Ouest;Matériel;2 160,93;1 527,03;Retard de livraison signalé par le client
+14/06/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Île-de-France;Maintenance annuelle;506,28;151,06;
+23/07/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Île-de-France;Logiciel de caisse;1 303,30;529,21;
+02/02/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;914,33;427,77;
+06/07/2026;Salon Éclat;contact@saloneclat.example;Léa Martin;Île-de-France;Logiciel de caisse;1 921,72;900,12;Client satisfait, à relancer en fin d'année
+18/02/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Hugo Bernard;Sud-Est;Formation;756,11;450,79;Remise accordée suite à négociation
+26/07/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Camille Lefèvre;Île-de-France;Maintenance annuelle;519,37;149,73;
+19/05/2026;Brasserie du Port;contact@brasserieduport.example;Inès Robert;Ouest;Formation;1 012,82;606,70;
+14/12/2025;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Ouest;Formation;1 659,31;986,28;Remise accordée suite à négociation
+03/10/2025;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Nord-Est;Maintenance annuelle;487,49;155,00;
+19/08/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Hugo Bernard;Ouest;Matériel;1 612,19;1 266,09;Client satisfait, à relancer en fin d'année
+26/07/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Nord-Est;Formation;825,09;429,90;Client satisfait, à relancer en fin d'année
+01/09/2026;Opticien Clair Regard;contact@opticienclairregard.example;Inès Robert;Sud-Est;Matériel;1 289,80;966,89;Remise accordée suite à négociation
+09/08/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Inès Robert;Nord-Est;Logiciel de caisse;1 136,53;504,20;
+10/12/2025;Fromagerie Bellevue;contact@fromageriebellevue.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 788,68;759,66;
+28/12/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Sud-Est;Maintenance annuelle;1 069,34;330,24;
+19/10/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Nord-Est;Matériel;802,96;555,03;
+13/10/2025;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Île-de-France;Formation;1 101,20;661,32;
+21/03/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Nathan Petit;Sud-Est;Maintenance annuelle;423,76;135,67;
+26/03/2026;Transports Rivière;contact@transportsriviere.example;Nathan Petit;Nord-Est;Matériel;3 159,37;2 276,00;Client satisfait, à relancer en fin d'année
+04/06/2026;Garage du Centre;contact@garageducentre.example;Léa Martin;Sud-Est;Matériel;2 957,00;2 313,79;Retard de livraison signalé par le client
+11/09/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Ouest;Formation;1 064,10;588,78;Client satisfait, à relancer en fin d'année
+16/10/2025;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Camille Lefèvre;Nord-Est;Formation;1 391,59;811,60;Client satisfait, à relancer en fin d'année
+18/12/2025;Brasserie du Port;contact@brasserieduport.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;2 415,10;1 106,93;Remise accordée suite à négociation
+15/10/2025;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Ouest;Logiciel de caisse;1 541,70;631,75;Client satisfait, à relancer en fin d'année
+26/01/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Léa Martin;Île-de-France;Logiciel de caisse;2 285,92;1 047,39;
+18/09/2026;Atelier Lumière;contact@atelierlumiere.example;Léa Martin;Ouest;Maintenance annuelle;392,65;107,46;
+18/09/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Inès Robert;Nord-Est;Matériel;2 417,59;1 787,02;
+27/02/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Nathan Petit;Île-de-France;Matériel;2 605,82;1 891,39;Retard de livraison signalé par le client
+28/08/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Inès Robert;Ouest;Maintenance annuelle;341,85;112,01;
+08/11/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Léa Martin;Sud-Ouest;Matériel;1 112,44;838,26;Client satisfait, à relancer en fin d'année
+25/03/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Sud-Est;Matériel;1 821,72;1 296,54;Client satisfait, à relancer en fin d'année
+14/12/2025;Atelier Lumière;contact@atelierlumiere.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;2 581,51;1 050,34;
+02/10/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Sud-Est;Maintenance annuelle;702,81;208,87;
+25/01/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Sud-Ouest;Matériel;1 453,03;1 026,12;Remise accordée suite à négociation
+11/01/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Nathan Petit;Nord-Est;Maintenance annuelle;853,66;266,90;
+12/03/2026;Atelier Lumière;contact@atelierlumiere.example;Léa Martin;Sud-Est;Formation;1 231,54;662,43;
+23/12/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 648,14;689,54;Remise accordée suite à négociation
+28/07/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Léa Martin;Ouest;Matériel;2 953,60;2 352,14;Retard de livraison signalé par le client
+28/03/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Léa Martin;Ouest;Logiciel de caisse;1 830,33;796,16;
+12/09/2026;Atelier Lumière;contact@atelierlumiere.example;Hugo Bernard;Sud-Est;Logiciel de caisse;1 690,12;718,72;Retard de livraison signalé par le client
+03/06/2026;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Sud-Ouest;Maintenance annuelle;324,03;99,93;Retard de livraison signalé par le client
+21/04/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Sud-Est;Matériel;1 743,50;1 295,09;
+22/07/2026;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Nord-Est;Formation;1 061,94;574,91;Client satisfait, à relancer en fin d'année
+26/04/2026;Brasserie du Port;contact@brasserieduport.example;Hugo Bernard;Sud-Ouest;Maintenance annuelle;505,77;162,36;
+14/11/2025;Garage du Centre;contact@garageducentre.example;Inès Robert;Sud-Est;Matériel;1 563,09;1 249,32;Client satisfait, à relancer en fin d'année
+13/05/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Ouest;Formation;1 398,69;792,62;Client satisfait, à relancer en fin d'année
+06/01/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Léa Martin;Sud-Est;Formation;1 434,43;728,15;
+26/03/2026;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Nord-Est;Maintenance annuelle;352,50;100,46;Remise accordée suite à négociation
+26/12/2025;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Nord-Est;Logiciel de caisse;2 105,38;872,30;
+01/04/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Léa Martin;Sud-Est;Matériel;2 085,99;1 639,89;Retard de livraison signalé par le client
+09/09/2026;Opticien Clair Regard;contact@opticienclairregard.example;Hugo Bernard;Île-de-France;Logiciel de caisse;1 001,30;443,00;
+02/02/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Nord-Est;Matériel;1 762,91;1 223,69;
+13/09/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Hugo Bernard;Nord-Est;Matériel;1 849,75;1 519,12;Remise accordée suite à négociation
+08/01/2026;Transports Rivière;contact@transportsriviere.example;Léa Martin;Sud-Ouest;Logiciel de caisse;2 369,81;1 020,68;Retard de livraison signalé par le client
+07/07/2026;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Ouest;Logiciel de caisse;1 316,73;586,13;Client satisfait, à relancer en fin d'année
+24/03/2026;Garage du Centre;contact@garageducentre.example;Nathan Petit;Ouest;Formation;704,16;352,67;
+03/06/2026;Atelier Lumière;contact@atelierlumiere.example;Hugo Bernard;Île-de-France;Formation;1 055,17;579,85;
+02/04/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Nathan Petit;Île-de-France;Formation;1 316,32;687,58;
+21/05/2026;Opticien Clair Regard;contact@opticienclairregard.example;Léa Martin;Sud-Est;Matériel;1 234,12;900,66;Remise accordée suite à négociation
+24/11/2025;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Léa Martin;Ouest;Formation;1 332,42;672,46;Remise accordée suite à négociation
+28/06/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Léa Martin;Nord-Est;Matériel;1 304,08;889,39;
+20/01/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Nord-Est;Logiciel de caisse;2 226,67;1 086,70;
+26/09/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Sud-Est;Matériel;2 570,10;1 992,09;
+22/09/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Nathan Petit;Nord-Est;Formation;1 346,45;744,70;Remise accordée suite à négociation
+17/10/2025;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Inès Robert;Sud-Est;Matériel;806,74;582,67;Client satisfait, à relancer en fin d'année
+19/09/2026;Garage du Centre;contact@garageducentre.example;Inès Robert;Sud-Est;Formation;749,19;444,46;
+03/06/2026;Opticien Clair Regard;contact@opticienclairregard.example;Inès Robert;Nord-Est;Logiciel de caisse;1 706,20;813,49;Retard de livraison signalé par le client
+16/01/2026;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Sud-Est;Logiciel de caisse;1 743,12;808,55;Client satisfait, à relancer en fin d'année
+19/10/2025;Garage du Centre;contact@garageducentre.example;Camille Lefèvre;Nord-Est;Matériel;1 353,35;1 023,56;Client satisfait, à relancer en fin d'année
+09/05/2026;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Ouest;Maintenance annuelle;719,25;217,98;
+11/12/2025;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Nathan Petit;Sud-Est;Logiciel de caisse;1 450,16;626,59;Client satisfait, à relancer en fin d'année
+22/10/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Nathan Petit;Île-de-France;Formation;1 262,71;712,97;Client satisfait, à relancer en fin d'année
+10/05/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Sud-Ouest;Formation;1 176,11;630,16;Retard de livraison signalé par le client
+06/09/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Sud-Ouest;Formation;758,50;451,99;
+21/08/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Inès Robert;Nord-Est;Formation;317,30;190,23;Retard de livraison signalé par le client
+04/04/2026;Transports Rivière;contact@transportsriviere.example;Inès Robert;Nord-Est;Maintenance annuelle;344,83;112,97;Remise accordée suite à négociation
+02/01/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Sud-Ouest;Maintenance annuelle;377,99;121,78;Client satisfait, à relancer en fin d'année
+28/02/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Léa Martin;Ouest;Matériel;1 944,96;1 545,42;
+06/08/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Sud-Est;Formation;356,83;198,61;
+23/11/2025;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Sud-Ouest;Logiciel de caisse;1 896,90;781,86;Remise accordée suite à négociation
+16/05/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Hugo Bernard;Ouest;Maintenance annuelle;311,73;94,63;
+19/11/2025;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Nathan Petit;Sud-Est;Formation;492,32;272,40;
+28/07/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Inès Robert;Ouest;Formation;1 384,33;751,71;
+01/08/2026;Atelier Lumière;contact@atelierlumiere.example;Léa Martin;Ouest;Formation;422,40;212,67;
+18/09/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Inès Robert;Île-de-France;Matériel;1 147,86;865,72;Remise accordée suite à négociation
+17/06/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 562,58;752,15;Remise accordée suite à négociation
+09/03/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Nord-Est;Maintenance annuelle;383,95;119,12;
+22/02/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Ouest;Formation;1 114,07;623,17;Client satisfait, à relancer en fin d'année
+02/04/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Nathan Petit;Île-de-France;Maintenance annuelle;809,99;264,89;Remise accordée suite à négociation
+24/06/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Nord-Est;Logiciel de caisse;1 589,24;731,31;
+26/02/2026;Opticien Clair Regard;contact@opticienclairregard.example;Nathan Petit;Sud-Est;Formation;648,22;372,49;Remise accordée suite à négociation
+25/08/2026;Agence Horizon;contact@agencehorizon.example;Nathan Petit;Nord-Est;Logiciel de caisse;647,51;279,19;
+08/08/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Léa Martin;Nord-Est;Matériel;552,72;423,03;
+05/10/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Nord-Est;Formation;1 381,83;750,93;
+19/03/2026;Opticien Clair Regard;contact@opticienclairregard.example;Nathan Petit;Sud-Ouest;Matériel;1 953,58;1 321,33;Remise accordée suite à négociation
+25/04/2026;Transports Rivière;contact@transportsriviere.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;1 915,26;893,94;Remise accordée suite à négociation
+28/12/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Île-de-France;Logiciel de caisse;1 266,51;534,44;Retard de livraison signalé par le client
+17/05/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Inès Robert;Île-de-France;Matériel;1 758,85;1 315,61;
+13/03/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Île-de-France;Maintenance annuelle;709,73;209,75;
+09/07/2026;Transports Rivière;contact@transportsriviere.example;Camille Lefèvre;Nord-Est;Maintenance annuelle;635,31;207,81;
+24/05/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Ouest;Formation;1 017,74;567,47;
+20/02/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Camille Lefèvre;Île-de-France;Formation;663,00;394,20;
+26/03/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;1 455,83;595,49;
+28/08/2026;Agence Horizon;contact@agencehorizon.example;Léa Martin;Sud-Ouest;Matériel;1 840,86;1 274,69;Remise accordée suite à négociation
+01/02/2026;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Île-de-France;Logiciel de caisse;2 226,33;942,90;
+05/06/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Camille Lefèvre;Sud-Ouest;Matériel;1 582,77;1 244,43;Remise accordée suite à négociation
+24/03/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Hugo Bernard;Sud-Est;Logiciel de caisse;2 369,54;1 045,65;
+25/06/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Nord-Est;Maintenance annuelle;674,01;217,59;
+05/08/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Inès Robert;Sud-Est;Maintenance annuelle;426,88;125,89;Remise accordée suite à négociation
+13/08/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Nathan Petit;Sud-Ouest;Formation;648,53;341,24;
+20/02/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Sud-Est;Formation;604,02;305,91;
+26/08/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Hugo Bernard;Île-de-France;Maintenance annuelle;477,22;150,21;Retard de livraison signalé par le client
+15/01/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Ouest;Maintenance annuelle;457,34;130,25;
+13/02/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Ouest;Maintenance annuelle;874,75;243,02;
+12/01/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Sud-Ouest;Matériel;699,68;544,00;
+27/12/2025;Garage du Centre;contact@garageducentre.example;Léa Martin;Nord-Est;Matériel;3 675,75;2 668,97;
+08/01/2026;Transports Rivière;contact@transportsriviere.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;1 450,35;596,72;Remise accordée suite à négociation
+24/05/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Sud-Est;Maintenance annuelle;541,81;162,46;
+21/06/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Léa Martin;Nord-Est;Matériel;1 662,18;1 356,33;
+04/05/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Ouest;Formation;1 280,51;645,54;
+11/08/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Sud-Ouest;Matériel;449,63;317,45;
+17/08/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Île-de-France;Formation;496,83;274,48;
+19/06/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Sud-Est;Formation;1 171,55;603,89;
+21/09/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Inès Robert;Île-de-France;Formation;579,03;322,95;
+28/03/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Nathan Petit;Sud-Est;Matériel;2 088,17;1 457,99;Retard de livraison signalé par le client
+27/11/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Sud-Est;Matériel;2 150,55;1 641,09;Client satisfait, à relancer en fin d'année
+24/03/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;1 825,56;758,78;Remise accordée suite à négociation
+01/12/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Sud-Ouest;Maintenance annuelle;515,86;149,77;Remise accordée suite à négociation
+01/09/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Camille Lefèvre;Ouest;Formation;824,74;433,90;
+08/01/2026;Salon Éclat;contact@saloneclat.example;Camille Lefèvre;Nord-Est;Matériel;2 406,45;1 957,47;Retard de livraison signalé par le client
+19/10/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;1 205,82;517,18;
+09/07/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Nord-Est;Formation;1 355,31;801,90;
+26/09/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Ouest;Matériel;2 235,40;1 517,44;Client satisfait, à relancer en fin d'année
+14/09/2026;Agence Horizon;contact@agencehorizon.example;Léa Martin;Île-de-France;Formation;1 187,44;589,22;Client satisfait, à relancer en fin d'année
+24/10/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Hugo Bernard;Nord-Est;Matériel;3 189,40;2 255,30;
+19/07/2026;Opticien Clair Regard;contact@opticienclairregard.example;Inès Robert;Sud-Ouest;Logiciel de caisse;1 606,64;658,44;Retard de livraison signalé par le client
+17/10/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Nathan Petit;Sud-Est;Logiciel de caisse;1 089,07;532,70;Retard de livraison signalé par le client
+09/12/2025;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;2 802,17;1 273,84;Retard de livraison signalé par le client
+16/02/2026;Salon Éclat;contact@saloneclat.example;Hugo Bernard;Île-de-France;Matériel;3 090,54;2 115,96;
+24/06/2026;Librairie Le Phare;contact@librairielephare.example;Léa Martin;Île-de-France;Maintenance annuelle;512,82;147,82;
+16/11/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Ouest;Formation;1 418,84;726,80;
+09/07/2026;Librairie Le Phare;contact@librairielephare.example;Inès Robert;Sud-Est;Matériel;3 092,00;2 089,06;Client satisfait, à relancer en fin d'année
+01/09/2026;Garage du Centre;contact@garageducentre.example;Léa Martin;Nord-Est;Formation;928,25;543,44;Remise accordée suite à négociation
+14/05/2026;Salon Éclat;contact@saloneclat.example;Nathan Petit;Île-de-France;Formation;491,88;259,04;
+17/08/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Léa Martin;Île-de-France;Maintenance annuelle;345,89;96,78;
+13/08/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Nord-Est;Formation;426,13;257,06;
+28/05/2026;Atelier Lumière;contact@atelierlumiere.example;Nathan Petit;Île-de-France;Matériel;900,78;699,71;Remise accordée suite à négociation
+18/03/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Inès Robert;Île-de-France;Maintenance annuelle;540,01;172,84;
+24/02/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Inès Robert;Île-de-France;Formation;640,85;374,75;Client satisfait, à relancer en fin d'année
+24/07/2026;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Sud-Est;Formation;1 303,26;645,85;Client satisfait, à relancer en fin d'année
+17/10/2025;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Nathan Petit;Ouest;Logiciel de caisse;1 768,37;776,47;Retard de livraison signalé par le client
+23/02/2026;Atelier Lumière;contact@atelierlumiere.example;Léa Martin;Sud-Ouest;Matériel;2 843,20;2 077,39;
+28/05/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Île-de-France;Matériel;1 645,25;1 133,89;
+22/12/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Sud-Ouest;Matériel;3 994,36;2 912,52;Retard de livraison signalé par le client
+27/12/2025;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;2 041,55;851,96;Remise accordée suite à négociation
+14/10/2025;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Hugo Bernard;Ouest;Logiciel de caisse;1 752,19;739,69;
+28/02/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Léa Martin;Nord-Est;Matériel;1 438,49;983,73;
+08/03/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 994,35;832,90;Retard de livraison signalé par le client
+27/12/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Nathan Petit;Île-de-France;Logiciel de caisse;2 574,14;1 226,98;
+26/11/2025;Opticien Clair Regard;contact@opticienclairregard.example;Léa Martin;Nord-Est;Formation;1 163,75;604,29;Client satisfait, à relancer en fin d'année
+07/11/2025;Opticien Clair Regard;contact@opticienclairregard.example;Léa Martin;Sud-Ouest;Logiciel de caisse;1 368,44;663,10;
+18/02/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Sud-Est;Formation;969,43;549,42;
+23/05/2026;Brasserie du Port;contact@brasserieduport.example;Nathan Petit;Sud-Ouest;Logiciel de caisse;2 341,36;988,53;Client satisfait, à relancer en fin d'année
+02/02/2026;Agence Horizon;contact@agencehorizon.example;Inès Robert;Sud-Ouest;Maintenance annuelle;481,69;135,03;Retard de livraison signalé par le client
+20/06/2026;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Sud-Ouest;Logiciel de caisse;2 186,22;892,60;
+14/06/2026;Atelier Lumière;contact@atelierlumiere.example;Camille Lefèvre;Ouest;Maintenance annuelle;486,04;153,80;Client satisfait, à relancer en fin d'année
+18/05/2026;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Nord-Est;Matériel;2 862,75;2 323,49;
+17/06/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Inès Robert;Île-de-France;Matériel;2 449,10;1 732,05;Retard de livraison signalé par le client
+25/04/2026;Librairie Le Phare;contact@librairielephare.example;Hugo Bernard;Nord-Est;Maintenance annuelle;789,34;257,02;Client satisfait, à relancer en fin d'année
+08/08/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Île-de-France;Logiciel de caisse;1 152,68;569,27;Client satisfait, à relancer en fin d'année
+24/04/2026;Atelier Lumière;contact@atelierlumiere.example;Camille Lefèvre;Nord-Est;Matériel;1 085,12;882,31;
+01/02/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Sud-Ouest;Maintenance annuelle;802,63;243,95;
+16/12/2025;Opticien Clair Regard;contact@opticienclairregard.example;Léa Martin;Sud-Est;Matériel;3 850,53;2 953,39;Retard de livraison signalé par le client
+05/06/2026;Brasserie du Port;contact@brasserieduport.example;Inès Robert;Sud-Est;Maintenance annuelle;733,57;203,29;
+08/11/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Hugo Bernard;Sud-Ouest;Matériel;1 435,01;1 128,42;Retard de livraison signalé par le client
+08/03/2026;Opticien Clair Regard;contact@opticienclairregard.example;Hugo Bernard;Nord-Est;Logiciel de caisse;1 244,88;575,26;Remise accordée suite à négociation
+17/04/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Inès Robert;Nord-Est;Logiciel de caisse;1 348,55;592,82;Client satisfait, à relancer en fin d'année
+27/02/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Hugo Bernard;Île-de-France;Logiciel de caisse;1 517,46;621,29;Client satisfait, à relancer en fin d'année
+02/06/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Camille Lefèvre;Île-de-France;Matériel;2 524,44;1 759,81;
+21/03/2026;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Nord-Est;Formation;1 421,12;799,63;
+24/12/2025;Agence Horizon;contact@agencehorizon.example;Camille Lefèvre;Île-de-France;Matériel;2 664,98;1 918,97;
+25/08/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Hugo Bernard;Nord-Est;Logiciel de caisse;942,77;459,02;Retard de livraison signalé par le client
+07/08/2026;Brasserie du Port;contact@brasserieduport.example;Léa Martin;Sud-Est;Formation;529,51;295,08;
+26/05/2026;Garage du Centre;contact@garageducentre.example;Inès Robert;Île-de-France;Formation;1 443,43;819,94;
+04/09/2026;Librairie Le Phare;contact@librairielephare.example;Nathan Petit;Île-de-France;Maintenance annuelle;886,53;240,51;Client satisfait, à relancer en fin d'année
+16/05/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Nord-Est;Formation;1 037,63;573,92;
+06/06/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Nathan Petit;Sud-Est;Matériel;1 994,73;1 545,37;Remise accordée suite à négociation
+19/02/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Hugo Bernard;Nord-Est;Maintenance annuelle;525,42;143,62;Client satisfait, à relancer en fin d'année
+17/04/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Léa Martin;Ouest;Logiciel de caisse;1 229,61;553,15;Client satisfait, à relancer en fin d'année
+15/07/2026;Librairie Le Phare;contact@librairielephare.example;Inès Robert;Île-de-France;Logiciel de caisse;1 400,35;584,96;
+03/10/2025;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Sud-Est;Maintenance annuelle;343,67;109,24;Client satisfait, à relancer en fin d'année
+28/08/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Hugo Bernard;Sud-Ouest;Logiciel de caisse;724,12;355,61;Client satisfait, à relancer en fin d'année
+28/04/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Camille Lefèvre;Nord-Est;Maintenance annuelle;612,40;178,48;Remise accordée suite à négociation
+24/06/2026;Transports Rivière;contact@transportsriviere.example;Camille Lefèvre;Ouest;Matériel;2 903,81;2 239,13;Remise accordée suite à négociation
+27/01/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Sud-Est;Maintenance annuelle;798,04;228,84;Remise accordée suite à négociation
+26/03/2026;Brasserie du Port;contact@brasserieduport.example;Camille Lefèvre;Ouest;Maintenance annuelle;548,70;171,47;Retard de livraison signalé par le client
+28/07/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Léa Martin;Sud-Est;Formation;628,12;314,70;
+02/07/2026;Ferronnerie Durand;contact@ferronneriedurand.example;Inès Robert;Sud-Ouest;Matériel;3 114,55;2 506,52;
+25/11/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Léa Martin;Sud-Ouest;Formation;594,19;339,24;Remise accordée suite à négociation
+18/11/2025;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Nathan Petit;Ouest;Logiciel de caisse;2 391,59;1 132,18;
+03/01/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Camille Lefèvre;Ouest;Logiciel de caisse;1 262,98;526,16;Remise accordée suite à négociation
+09/07/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Léa Martin;Sud-Ouest;Formation;782,40;448,22;Remise accordée suite à négociation
+03/02/2026;Salon Éclat;contact@saloneclat.example;Nathan Petit;Sud-Est;Matériel;1 531,45;1 185,84;Client satisfait, à relancer en fin d'année
+24/02/2026;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Camille Lefèvre;Île-de-France;Matériel;2 795,72;2 155,28;
+03/11/2025;Clinique Vétérinaire Azur;contact@cliniqueveterinaireazur.example;Léa Martin;Sud-Ouest;Matériel;2 374,65;1 649,98;
+16/02/2026;Boulangerie des Halles;contact@boulangeriedeshalles.example;Inès Robert;Île-de-France;Matériel;1 520,07;1 037,89;
+05/09/2026;Garage du Centre;contact@garageducentre.example;Hugo Bernard;Nord-Est;Formation;1 254,62;737,71;Retard de livraison signalé par le client
+24/07/2026;Transports Rivière;contact@transportsriviere.example;Inès Robert;Ouest;Maintenance annuelle;762,78;233,74;Retard de livraison signalé par le client
+01/02/2026;Librairie Le Phare;contact@librairielephare.example;Camille Lefèvre;Sud-Est;Maintenance annuelle;810,73;222,03;Remise accordée suite à négociation
+14/10/2025;Atelier Lumière;contact@atelierlumiere.example;Inès Robert;Sud-Est;Logiciel de caisse;1 693,57;807,82;
+27/11/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Nathan Petit;Ouest;Matériel;2 018,81;1 368,20;
+26/03/2026;Hôtel Les Tilleuls;contact@hotellestilleuls.example;Nathan Petit;Nord-Est;Logiciel de caisse;939,58;454,97;Retard de livraison signalé par le client
+27/12/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Léa Martin;Sud-Ouest;Logiciel de caisse;3 079,73;1 355,78;Retard de livraison signalé par le client
+26/06/2026;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Léa Martin;Île-de-France;Maintenance annuelle;847,68;255,09;
+05/07/2026;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Léa Martin;Île-de-France;Maintenance annuelle;860,43;259,86;
+18/11/2025;Boulangerie des Halles;contact@boulangeriedeshalles.example;Camille Lefèvre;Sud-Ouest;Formation;547,04;304,96;Retard de livraison signalé par le client
+10/10/2025;Pharmacie Saint-Michel;contact@pharmaciesaintmichel.example;Léa Martin;Sud-Ouest;Maintenance annuelle;761,13;249,96;Retard de livraison signalé par le client
+24/08/2026;Épicerie Fine Saveurs;contact@epiceriefinesaveurs.example;Léa Martin;Sud-Est;Formation;808,06;439,04;
+07/02/2026;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Sud-Ouest;Maintenance annuelle;763,37;231,84;
+03/02/2026;Salon Éclat;contact@saloneclat.example;Inès Robert;Nord-Est;Matériel;2 340,08;1 829,07;
+21/05/2026;Transports Rivière;contact@transportsriviere.example;Léa Martin;Île-de-France;Formation;713,08;390,96;Remise accordée suite à négociation
+26/11/2025;Fromagerie Bellevue;contact@fromageriebellevue.example;Nathan Petit;Nord-Est;Formation;1 272,15;755,40;Retard de livraison signalé par le client
+06/12/2025;Salon Éclat;contact@saloneclat.example;Nathan Petit;Nord-Est;Formation;1 992,78;1 168,30;
+09/10/2025;Restaurant La Table Ronde;contact@restaurantlatableronde.example;Hugo Bernard;Ouest;Formation;516,65;259,30;
+14/12/2025;Pépinière Verte Vallée;contact@pepinierevertevallee.example;Camille Lefèvre;Île-de-France;Matériel;815,79;568,53;Retard de livraison signalé par le client
+11/01/2026;Cabinet Dupont Conseil;contact@cabinetdupontconseil.example;Camille Lefèvre;Sud-Est;Logiciel de caisse;1 631,58;715,09;Retard de livraison signalé par le client
+06/08/2026;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Léa Martin;Île-de-France;Maintenance annuelle;433,12;137,97;Remise accordée suite à négociation
+06/11/2025;Imprimerie Arc-en-Ciel;contact@imprimeriearcenciel.example;Inès Robert;Sud-Ouest;Logiciel de caisse;1 551,31;698,86;
+21/03/2026;Menuiserie Moreau;contact@menuiseriemoreau.example;Inès Robert;Nord-Est;Logiciel de caisse;1 015,88;486,93;
