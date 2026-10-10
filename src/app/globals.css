@@ -4,3 +4,19 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+/* Export PDF (impression) : A4, fond blanc, pas de coupure au milieu d'une carte. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body {
+    background: #ffffff;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  article {
+    break-inside: avoid;
+  }
+}

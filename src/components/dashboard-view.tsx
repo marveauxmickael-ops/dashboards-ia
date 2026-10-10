@@ -44,7 +44,9 @@ export function DashboardView({ result }: { result: DashboardResult }) {
             <p className="text-sm font-medium text-slate-600">{k.label}</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{formatValue(k.value, k.format)}</p>
             <p className="mt-2 text-xs text-slate-500">{k.description}</p>
-            <details className="mt-2 text-xs text-slate-500">
+            {/* Dans le PDF, le calcul est affiché en clair à la place du lien. */}
+            <p className="mt-2 hidden font-mono text-[11px] text-slate-600 print:block">Calcul : {k.formula}</p>
+            <details className="mt-2 text-xs text-slate-500 print:hidden">
               <summary className="cursor-pointer text-teal-800">Voir le calcul</summary>
               <code className="mt-1 block rounded bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-700">{k.formula}</code>
             </details>
@@ -91,6 +93,7 @@ export function DashboardView({ result }: { result: DashboardResult }) {
   );
 }
 
+// Graphiques sans animation : l'impression (export PDF) capture toujours le graphique complet.
 function ChartCard({ chart }: { chart: ComputedChart }) {
   const data = chart.data.map((d) => ({ ...d, label: chart.chronological ? formatPeriod(d.category) : d.category }));
   const fmt = (v: unknown) => formatValue(typeof v === "number" ? v : null, chart.format);
@@ -128,13 +131,13 @@ function ChartCard({ chart }: { chart: ComputedChart }) {
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} />
                 <YAxis tickFormatter={compact} tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} width={48} />
                 <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
-                <Line type="monotone" dataKey="value" stroke={PALETTE[0]} strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="value" stroke={PALETTE[0]} strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} />
               </LineChart>
             ) : chart.type === "pie" ? (
               <PieChart>
                 <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
                 <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                <Pie data={data} dataKey="value" nameKey="label" innerRadius="45%" outerRadius="75%" paddingAngle={2}>
+                <Pie data={data} dataKey="value" nameKey="label" innerRadius="45%" outerRadius="75%" paddingAngle={2} isAnimationActive={false}>
                   {data.map((d, i) => (
                     <Cell key={d.category} fill={PALETTE[i % PALETTE.length]} />
                   ))}
@@ -146,7 +149,7 @@ function ChartCard({ chart }: { chart: ComputedChart }) {
                 <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} />
                 <YAxis type="category" dataKey="label" width={150} tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} />
                 <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
-                <Bar dataKey="value" fill={PALETTE[0]} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="value" fill={PALETTE[0]} radius={[0, 4, 4, 0]} isAnimationActive={false} />
               </BarChart>
             )}
           </ResponsiveContainer>

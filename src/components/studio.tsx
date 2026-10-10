@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { DashboardResult } from "@/lib/pipeline";
 import type { AiMode } from "@/lib/types";
 import { DashboardView } from "./dashboard-view";
+import { ExportActions } from "./export-actions";
 import { PrivacyPanel } from "./privacy-panel";
 
 type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult; dashboardId?: string };
@@ -29,9 +30,12 @@ async function generateOnServer(file: File, mode: AiMode): Promise<GenerateOutco
 export function Studio({
   generateDashboard = generateOnServer,
   demoFileUrl = "/demo/ventes-demo.csv",
+  exportable = true,
 }: {
   generateDashboard?: (file: File, mode: AiMode) => Promise<GenerateOutcome>;
   demoFileUrl?: string;
+  /** Affiche les boutons de téléchargement (désactivé dans la démo navigateur). */
+  exportable?: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<AiMode>("standard");
@@ -55,7 +59,7 @@ export function Studio({
   return (
     <div className="flex flex-col gap-8">
       <form
-        className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5"
+        className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 print:hidden"
         onSubmit={(e) => {
           e.preventDefault();
           if (file) void generate(file);
@@ -117,7 +121,7 @@ export function Studio({
       </form>
 
       {state.status === "loading" && (
-        <p role="status" className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
+        <p role="status" className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-700 print:hidden">
           Analyse de {state.fileName} : pseudonymisation, conception par l&apos;IA puis calcul des indicateurs…
         </p>
       )}
@@ -129,16 +133,17 @@ export function Studio({
       {state.status === "done" && (
         <>
           {state.dashboardId && (
-            <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+            <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 print:hidden">
               Dashboard enregistré dans votre organisation.{" "}
               <a href={`/dashboards/${state.dashboardId}`} className="font-medium underline">
                 Le retrouver
               </a>
             </p>
           )}
+          {exportable && <ExportActions dashboardId={state.dashboardId} />}
           <DashboardView result={state.result} />
           <PrivacyPanel result={state.result} />
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 print:hidden">
             Généré en{" "}
             {state.result.durationMs < 1000
               ? "moins d'une seconde"

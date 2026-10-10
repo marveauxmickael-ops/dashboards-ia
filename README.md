@@ -25,6 +25,13 @@ Vérifications : `npm run typecheck`, `npm run lint`, `npm test`.
 - **Journal des appels IA** (`ai_calls`) : fournisseur, modèle, mode, nombre de jetons. Jamais le contenu.
 - La clé de pseudonymisation est dérivée **par organisation** : deux clients n'obtiennent jamais les mêmes jetons.
 
+### Téléchargement du dashboard (US-09)
+
+- **PDF** : bouton « PDF » → impression du navigateur, choisir « Enregistrer au format PDF ». Mise en page A4 dédiée : navigation, formulaire et panneau technique masqués, calcul de chaque KPI affiché en clair, graphiques sans animation pour être capturés complets.
+- **Excel** (`/api/dashboards/[id]/export?format=xlsx`) : onglet *Synthèse* (organisation, fichier source, dates de création et d'export, KPI avec leur calcul, constats et leur statut de vérification), un onglet par graphique avec ses valeurs, onglet *Données et confidentialité*.
+- **CSV** (`?format=csv`) : KPI et valeurs des graphiques, séparateur `;`, virgule décimale, formules neutralisées.
+- Les exports passent par la session de l'utilisateur : la RLS empêche d'exporter le dashboard d'une autre organisation.
+
 ### Configuration Supabase à faire dans le tableau de bord
 
 Authentication → URL Configuration :

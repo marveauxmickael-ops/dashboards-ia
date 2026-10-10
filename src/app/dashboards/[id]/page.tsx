@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { DashboardView } from "@/components/dashboard-view";
+import { ExportActions } from "@/components/export-actions";
 import { PrivacyPanel } from "@/components/privacy-panel";
 import { canEdit, requireWorkspace } from "@/lib/auth/session";
 import type { DashboardResult } from "@/lib/pipeline";
@@ -24,7 +25,7 @@ export default async function DashboardPage({ params }: PageProps<"/dashboards/[
     <>
       <AppHeader organization={organization.name} email={user.email} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 print:hidden">
           <Link href="/dashboards" className="text-teal-800 underline">
             ← Mes dashboards
           </Link>
@@ -40,6 +41,11 @@ export default async function DashboardPage({ params }: PageProps<"/dashboards/[
             )}
           </div>
         </div>
+        <ExportActions dashboardId={dashboard.id} />
+        <p className="hidden text-xs text-slate-500 print:block">
+          {organization.name} · créé le {dateFormat.format(new Date(dashboard.created_at))} · exporté le {dateFormat.format(new Date())}. Chaque
+          valeur est calculée sur les données du fichier source ; l&apos;IA n&apos;a reçu que des données pseudonymisées.
+        </p>
         <DashboardView result={result} />
         <PrivacyPanel result={result} />
       </main>

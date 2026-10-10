@@ -24,7 +24,7 @@ const TYPE_LABEL: Record<string, string> = {
 export function PrivacyPanel({ result }: { result: DashboardResult }) {
   const { profile, aiContext, ai } = result;
   return (
-    <section aria-label="Données et confidentialité" className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4">
+    <section aria-label="Données et confidentialité" className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 print:hidden">
       <div>
         <h3 className="text-base font-semibold text-slate-900">Ce que l&apos;IA a vu</h3>
         <p className="mt-1 text-sm text-slate-600">

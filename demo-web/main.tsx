@@ -18,7 +18,7 @@ async function generateInBrowser(file: File, mode: AiMode) {
 function App() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
-      <header className="flex flex-col gap-2">
+      <header className="flex flex-col gap-2 print:hidden">
         <p className="text-xs font-semibold uppercase tracking-widest text-teal-800">Démo navigateur</p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Votre fichier devient un tableau de bord</h1>
         <p className="max-w-2xl text-slate-600">
@@ -29,7 +29,7 @@ function App() {
           Tout s&apos;exécute dans votre navigateur : aucun fichier n&apos;est envoyé. La conception utilise le mode démonstration, sans appel à Claude.
         </p>
       </header>
-      <Studio generateDashboard={generateInBrowser} demoFileUrl="ventes-demo.csv" />
+      <Studio generateDashboard={generateInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} />
     </main>
   );
 }
