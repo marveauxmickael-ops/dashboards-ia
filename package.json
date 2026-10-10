@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "prebuild": "node scripts/generate-demo-data.mjs"
+    "prebuild": "node scripts/generate-demo-data.mjs",
+    "build:demo": "node demo-web/build.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
@@ -23,11 +24,14 @@
     "zod": "^4.4.0"
   },
   "devDependencies": {
+    "@noble/hashes": "^2.4.0",
+    "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",

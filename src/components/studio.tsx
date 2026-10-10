@@ -8,28 +8,42 @@ import { PrivacyPanel } from "./privacy-panel";
 
 type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult };
 
-export function Studio() {
+/** Résultat d'une génération : le dashboard, ou un message d'erreur à afficher. */
+export type GenerateOutcome = { ok: true; result: DashboardResult } | { ok: false; message: string };
+
+/** Génération par défaut : envoi du fichier à l'API du serveur. */
+async function generateOnServer(file: File, mode: AiMode): Promise<GenerateOutcome> {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("mode", mode);
+  try {
+    const response = await fetch("/api/dashboard", { method: "POST", body });
+    const json = await response.json();
+    return response.ok ? { ok: true, result: json as DashboardResult } : { ok: false, message: json.error ?? "La génération a échoué." };
+  } catch {
+    return { ok: false, message: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez." };
+  }
+}
+
+export function Studio({
+  generateDashboard = generateOnServer,
+  demoFileUrl = "/demo/ventes-demo.csv",
+}: {
+  generateDashboard?: (file: File, mode: AiMode) => Promise<GenerateOutcome>;
+  demoFileUrl?: string;
+}) {
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<AiMode>("standard");
   const [state, setState] = useState<State>({ status: "idle" });
 
   async function generate(selected: File) {
     setState({ status: "loading", fileName: selected.name });
-    const body = new FormData();
-    body.append("file", selected);
-    body.append("mode", mode);
-    try {
-      const response = await fetch("/api/dashboard", { method: "POST", body });
-      const json = await response.json();
-      if (!response.ok) setState({ status: "error", message: json.error ?? "La génération a échoué." });
-      else setState({ status: "done", result: json as DashboardResult });
-    } catch {
-      setState({ status: "error", message: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez." });
-    }
+    const outcome = await generateDashboard(selected, mode);
+    setState(outcome.ok ? { status: "done", result: outcome.result } : { status: "error", message: outcome.message });
   }
 
   async function loadDemo() {
-    const response = await fetch("/demo/ventes-demo.csv");
+    const response = await fetch(demoFileUrl);
     const demo = new File([await response.blob()], "ventes-demo.csv", { type: "text/csv" });
     setFile(demo);
     await generate(demo);
