@@ -16,13 +16,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
 import { allowedChartTypes, analysisView, chartTypeOf, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ExportActions } from "./export-actions";
+import { ActiveFilters } from "./filters-bar";
 
 const PALETTE = ["#0d5c70", "#3b8ea5", "#7fb7c7", "#c08a3e", "#8c6bb1", "#5f8f5a", "#b5545c"];
 
@@ -33,7 +34,21 @@ const STATUS: Record<InsightStatus, { label: string; className: string }> = {
   qualitative: { label: "Sans chiffre", className: "bg-slate-100 text-slate-700 ring-slate-200" },
 };
 
-export function DashboardView({ result, dashboardId, exportable = false }: { result: DashboardResult; dashboardId?: string | null; exportable?: boolean }) {
+export function DashboardView({
+  result,
+  base = result,
+  dashboardId,
+  exportable = false,
+  children,
+}: {
+  result: DashboardResult;
+  /** Dashboard enregistré (non filtré), auquel se rapportent les exports Excel et CSV. */
+  base?: DashboardResult;
+  dashboardId?: string | null;
+  exportable?: boolean;
+  /** Outils affichés sous le titre (fichier source, filtres, questions). */
+  children?: ReactNode;
+}) {
   const [view, setView] = useDashboardView(dashboardId);
   const [customizing, setCustomizing] = useState(false);
   const hiddenKpis = new Set(view.hiddenKpis);
@@ -56,8 +71,16 @@ export function DashboardView({ result, dashboardId, exportable = false }: { res
         </p>
       </div>
 
+      {children}
+      <ActiveFilters filters={result.filters} />
+      {exportable && result.filters && (
+        <p className="text-xs text-slate-500 print:hidden">
+          Le PDF reprend la vue filtrée ; les téléchargements Excel et CSV portent sur le dashboard complet.
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        {exportable ? <ExportActions dashboardId={dashboardId} view={view} /> : <span />}
+        {exportable ? <ExportActions dashboardId={dashboardId} view={view} base={base} /> : <span />}
         <button
           type="button"
           aria-expanded={customizing}
@@ -365,7 +388,7 @@ function ChartCard({
   view: ViewState;
   onHide: () => void;
   onType: (type: ChartType) => void;
-  onCategories: (hidden: number[]) => void;
+  onCategories: (hidden: string[]) => void;
 }) {
   const type = chartTypeOf(chart, view);
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
@@ -375,7 +398,9 @@ function ChartCard({
   const share = (v: unknown) => (typeof v === "number" && total > 0 ? ` (${Math.round((v / total) * 1000) / 10} %)` : "");
   const compact = (v: number) =>
     new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(chart.format === "percent" ? v * 100 : v);
-  const toggleCategory = (i: number) => onCategories(hidden.has(i) ? [...hidden].filter((x) => x !== i) : [...hidden, i]);
+  const toggleCategory = (category: string) => onCategories(hidden.has(category) ? [...hidden].filter((x) => x !== category) : [...hidden, category]);
+  // Catégories masquées présentes dans les données affichées (une vue filtrée peut en exclure).
+  const hiddenCount = chart.data.filter((d) => hidden.has(d.category)).length;
   // Barres horizontales : la hauteur suit le nombre de catégories pour que chaque libellé reste lisible.
   const barHeight = Math.max(220, data.length * 34 + 40);
 
@@ -386,7 +411,7 @@ function ChartCard({
       <p className="mb-3 text-xs text-slate-500">
         {chart.formula}
         {chart.othersCount > 0 && ` · ${chart.othersCount} autre(s) catégorie(s) non affichée(s)`}
-        {hidden.size > 0 && ` · ${hidden.size} catégorie(s) masquée(s)`}
+        {hiddenCount > 0 && ` · ${hiddenCount} catégorie(s) masquée(s)`}
       </p>
 
       <div className="mb-3 flex flex-wrap items-start gap-2 print:hidden">
@@ -406,22 +431,22 @@ function ChartCard({
         {chart.data.length > 1 && (
           <details className="min-w-0 text-xs">
             <summary className="cursor-pointer rounded-lg border border-slate-200 px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-50">
-              {chart.chronological ? "Périodes" : "Catégories"} affichées : {chart.data.length - hidden.size}/{chart.data.length}
+              {chart.chronological ? "Périodes" : "Catégories"} affichées : {chart.data.length - hiddenCount}/{chart.data.length}
             </summary>
             <div className="mt-2 rounded-lg border border-slate-200 bg-white p-2">
               <div className="mb-1.5 flex gap-3">
                 <button type="button" onClick={() => onCategories([])} className="text-teal-900 underline">
                   Tout cocher
                 </button>
-                <button type="button" onClick={() => onCategories(chart.data.map((_, i) => i))} className="text-teal-900 underline">
+                <button type="button" onClick={() => onCategories(chart.data.map((d) => d.category))} className="text-teal-900 underline">
                   Tout décocher
                 </button>
               </div>
               <ul className="grid max-h-48 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
-                {chart.data.map((d, i) => (
+                {chart.data.map((d) => (
                   <li key={d.category}>
                     <label className="flex cursor-pointer items-center gap-2 text-slate-800">
-                      <input type="checkbox" checked={!hidden.has(i)} onChange={() => toggleCategory(i)} className="size-3.5 accent-teal-800" />
+                      <input type="checkbox" checked={!hidden.has(d.category)} onChange={() => toggleCategory(d.category)} className="size-3.5 accent-teal-800" />
                       <span className="truncate">{chart.chronological ? formatPeriod(d.category) : d.category}</span>
                     </label>
                   </li>

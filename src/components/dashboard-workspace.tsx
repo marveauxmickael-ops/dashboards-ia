@@ -1,0 +1,128 @@
+"use client";
+
+import { useState } from "react";
+import { isFiltered, NO_FILTERS, type Filters } from "@/lib/filters";
+import type { DashboardResult } from "@/lib/pipeline";
+import { DashboardView } from "./dashboard-view";
+import { FiltersBar } from "./filters-bar";
+
+export type RecomputeAction = "filter" | "reimport";
+export type RecomputeOutcome = { ok: true; result: DashboardResult } | { ok: false; message: string };
+export type Recompute = (input: { file: File; previous: DashboardResult; filters: Filters; action: RecomputeAction; dashboardId?: string | null }) => Promise<RecomputeOutcome>;
+
+/** Recalcul par défaut : API du serveur (le dashboard doit être enregistré). */
+export const recomputeOnServer: Recompute = async ({ file, filters, action, dashboardId }) => {
+  if (!dashboardId) return { ok: false, message: "Le dashboard doit être enregistré pour être filtré." };
+  const body = new FormData();
+  body.append("file", file);
+  body.append("action", action);
+  body.append("filters", JSON.stringify(filters));
+  try {
+    const response = await fetch(`/api/dashboards/${dashboardId}/recompute`, { method: "POST", body });
+    const json = await response.json();
+    return response.ok ? { ok: true, result: json.result as DashboardResult } : { ok: false, message: json.error ?? "Le recalcul a échoué." };
+  } catch {
+    return { ok: false, message: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez." };
+  }
+};
+
+/**
+ * Dashboard et outils de travail sur le fichier source : filtres interactifs et mise à jour (US-08).
+ * Le fichier source reste dans la mémoire du navigateur le temps de la session ; il n'est jamais conservé
+ * par le serveur, qui le lit pour chaque calcul puis l'oublie.
+ */
+export function DashboardWorkspace({
+  initial,
+  dashboardId,
+  exportable = true,
+  canReimport = false,
+  initialFile = null,
+  recompute = recomputeOnServer,
+}: {
+  initial: DashboardResult;
+  dashboardId?: string | null;
+  exportable?: boolean;
+  canReimport?: boolean;
+  initialFile?: File | null;
+  recompute?: Recompute;
+}) {
+  const [base, setBase] = useState(initial);
+  const [shown, setShown] = useState(initial);
+  const [file, setFile] = useState<File | null>(initialFile);
+  const [busy, setBusy] = useState<RecomputeAction | null>(null);
+  const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
+  const supported = !!base.spec && !!base.filterOptions;
+
+  async function run(action: RecomputeAction, filters: Filters, source = file) {
+    if (!source) return;
+    // Retirer les filtres : retour au dashboard enregistré, sans recalcul.
+    if (action === "filter" && !isFiltered(filters)) {
+      setShown(base);
+      setMessage(null);
+      return;
+    }
+    setBusy(action);
+    setMessage(null);
+    const outcome = await recompute({ file: source, previous: base, filters, action, dashboardId });
+    setBusy(null);
+    if (!outcome.ok) {
+      setMessage({ tone: "error", text: outcome.message });
+      return;
+    }
+    if (action === "reimport") {
+      setBase(outcome.result);
+      setMessage({ tone: "success", text: `Dashboard mis à jour avec ${outcome.result.fileName} (${outcome.result.profile.rowCount.toLocaleString("fr-FR")} lignes).` });
+    }
+    setShown(outcome.result);
+  }
+
+  return (
+    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable}>
+      {supported && (
+        <section aria-label="Fichier source" className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm print:hidden">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-medium text-slate-800">Fichier source :</span>
+            {file ? <span className="text-slate-700">{file.name}</span> : <span className="text-slate-500">non chargé</span>}
+            <label className="cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-800 hover:bg-slate-50">
+              {file ? "Changer de fichier" : "Charger le fichier"}
+              <input
+                type="file"
+                accept=".csv,.xlsx"
+                className="sr-only"
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] ?? null);
+                  setMessage(null);
+                }}
+              />
+            </label>
+            {file && canReimport && dashboardId && (
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => {
+                  if (window.confirm(`Mettre à jour ce dashboard avec « ${file.name} » ? Les chiffres enregistrés seront remplacés.`)) void run("reimport", NO_FILTERS);
+                }}
+                className="rounded-lg bg-slate-800 px-3 py-1.5 font-semibold text-white hover:bg-slate-900 disabled:opacity-50"
+              >
+                {busy === "reimport" ? "Mise à jour…" : "Mettre à jour le dashboard avec ce fichier"}
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-slate-500">
+            {file
+              ? "Le fichier est lu pour chaque calcul puis oublié : il n'est jamais conservé. Les filtres n'appellent pas l'IA."
+              : "Pour filtrer le dashboard ou le mettre à jour avec un fichier plus récent, chargez le fichier source. Il n'est jamais conservé."}
+          </p>
+          {message && (
+            <p role={message.tone === "error" ? "alert" : "status"} className={message.tone === "error" ? "text-red-800" : "text-emerald-800"}>
+              {message.text}
+            </p>
+          )}
+        </section>
+      )}
+      {supported && file && base.filterOptions && (
+        <FiltersBar key={base.fileName + base.profile.rowCount} options={base.filterOptions} applied={shown.filters ?? NO_FILTERS} busy={busy === "filter"} onApply={(f) => void run("filter", f)} />
+      )}
+    </DashboardView>
+  );
+}

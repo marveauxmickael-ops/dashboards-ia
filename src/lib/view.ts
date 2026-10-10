@@ -12,8 +12,8 @@ export type ChartType = ComputedChart["type"];
 export const ViewSchema = z.object({
   hiddenKpis: z.array(z.string().max(64)).max(50).default([]),
   hiddenCharts: z.array(z.string().max(64)).max(50).default([]),
-  /** Catégories masquées par graphique, désignées par leur position (jamais par leur nom dans l'URL). */
-  hiddenCategories: z.record(z.string().max(64), z.array(z.number().int().min(0).max(1000)).max(1000)).default({}),
+  /** Catégories masquées par graphique, par leur valeur (stable quand des filtres changent les données). */
+  hiddenCategories: z.record(z.string().max(64), z.array(z.string().max(500)).max(1000)).default({}),
   chartTypes: z.record(z.string().max(64), z.enum(["bar", "line", "pie", "table"])).default({}),
   hideInsights: z.boolean().default(false),
   hideAnalysis: z.boolean().default(false),
@@ -56,7 +56,7 @@ export function chartTypeOf(chart: ComputedChart, view: ViewState): ChartType {
 /** Données d'un graphique après masquage des catégories décochées. */
 export function visibleData(chart: ComputedChart, view: ViewState) {
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
-  return chart.data.filter((_, i) => !hidden.has(i));
+  return chart.data.filter((d) => !hidden.has(d.category));
 }
 
 /** Applique la sélection au résultat (exports) : éléments masqués retirés, valeurs inchangées. */
@@ -90,21 +90,40 @@ export function analysisView(analysis: AnalysisResult, view: ViewState): Analysi
   };
 }
 
+// Dans l'URL d'export, les catégories masquées sont désignées par leur position dans le dashboard enregistré,
+// jamais par leur valeur (noms de clients, etc.), pour qu'elles n'apparaissent pas dans les journaux d'accès.
+const ExportViewSchema = ViewSchema.extend({
+  hiddenCategories: z.record(z.string().max(64), z.array(z.number().int().min(0).max(1000)).max(1000)).default({}),
+});
+
 /** Encodage compact pour l'URL d'export (base64url d'un JSON validé à la lecture). */
-export function encodeView(view: ViewState): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(view));
+export function encodeView(view: ViewState, base: Pick<DashboardResult, "charts">): string {
+  const hiddenCategories: Record<string, number[]> = {};
+  for (const chart of base.charts) {
+    const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
+    const positions = chart.data.flatMap((d, i) => (hidden.has(d.category) ? [i] : []));
+    if (positions.length > 0) hiddenCategories[chart.id] = positions;
+  }
+  const bytes = new TextEncoder().encode(JSON.stringify({ ...view, hiddenCategories }));
   let binary = "";
   for (const b of bytes) binary += String.fromCharCode(b);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-export function decodeView(encoded: string | null): ViewState {
+export function decodeView(encoded: string | null, base: Pick<DashboardResult, "charts">): ViewState {
   if (!encoded || encoded.length > 8000) return EMPTY_VIEW;
   try {
     const binary = atob(encoded.replace(/-/g, "+").replace(/_/g, "/"));
     const json = new TextDecoder().decode(Uint8Array.from(binary, (c) => c.charCodeAt(0)));
-    const parsed = ViewSchema.safeParse(JSON.parse(json));
-    return parsed.success ? parsed.data : EMPTY_VIEW;
+    const parsed = ExportViewSchema.safeParse(JSON.parse(json));
+    if (!parsed.success) return EMPTY_VIEW;
+    const hiddenCategories: Record<string, string[]> = {};
+    for (const chart of base.charts) {
+      const positions = new Set(parsed.data.hiddenCategories[chart.id] ?? []);
+      const names = chart.data.flatMap((d, i) => (positions.has(i) ? [d.category] : []));
+      if (names.length > 0) hiddenCategories[chart.id] = names;
+    }
+    return { ...parsed.data, hiddenCategories };
   } catch {
     return EMPTY_VIEW;
   }

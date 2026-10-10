@@ -3,7 +3,8 @@
 import { createRoot } from "react-dom/client";
 import { Studio } from "@/components/studio";
 import { ImportError } from "@/lib/ingest/parse";
-import { generateDashboard } from "@/lib/pipeline";
+import type { Recompute } from "@/components/dashboard-workspace";
+import { generateDashboard, IncompatibleFileError, recomputeDashboard } from "@/lib/pipeline";
 import type { AiMode } from "@/lib/types";
 
 async function generateInBrowser(file: File, mode: AiMode) {
@@ -14,6 +15,16 @@ async function generateInBrowser(file: File, mode: AiMode) {
     return { ok: false as const, message: error instanceof ImportError ? error.message : "Le fichier n'a pas pu être analysé." };
   }
 }
+
+// Filtres calculés dans le navigateur, comme la génération : aucun envoi de fichier.
+const recomputeInBrowser: Recompute = async ({ file, previous, filters, action }) => {
+  try {
+    const result = await recomputeDashboard({ previous, fileName: file.name, data: await file.arrayBuffer(), filters, mode: "standard", organizationId: "demo-navigateur", allowAi: action === "reimport" });
+    return { ok: true, result };
+  } catch (error) {
+    return { ok: false, message: error instanceof ImportError || error instanceof IncompatibleFileError ? error.message : "Le recalcul a échoué." };
+  }
+};
 
 function App() {
   return (
@@ -29,7 +40,7 @@ function App() {
           Tout s&apos;exécute dans votre navigateur : aucun fichier n&apos;est envoyé. La conception utilise le mode démonstration, sans appel à Claude.
         </p>
       </header>
-      <Studio generateDashboard={generateInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} />
+      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} />
     </main>
   );
 }

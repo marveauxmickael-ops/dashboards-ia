@@ -19,7 +19,7 @@ describe("personnalisation de l'affichage", () => {
       ...EMPTY_VIEW,
       hiddenKpis: [result.kpis[0].id],
       hiddenCharts: [result.charts.find((c) => c.id !== chart.id)!.id],
-      hiddenCategories: { [chart.id]: [0, 2] },
+      hiddenCategories: { [chart.id]: [chart.data[0].category, chart.data[2].category] },
       chartTypes: { [chart.id]: "table" },
       hideSuggestions: true,
     };
@@ -35,12 +35,15 @@ describe("personnalisation de l'affichage", () => {
     expect(shown.analysis?.insights.map((i) => i.facts)).toEqual(result.analysis?.insights.map((i) => i.facts));
   });
 
-  it("encode la sélection pour l'URL d'export et rejette une valeur invalide", () => {
-    const view: ViewState = { ...EMPTY_VIEW, hiddenCharts: ["c_é"], hiddenCategories: { c1: [1] }, hideExplanations: true };
-    const encoded = encodeView(view);
+  it("encode la sélection pour l'URL d'export par positions, sans les noms, et rejette une valeur invalide", async () => {
+    const result = await demoResult();
+    const chart = result.charts.find((c) => c.data.length >= 3)!;
+    const view: ViewState = { ...EMPTY_VIEW, hiddenCharts: ["c_é"], hiddenCategories: { [chart.id]: [chart.data[1].category] }, hideExplanations: true };
+    const encoded = encodeView(view, result);
     expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(decodeView(encoded)).toEqual(view);
-    expect(isDefaultView(decodeView("pas-du-base64!"))).toBe(true);
-    expect(isDefaultView(decodeView(encodeView({ ...EMPTY_VIEW, chartTypes: { c1: "radar" } } as unknown as ViewState)))).toBe(true);
+    expect(atob(encoded.replace(/-/g, "+").replace(/_/g, "/"))).not.toContain(chart.data[1].category);
+    expect(decodeView(encoded, result)).toEqual(view);
+    expect(isDefaultView(decodeView("pas-du-base64!", result))).toBe(true);
+    expect(isDefaultView(decodeView(encodeView({ ...EMPTY_VIEW, chartTypes: { c1: "radar" } } as unknown as ViewState, result), result))).toBe(true);
   });
 });

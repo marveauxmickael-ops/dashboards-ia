@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { DashboardView } from "@/components/dashboard-view";
+import { DashboardWorkspace } from "@/components/dashboard-workspace";
 import { PrivacyPanel } from "@/components/privacy-panel";
 import { canEdit, requireWorkspace } from "@/lib/auth/session";
 import type { DashboardResult } from "@/lib/pipeline";
@@ -44,7 +44,7 @@ export default async function DashboardPage({ params }: PageProps<"/dashboards/[
           {organization.name} · créé le {dateFormat.format(new Date(dashboard.created_at))} · exporté le {dateFormat.format(new Date())}. Chaque
           valeur est calculée sur les données du fichier source ; l&apos;IA n&apos;a reçu que des données pseudonymisées.
         </p>
-        <DashboardView result={result} dashboardId={dashboard.id} exportable />
+        <DashboardWorkspace initial={result} dashboardId={dashboard.id} canReimport={canEdit(role)} />
         <PrivacyPanel result={result} />
       </main>
     </>

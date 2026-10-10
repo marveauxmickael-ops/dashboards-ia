@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { DashboardResult } from "@/lib/pipeline";
 import type { AiMode } from "@/lib/types";
-import { DashboardView } from "./dashboard-view";
+import { DashboardWorkspace, recomputeOnServer, type Recompute } from "./dashboard-workspace";
 import { PrivacyPanel } from "./privacy-panel";
 
 type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult; dashboardId?: string };
@@ -30,11 +30,14 @@ export function Studio({
   generateDashboard = generateOnServer,
   demoFileUrl = "/demo/ventes-demo.csv",
   exportable = true,
+  recompute = recomputeOnServer,
 }: {
   generateDashboard?: (file: File, mode: AiMode) => Promise<GenerateOutcome>;
   demoFileUrl?: string;
   /** Affiche les boutons de téléchargement (désactivé dans la démo navigateur). */
   exportable?: boolean;
+  /** Recalcul (filtres, mise à jour) ; la démo navigateur le fait localement. */
+  recompute?: Recompute;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<AiMode>("standard");
@@ -139,7 +142,15 @@ export function Studio({
               </a>
             </p>
           )}
-          <DashboardView result={state.result} dashboardId={state.dashboardId} exportable={exportable} />
+          <DashboardWorkspace
+            key={state.dashboardId ?? state.result.fileName + state.result.durationMs}
+            initial={state.result}
+            dashboardId={state.dashboardId}
+            exportable={exportable}
+            canReimport={!!state.dashboardId}
+            initialFile={file}
+            recompute={recompute}
+          />
           <PrivacyPanel result={state.result} />
           <p className="text-xs text-slate-500 print:hidden">
             Généré en{" "}

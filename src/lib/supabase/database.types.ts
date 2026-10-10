@@ -96,6 +96,7 @@ export type Database = {
           result: Json;
           row_count: number;
           title: string;
+          updated_at: string | null;
         };
         Insert: {
           ai_mode: string;
@@ -107,6 +108,7 @@ export type Database = {
           result: Json;
           row_count: number;
           title: string;
+          updated_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["dashboards"]["Insert"]>;
         Relationships: [];
