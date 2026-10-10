@@ -1,6 +1,6 @@
 // Génère un fichier de ventes entièrement fictif pour les démonstrations.
 // Usage : node scripts/generate-demo-data.mjs
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 
 let seed = 42;
 const rand = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
@@ -52,5 +52,6 @@ rows.push([...rows[10]]); // un doublon volontaire pour la détection d'anomalie
 
 const header = ["Date", "Client", "Email contact", "Commercial", "Région", "Produit", "Montant HT", "Coût", "Commentaire"];
 const csv = [header, ...rows].map((r) => r.map((v) => (/[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)).join(";")).join("\n");
+mkdirSync(new URL("../public/demo/", import.meta.url), { recursive: true });
 writeFileSync(new URL("../public/demo/ventes-demo.csv", import.meta.url), csv + "\n");
 console.log(`${rows.length} lignes écrites dans public/demo/ventes-demo.csv`);
