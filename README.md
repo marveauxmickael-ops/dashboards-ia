@@ -16,6 +16,23 @@ Sans `ANTHROPIC_API_KEY`, l'application fonctionne en **mode démonstration** : 
 
 Vérifications : `npm run typecheck`, `npm run lint`, `npm test`.
 
+## Comptes, organisations et sauvegarde (sprint 2)
+
+- **Authentification Supabase** (email + mot de passe) : inscription avec confirmation par email, connexion, mot de passe oublié, réinitialisation (les autres sessions sont fermées), déconnexion. Mot de passe de 12 caractères minimum, messages d'erreur qui ne révèlent pas quels comptes existent, redirections limitées aux chemins internes.
+- **Organisations** : à l'inscription, une organisation est créée et l'utilisateur en devient propriétaire (rôles : propriétaire, administrateur, éditeur, lecteur).
+- **Dashboards enregistrés** : chaque dashboard généré est sauvegardé dans l'organisation (`/dashboards`). Le fichier importé n'est **jamais conservé** : seul le résultat est stocké.
+- **Isolation** : RLS PostgreSQL sur toutes les tables (`supabase/migrations`). Test d'isolation entre deux organisations : `supabase/tests/isolation.sql`.
+- **Journal des appels IA** (`ai_calls`) : fournisseur, modèle, mode, nombre de jetons. Jamais le contenu.
+- La clé de pseudonymisation est dérivée **par organisation** : deux clients n'obtiennent jamais les mêmes jetons.
+
+### Configuration Supabase à faire dans le tableau de bord
+
+Authentication → URL Configuration :
+- *Site URL* : l'URL de production (ex. `https://dashboards-ia-creetacrea.vercel.app`) ;
+- *Redirect URLs* : ajouter `https://dashboards-ia-creetacrea.vercel.app/auth/confirm` et `http://localhost:3000/auth/confirm`.
+
+Authentication → Sign In / Providers → Email : *Minimum password length* = 12, et laisser *Confirm email* activé. Le contrôle est aussi fait par l'application, mais la règle doit être imposée par Supabase pour ne pas pouvoir être contournée.
+
 ## Le cycle de traitement
 
 | Étape | Où | Fichier |
@@ -55,7 +72,8 @@ L'IA ne fournit aucune valeur affichée : KPI et graphiques sont calculés par l
 
 ## Limites connues du prototype
 
-- Pas d'authentification ni de persistance : une organisation unique (`prototype`), table de correspondance en mémoire le temps de la requête. Supabase (Auth, PostgreSQL + RLS, Storage) arrive au sprint suivant.
+- Une seule organisation par utilisateur ; l'invitation de membres et la gestion des rôles dans l'interface arrivent au sprint suivant.
+- Double authentification (TOTP) et journal d'audit : sprint suivant.
 - La détection des colonnes identifiantes repose sur le nom et le format des colonnes ; le texte libre est exclu en attendant une détection d'entités (Presidio).
 - Le seuil de petits groupes ne protège pas contre les déductions par différence (total − groupes affichés) ; à traiter avant les données RH.
 - Pas encore de filtres interactifs, d'export ni de réimport.

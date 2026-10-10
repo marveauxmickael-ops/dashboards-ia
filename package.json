@@ -8,12 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "prebuild": "node scripts/generate-demo-data.mjs",
     "build:demo": "node demo-web/build.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.3",
     "exceljs": "^4.4.0",
     "next": "16.3.4",
     "papaparse": "^5.7.0",

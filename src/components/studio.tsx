@@ -6,10 +6,11 @@ import type { AiMode } from "@/lib/types";
 import { DashboardView } from "./dashboard-view";
 import { PrivacyPanel } from "./privacy-panel";
 
-type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult };
+type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult; dashboardId?: string };
 
 /** Résultat d'une génération : le dashboard, ou un message d'erreur à afficher. */
-export type GenerateOutcome = { ok: true; result: DashboardResult } | { ok: false; message: string };
+/** `dashboardId` est présent quand le dashboard a été enregistré dans l'organisation. */
+export type GenerateOutcome = { ok: true; result: DashboardResult; dashboardId?: string } | { ok: false; message: string };
 
 /** Génération par défaut : envoi du fichier à l'API du serveur. */
 async function generateOnServer(file: File, mode: AiMode): Promise<GenerateOutcome> {
@@ -19,7 +20,7 @@ async function generateOnServer(file: File, mode: AiMode): Promise<GenerateOutco
   try {
     const response = await fetch("/api/dashboard", { method: "POST", body });
     const json = await response.json();
-    return response.ok ? { ok: true, result: json as DashboardResult } : { ok: false, message: json.error ?? "La génération a échoué." };
+    return response.ok ? { ok: true, result: json.result as DashboardResult, dashboardId: json.dashboardId } : { ok: false, message: json.error ?? "La génération a échoué." };
   } catch {
     return { ok: false, message: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez." };
   }
@@ -39,7 +40,7 @@ export function Studio({
   async function generate(selected: File) {
     setState({ status: "loading", fileName: selected.name });
     const outcome = await generateDashboard(selected, mode);
-    setState(outcome.ok ? { status: "done", result: outcome.result } : { status: "error", message: outcome.message });
+    setState(outcome.ok ? { status: "done", result: outcome.result, dashboardId: outcome.dashboardId } : { status: "error", message: outcome.message });
   }
 
   async function loadDemo() {
@@ -127,6 +128,14 @@ export function Studio({
       )}
       {state.status === "done" && (
         <>
+          {state.dashboardId && (
+            <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+              Dashboard enregistré dans votre organisation.{" "}
+              <a href={`/dashboards/${state.dashboardId}`} className="font-medium underline">
+                Le retrouver
+              </a>
+            </p>
+          )}
           <DashboardView result={state.result} />
           <PrivacyPanel result={state.result} />
           <p className="text-xs text-slate-500">
