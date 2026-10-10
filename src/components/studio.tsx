@@ -4,7 +4,6 @@ import { useState } from "react";
 import type { DashboardResult } from "@/lib/pipeline";
 import type { AiMode } from "@/lib/types";
 import { DashboardView } from "./dashboard-view";
-import { ExportActions } from "./export-actions";
 import { PrivacyPanel } from "./privacy-panel";
 
 type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult; dashboardId?: string };
@@ -140,8 +139,7 @@ export function Studio({
               </a>
             </p>
           )}
-          {exportable && <ExportActions dashboardId={state.dashboardId} />}
-          <DashboardView result={state.result} />
+          <DashboardView result={state.result} dashboardId={state.dashboardId} exportable={exportable} />
           <PrivacyPanel result={state.result} />
           <p className="text-xs text-slate-500 print:hidden">
             Généré en{" "}

@@ -55,16 +55,19 @@ export async function POST(request: Request) {
   if (saveError) console.error("Enregistrement du dashboard en échec", saveError.code);
 
   // Journal des appels IA : métadonnées uniquement, jamais le contenu.
-  const { error: logError } = await supabase.from("ai_calls").insert({
-    organization_id: organization.id,
-    user_id: user.id,
-    dashboard_id: saved?.id ?? null,
-    provider: result.ai.provider,
-    model: result.ai.model,
-    ai_mode: mode,
-    input_tokens: result.ai.inputTokens,
-    output_tokens: result.ai.outputTokens,
-  });
+  const calls = [result.ai, ...(result.analysis?.writtenBy === "ai" ? [result.analysis] : [])];
+  const { error: logError } = await supabase.from("ai_calls").insert(
+    calls.map((call) => ({
+      organization_id: organization.id,
+      user_id: user.id,
+      dashboard_id: saved?.id ?? null,
+      provider: call.provider,
+      model: call.model,
+      ai_mode: mode,
+      input_tokens: call.inputTokens,
+      output_tokens: call.outputTokens,
+    })),
+  );
   if (logError) console.error("Journalisation de l'appel IA en échec", logError.code);
 
   return Response.json({ result, dashboardId: saved?.id ?? null });

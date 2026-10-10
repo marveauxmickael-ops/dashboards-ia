@@ -76,6 +76,14 @@ export function PrivacyPanel({ result }: { result: DashboardResult }) {
           {JSON.stringify(aiContext, null, 2)}
         </pre>
       </details>
+      {result.analysis?.sentToAi && (
+        <details className="text-sm">
+          <summary className="cursor-pointer font-medium text-teal-800">Afficher les données envoyées pour l&apos;analyse des variations</summary>
+          <pre className="mt-2 max-h-96 overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-xs leading-relaxed text-slate-100">
+            {JSON.stringify(result.analysis.sentToAi, null, 2)}
+          </pre>
+        </details>
+      )}
     </section>
   );
 }

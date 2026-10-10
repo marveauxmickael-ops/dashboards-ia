@@ -19,7 +19,8 @@ describe("export Excel", () => {
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load((await buildXlsx(result, meta)) as unknown as ArrayBuffer);
 
-    expect(wb.worksheets.map((w) => w.name)).toEqual(["Synthèse", ...result.charts.map(() => expect.any(String)), "Données et confidentialité"]);
+    const analysisSheet = result.analysis && result.analysis.variations.length > 0 ? ["Analyse des variations"] : [];
+    expect(wb.worksheets.map((w) => w.name)).toEqual(["Synthèse", ...result.charts.map(() => expect.any(String)), ...analysisSheet, "Données et confidentialité"]);
     const summary = wb.getWorksheet("Synthèse")!;
     const cells = summary.getSheetValues().flat().filter((v) => v !== undefined && v !== null);
     expect(cells).toContain("Exporté le");

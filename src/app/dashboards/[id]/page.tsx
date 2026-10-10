@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { DashboardView } from "@/components/dashboard-view";
-import { ExportActions } from "@/components/export-actions";
 import { PrivacyPanel } from "@/components/privacy-panel";
 import { canEdit, requireWorkspace } from "@/lib/auth/session";
 import type { DashboardResult } from "@/lib/pipeline";
@@ -41,12 +40,11 @@ export default async function DashboardPage({ params }: PageProps<"/dashboards/[
             )}
           </div>
         </div>
-        <ExportActions dashboardId={dashboard.id} />
         <p className="hidden text-xs text-slate-500 print:block">
           {organization.name} · créé le {dateFormat.format(new Date(dashboard.created_at))} · exporté le {dateFormat.format(new Date())}. Chaque
           valeur est calculée sur les données du fichier source ; l&apos;IA n&apos;a reçu que des données pseudonymisées.
         </p>
-        <DashboardView result={result} />
+        <DashboardView result={result} dashboardId={dashboard.id} exportable />
         <PrivacyPanel result={result} />
       </main>
     </>

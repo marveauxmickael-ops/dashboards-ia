@@ -26,6 +26,8 @@ export interface ComputedChart {
   data: { category: string; value: number | null }[];
   /** Catégories regroupées sous « Autres » (au-delà de la limite). */
   othersCount: number;
+  /** Catégories masquées par l'utilisateur (personnalisation de l'affichage, exports). */
+  maskedCount?: number;
 }
 
 export type InsightStatus = "verified" | "mismatch" | "unverified" | "qualitative";
@@ -112,10 +114,9 @@ export function validateSpec(spec: DashboardSpec, profile: DatasetProfile): { sp
   return { spec: { ...spec, measures, kpis, charts }, issues };
 }
 
-export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile: DatasetProfile) {
+/** Calcule la valeur d'une mesure (de base ou dérivée) sur un ensemble de lignes. */
+export function measureEvaluator(spec: DashboardSpec) {
   const byId = new Map(spec.measures.map((m) => [m.id, m]));
-  const dateColumns = new Set(profile.columns.filter((c) => c.role === "date").map((c) => c.name));
-
   const valueOf = (list: TypedRow[], measureId: string, aggregation: Aggregation): number | null => {
     if (measureId === "rows") return list.length;
     const m = byId.get(measureId)!;
@@ -126,6 +127,13 @@ export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile:
     if (m.operation === "difference") return Math.round((left - right) * 1e6) / 1e6;
     return right === 0 ? null : left / right;
   };
+  return valueOf;
+}
+
+export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile: DatasetProfile) {
+  const byId = new Map(spec.measures.map((m) => [m.id, m]));
+  const dateColumns = new Set(profile.columns.filter((c) => c.role === "date").map((c) => c.name));
+  const valueOf = measureEvaluator(spec);
 
   const formulaOf = (measureId: string, aggregation: Aggregation): string => {
     if (measureId === "rows") return "Nombre de lignes";

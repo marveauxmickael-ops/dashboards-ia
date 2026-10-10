@@ -75,7 +75,28 @@ L'IA ne fournit aucune valeur affichée : KPI et graphiques sont calculés par l
 
 ## Configuration Claude
 
-`src/lib/ai/gateway.ts` appelle `claude-opus-5-5` via le SDK officiel (`client.beta.messages.parse` + sortie structurée Zod), effort `medium`, avec le repli serveur `fallbacks: "default"` en cas de refus du modèle. `AI_PROVIDER` choisit le fournisseur ; `vertex` et `bedrock` sont réservés à la production UE et restent à brancher.
+`src/lib/ai/gateway.ts` appelle `claude-opus-5-5` via le SDK officiel (`client.beta.messages.parse` + sortie structurée Zod), effort `medium`, avec le repli serveur `fallbacks: "default"` en cas de refus du modèle. Le repli serveur n'existe que sur l'API Anthropic directe. `AI_PROVIDER` choisit le fournisseur :
+
+| Valeur | Traitement | Configuration |
+|---|---|---|
+| `vertex` | Google Cloud, région UE | `VERTEX_PROJECT_ID`, `VERTEX_REGION` (`eu` par défaut), `GOOGLE_VERTEX_CREDENTIALS` (JSON du compte de service) |
+| `bedrock` | AWS Paris (`eu-west-3`) | `BEDROCK_REGION`, `BEDROCK_MODEL`, identifiants AWS de l'environnement |
+| `anthropic` | API Anthropic (hors UE) | `ANTHROPIC_API_KEY` — prototypage sur données fictives uniquement |
+| `demo` | aucun modèle | par défaut sans configuration |
+
+Vérifier la disponibilité du modèle dans la région choisie avant la mise en production.
+
+## Analyse des variations (US-10)
+
+1. Le moteur détecte les hausses et baisses de plus de 10 % sur les indicateurs additifs : dernier mois complet contre le mois précédent, contre le même mois un an plus tôt, et trimestre glissant. Un dernier mois incomplet est écarté.
+2. Chaque variation est décomposée par dimension (part de l'écart par segment, segments à contre-courant).
+3. L'IA reçoit ces chiffres pseudonymisés (groupes de moins de 5 lignes retirés) et rédige constats, hypothèses (au conditionnel) et pistes d'amélioration en cas de baisse. Chaque chiffre cité est recalculé.
+4. En mode strict, sans IA configurée ou en cas d'échec, les explications sont rédigées par des règles, sans modèle.
+5. Les avis « Utile / Pas utile » sur les suggestions sont enregistrés dans `analysis_feedback` (RLS par organisation).
+
+## Personnalisation de l'affichage
+
+« Personnaliser l'affichage » permet de cocher les indicateurs, graphiques et sections à afficher (constats, analyse des variations, et dans l'analyse : explications et/ou suggestions). Chaque graphique peut changer de type (barres, courbe, secteurs, tableau) et masquer des catégories ou des périodes. Les valeurs ne sont jamais recalculées : on masque, on ne modifie pas. La sélection est mémorisée dans le navigateur et s'applique au PDF et aux exports Excel / CSV (paramètre `vue`, positions des catégories uniquement, jamais leurs noms).
 
 ## Limites connues du prototype
 
@@ -83,4 +104,4 @@ L'IA ne fournit aucune valeur affichée : KPI et graphiques sont calculés par l
 - Double authentification (TOTP) et journal d'audit : sprint suivant.
 - La détection des colonnes identifiantes repose sur le nom et le format des colonnes ; le texte libre est exclu en attendant une détection d'entités (Presidio).
 - Le seuil de petits groupes ne protège pas contre les déductions par différence (total − groupes affichés) ; à traiter avant les données RH.
-- Pas encore de filtres interactifs, d'export ni de réimport.
+- Pas encore de filtres interactifs sur les données (recalcul par période ou segment) ni de réimport : sprint 4.

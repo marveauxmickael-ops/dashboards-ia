@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { getWorkspace } from "@/lib/auth/session";
 import { buildCsv, buildXlsx, exportFileName } from "@/lib/export/dashboard-export";
 import type { DashboardResult } from "@/lib/pipeline";
+import { applyView, decodeView } from "@/lib/view";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -22,7 +23,8 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/d
     .maybeSingle();
   if (!dashboard) return Response.json({ error: "Dashboard introuvable." }, { status: 404 });
 
-  const result = dashboard.result as unknown as DashboardResult;
+  // L'export reprend la sélection affichée à l'écran (éléments cochés), sans modifier aucune valeur.
+  const result = applyView(dashboard.result as unknown as DashboardResult, decodeView(request.nextUrl.searchParams.get("vue")));
   const meta = { organization: workspace.organization.name, createdAt: new Date(dashboard.created_at), exportedAt: new Date(), aiMode: dashboard.ai_mode };
   const fileName = exportFileName(dashboard.title, meta.exportedAt, format);
   const headers = {

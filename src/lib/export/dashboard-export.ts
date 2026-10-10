@@ -106,11 +106,39 @@ export async function buildXlsx(result: DashboardResult, meta: ExportMeta): Prom
     ws.addRow([chart.title]).font = { bold: true, size: 13 };
     ws.addRow([`Calcul : ${chart.formula}`]).font = { italic: true, color: { argb: "FF566273" } };
     if (chart.othersCount > 0) ws.addRow([`${chart.othersCount} autre(s) catégorie(s) non affichée(s) dans le dashboard.`]);
+    if (chart.maskedCount) ws.addRow([`${chart.maskedCount} catégorie(s) masquée(s) par l'utilisateur.`]);
     ws.addRow([]);
     header(ws.addRow([chart.chronological ? "Période" : "Catégorie", chart.measureLabel]));
     for (const d of chart.data) {
       const row = ws.addRow([d.category, d.value]);
       row.getCell(2).numFmt = NUM_FMT[chart.format];
+    }
+  }
+
+  // Analyse des variations (US-10) : chiffres du moteur, explications vérifiées, pistes d'amélioration.
+  const analysis = result.analysis;
+  if (analysis && analysis.variations.length > 0) {
+    const ws = wb.addWorksheet(sheetName("Analyse des variations", used));
+    ws.columns = [{ width: 30 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 70 }];
+    ws.addRow(["Analyse des variations"]).font = { bold: true, size: 13 };
+    ws.addRow([analysis.writtenBy === "ai" ? "Rédigée par l'IA sur données pseudonymisées ; chiffres vérifiés par le moteur." : "Rédigée automatiquement, sans IA ; chiffres vérifiés par le moteur."]);
+    for (const n of analysis.notes) ws.addRow([n]);
+    const insightById = new Map(analysis.insights.map((i) => [i.variationId, i]));
+    for (const v of analysis.variations) {
+      ws.addRow([]);
+      header(ws.addRow([`${v.direction === "down" ? "Baisse" : "Hausse"} · ${v.measureLabel}`, "Avant", "Après", "Variation", `${v.period} comparé à ${v.previousPeriod}`]));
+      const row = ws.addRow(["Total", v.previous, v.current, v.changePct, ""]);
+      row.getCell(2).numFmt = row.getCell(3).numFmt = NUM_FMT[v.format];
+      row.getCell(4).numFmt = "+0.0%;-0.0%";
+      for (const item of [...(v.drivers[0]?.items ?? []), ...(v.drivers[0]?.opposite ?? [])]) {
+        const r = ws.addRow([`${v.drivers[0].dimension} : ${item.category}`, item.previous, item.current, item.previous !== 0 ? item.delta / Math.abs(item.previous) : null, ""]);
+        r.getCell(2).numFmt = r.getCell(3).numFmt = NUM_FMT[v.format];
+        r.getCell(4).numFmt = "+0.0%;-0.0%";
+      }
+      const insight = insightById.get(v.id);
+      for (const f of insight?.facts ?? []) ws.addRow(["Constat", STATUS_LABEL[f.status] ?? f.status, "", "", f.text]).alignment = { wrapText: true, vertical: "top" };
+      for (const h of insight?.hypotheses ?? []) ws.addRow(["Hypothèse", "", "", "", h]).alignment = { wrapText: true, vertical: "top" };
+      for (const sug of insight?.suggestions ?? []) ws.addRow(["Piste d'amélioration", "", "", "", sug.text]).alignment = { wrapText: true, vertical: "top" };
     }
   }
 
@@ -137,6 +165,16 @@ export function buildCsv(result: DashboardResult, meta: ExportMeta): string {
     ["Section", "Libellé", "Catégorie", "Valeur"],
     ...result.kpis.map((k) => ["Indicateur", k.label, "", k.value]),
     ...result.charts.flatMap((c) => c.data.map((d) => [c.title, c.measureLabel, d.category, d.value])),
+    ...(result.analysis?.variations ?? []).flatMap((v) => {
+      const insight = result.analysis?.insights.find((i) => i.variationId === v.id);
+      const label = `${v.direction === "down" ? "Baisse" : "Hausse"} ${v.measureLabel} (${v.period} / ${v.previousPeriod})`;
+      return [
+        ["Analyse des variations", label, "Variation", v.changePct],
+        ...(insight?.facts ?? []).map((f) => ["Analyse des variations", label, "Constat", f.text]),
+        ...(insight?.hypotheses ?? []).map((h) => ["Analyse des variations", label, "Hypothèse", h]),
+        ...(insight?.suggestions ?? []).map((sg) => ["Analyse des variations", label, "Piste d'amélioration", sg.text]),
+      ];
+    }),
   ];
   return "﻿" + rows.map((r) => r.map(csvCell).join(";")).join("\r\n") + "\r\n";
 }

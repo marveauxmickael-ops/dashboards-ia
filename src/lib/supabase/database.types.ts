@@ -37,6 +37,54 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["ai_calls"]["Insert"]>;
         Relationships: [];
       };
+      analysis_feedback: {
+        Row: {
+          created_at: string
+          dashboard_id: string
+          id: string
+          organization_id: string
+          suggestion_index: number
+          useful: boolean
+          user_id: string
+          variation_id: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_id: string
+          id?: string
+          organization_id: string
+          suggestion_index: number
+          useful: boolean
+          user_id?: string
+          variation_id: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_id?: string
+          id?: string
+          organization_id?: string
+          suggestion_index?: number
+          useful?: boolean
+          user_id?: string
+          variation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_feedback_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "dashboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analysis_feedback_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboards: {
         Row: {
           ai_mode: string;

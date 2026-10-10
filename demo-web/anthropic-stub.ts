@@ -9,3 +9,7 @@ export default class Anthropic {
   beta = { messages: { parse: async (): Promise<never> => { throw new Error("Claude n'est pas disponible dans la démo navigateur."); } } };
 }
 export const betaZodOutputFormat = (schema: unknown) => schema;
+// Clients cloud UE (Vertex, Bedrock) : jamais utilisés dans la démo, remplacés par le même module vide.
+export const AnthropicVertex = Anthropic;
+export const AnthropicBedrockMantle = Anthropic;
+export class GoogleAuth {}

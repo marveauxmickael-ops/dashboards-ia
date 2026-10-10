@@ -13,10 +13,13 @@
     "build:demo": "node demo-web/build.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "^0.34.4",
     "@anthropic-ai/sdk": "^0.133.0",
+    "@anthropic-ai/vertex-sdk": "^0.20.4",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "exceljs": "^4.4.0",
+    "google-auth-library": "^10.9.1",
     "next": "16.3.4",
     "papaparse": "^5.7.0",
     "react": "19.2.8",

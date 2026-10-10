@@ -1,4 +1,5 @@
 import { designDashboard, type DesignResult } from "@/lib/ai/gateway";
+import { explainVariations, type AnalysisResult } from "@/lib/analysis";
 import { checkInsights, computeDashboard, validateSpec, type CheckedInsight, type ComputedChart, type ComputedKpi } from "@/lib/engine/compute";
 import { parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
@@ -19,6 +20,8 @@ export interface DashboardResult {
   kpis: ComputedKpi[];
   charts: ComputedChart[];
   insights: CheckedInsight[];
+  /** Analyse des variations (US-10) ; absente des dashboards créés avant le sprint 3. */
+  analysis?: AnalysisResult;
   issues: string[];
   tokensUsed: number;
   durationMs: number;
@@ -57,6 +60,9 @@ export async function generateDashboard(input: {
     details: insight.details,
   }));
 
+  // Analyse des variations : décomposition par le moteur, explication par l'IA sur données pseudonymisées.
+  const analysis = await explainVariations({ spec, rows, profile, mode: input.mode, pseudo });
+
   return {
     fileName: raw.fileName,
     profile,
@@ -66,6 +72,7 @@ export async function generateDashboard(input: {
     kpis: kpis.map((k) => ({ ...k, label: clear(k.label), description: clear(k.description) })),
     charts: charts.map((c) => ({ ...c, title: clear(c.title) })),
     insights,
+    analysis,
     issues,
     tokensUsed: pseudo.size,
     durationMs: Date.now() - started,

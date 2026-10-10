@@ -22,6 +22,9 @@ const result = await build({
     "node:crypto": path.join(root, "demo-web/crypto-shim.ts"),
     "@anthropic-ai/sdk/helpers/beta/zod": path.join(root, "demo-web/anthropic-stub.ts"),
     "@anthropic-ai/sdk": path.join(root, "demo-web/anthropic-stub.ts"),
+    "@anthropic-ai/vertex-sdk": path.join(root, "demo-web/anthropic-stub.ts"),
+    "@anthropic-ai/bedrock-sdk": path.join(root, "demo-web/anthropic-stub.ts"),
+    "google-auth-library": path.join(root, "demo-web/anthropic-stub.ts"),
   },
   define: {
     "process.env.NODE_ENV": '"production"',

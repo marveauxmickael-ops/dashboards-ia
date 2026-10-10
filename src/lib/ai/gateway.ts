@@ -1,26 +1,36 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { AnthropicBedrockMantle } from "@anthropic-ai/bedrock-sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
+import { GoogleAuth } from "google-auth-library";
+import type { z } from "zod";
 import type { AiContext } from "@/lib/privacy/ai-context";
 import { buildDemoSpec } from "./demo-designer";
 import { SYSTEM_PROMPT, userMessage } from "./prompt";
 import { DashboardSpecSchema, type DashboardSpec } from "./spec";
 
 // Passerelle IA : un point d'entrée unique, quel que soit le fournisseur.
-// Le reste de l'application ne connaît que `designDashboard`.
+// - anthropic : API Anthropic (prototype, données fictives uniquement) ;
+// - vertex : Claude sur Google Cloud Vertex AI, région UE ;
+// - bedrock : Claude sur Amazon Bedrock, région Paris ou Francfort ;
+// - demo : concepteur déterministe, sans appel à un modèle.
 
 export const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 
-export interface DesignResult {
-  spec: DashboardSpec;
-  provider: "anthropic" | "demo";
+export type Provider = "anthropic" | "vertex" | "bedrock" | "demo";
+
+export interface AiUsage {
+  provider: Provider;
   model: string | null;
   inputTokens: number | null;
   outputTokens: number | null;
 }
 
-export class AiError extends Error {}
+export interface DesignResult extends AiUsage {
+  spec: DashboardSpec;
+}
 
-type Provider = "anthropic" | "vertex" | "bedrock" | "demo";
+export class AiError extends Error {}
 
 export function activeProvider(): Provider {
   const configured = process.env.AI_PROVIDER as Provider | undefined;
@@ -28,50 +38,85 @@ export function activeProvider(): Provider {
   return process.env.ANTHROPIC_API_KEY ? "anthropic" : "demo";
 }
 
+/** Le traitement reste-t-il dans l'Union européenne ? (affiché à l'utilisateur) */
+export function processedInEurope(provider: Provider): boolean {
+  return provider === "vertex" || provider === "bedrock" || provider === "demo";
+}
+
 export async function designDashboard(ctx: AiContext): Promise<DesignResult> {
   const provider = activeProvider();
+  if (provider === "demo") return { spec: buildDemoSpec(ctx), provider, model: null, inputTokens: null, outputTokens: null };
+  const { output, ...usage } = await callClaude(provider, DashboardSpecSchema, SYSTEM_PROMPT, userMessage(JSON.stringify(ctx)));
+  return { spec: output, ...usage };
+}
+
+type ParseClient = Pick<Anthropic, "beta">;
+
+function clientFor(provider: Exclude<Provider, "demo">): { client: ParseClient; model: string } {
   switch (provider) {
     case "anthropic":
-      return designWithClaude(new Anthropic(), ctx);
-    case "demo":
-      return { spec: buildDemoSpec(ctx), provider: "demo", model: null, inputTokens: null, outputTokens: null };
-    case "vertex":
-    case "bedrock":
-      // Production UE : même SDK Anthropic, client AnthropicVertex (région « eu ») ou AnthropicBedrockMantle
-      // (région Paris / Francfort). À brancher avant d'accepter des données réelles.
-      throw new AiError(`Le fournisseur ${provider} n'est pas encore branché dans ce prototype.`);
-    default:
-      throw new AiError(`AI_PROVIDER inconnu : ${String(provider)}.`);
+      return { client: new Anthropic(), model: CLAUDE_MODEL };
+    case "vertex": {
+      const projectId = process.env.VERTEX_PROJECT_ID;
+      if (!projectId) throw new AiError("VERTEX_PROJECT_ID manquant : Claude sur Vertex AI n'est pas configuré.");
+      // Compte de service Google (JSON) fourni par variable d'environnement, faute de fichier sur Vercel.
+      const credentials = process.env.GOOGLE_VERTEX_CREDENTIALS ? JSON.parse(process.env.GOOGLE_VERTEX_CREDENTIALS) : undefined;
+      const client = new AnthropicVertex({
+        projectId,
+        // Multi-région UE : le traitement reste en Europe.
+        region: process.env.VERTEX_REGION ?? "eu",
+        googleAuth: credentials ? new GoogleAuth({ credentials, scopes: ["https://www.googleapis.com/auth/cloud-platform"] }) : undefined,
+      });
+      return { client: client as unknown as ParseClient, model: CLAUDE_MODEL };
+    }
+    case "bedrock": {
+      // Identifiants AWS lus dans l'environnement (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY).
+      const client = new AnthropicBedrockMantle({ awsRegion: process.env.BEDROCK_REGION ?? "eu-west-3" });
+      return { client: client as unknown as ParseClient, model: process.env.BEDROCK_MODEL ?? `anthropic.${CLAUDE_MODEL}` };
+    }
   }
 }
 
-async function designWithClaude(client: Anthropic, ctx: AiContext): Promise<DesignResult> {
+/**
+ * Appel à Claude avec sortie structurée validée par un schéma Zod.
+ * Le repli serveur en cas de refus n'existe que sur l'API Anthropic ; ailleurs un refus est une erreur.
+ */
+export async function callClaude<S extends z.ZodType>(
+  provider: Provider,
+  schema: S,
+  system: string,
+  user: string,
+): Promise<AiUsage & { output: z.infer<S> }> {
+  if (provider === "demo") throw new AiError("Le mode démonstration n'appelle pas de modèle.");
+  if (provider !== "anthropic" && provider !== "vertex" && provider !== "bedrock") {
+    throw new AiError(`AI_PROVIDER inconnu : ${String(provider)}.`);
+  }
+  const { client, model } = clientFor(provider);
+
   let response;
   try {
     response = await client.beta.messages.parse({
-      model: CLAUDE_MODEL,
+      model,
       max_tokens: 16000,
-      // Si le modèle décline la requête, l'API la rejoue sur un modèle de repli adapté.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "medium", format: betaZodOutputFormat(DashboardSpecSchema) },
-      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: userMessage(JSON.stringify(ctx)) }],
+      ...(provider === "anthropic" ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
+      output_config: { effort: "medium", format: betaZodOutputFormat(schema) },
+      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: user }],
     });
   } catch (error) {
-    if (error instanceof Anthropic.AuthenticationError) throw new AiError("Clé d'API Claude invalide.");
-    if (error instanceof Anthropic.RateLimitError) throw new AiError("Limite d'appels à Claude atteinte, réessayez dans une minute.");
-    if (error instanceof Anthropic.APIError) throw new AiError(`Erreur de l'API Claude (${error.status ?? "réseau"}).`);
+    if (error instanceof Anthropic.AuthenticationError) throw new AiError("Identifiants du fournisseur IA invalides.");
+    if (error instanceof Anthropic.RateLimitError) throw new AiError("Limite d'appels à l'IA atteinte, réessayez dans une minute.");
+    if (error instanceof Anthropic.APIError) throw new AiError(`Erreur du fournisseur IA (${error.status ?? "réseau"}).`);
     throw error;
   }
 
-  if (response.stop_reason === "refusal") throw new AiError("Claude a décliné la génération de ce dashboard.");
-  if (response.stop_reason === "max_tokens") throw new AiError("La réponse de Claude a été tronquée.");
-  if (!response.parsed_output) throw new AiError("La réponse de Claude ne respecte pas le format attendu.");
+  if (response.stop_reason === "refusal") throw new AiError("L'IA a décliné cette demande.");
+  if (response.stop_reason === "max_tokens") throw new AiError("La réponse de l'IA a été tronquée.");
+  if (!response.parsed_output) throw new AiError("La réponse de l'IA ne respecte pas le format attendu.");
 
   return {
-    spec: response.parsed_output,
-    provider: "anthropic",
+    output: response.parsed_output as z.infer<S>,
+    provider,
     model: response.model,
     inputTokens: response.usage.input_tokens,
     outputTokens: response.usage.output_tokens,
