@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { logEvent } from "@/lib/audit";
 import { safeNextPath } from "@/lib/auth/redirect";
+import { MFA_PATH, needsSecondFactor } from "@/lib/auth/mfa";
 import { getWorkspace } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,9 +47,11 @@ export async function login(_prev: AuthState, form: FormData): Promise<AuthState
     // Même message que l'email existe ou non : on ne révèle pas quels comptes existent.
     return { error: GENERIC_LOGIN_ERROR, fields };
   }
+  const next = safeNextPath(form.get("next")?.toString());
+  if (await needsSecondFactor(supabase)) redirect(`${MFA_PATH}?next=${encodeURIComponent(next)}`);
   const workspace = await getWorkspace();
   if (workspace) await logEvent(workspace, "auth.login");
-  redirect(safeNextPath(form.get("next")?.toString()));
+  redirect(next);
 }
 
 export async function signup(_prev: AuthState, form: FormData): Promise<AuthState> {
@@ -119,6 +122,24 @@ export async function updatePassword(_prev: AuthState, form: FormData): Promise<
   // Toutes les autres sessions sont fermées après un changement de mot de passe.
   await supabase.auth.signOut({ scope: "others" });
   redirect("/");
+}
+
+/** Second facteur (TOTP) après le mot de passe : la session passe au niveau aal2. */
+export async function verifySecondFactor(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const code = String(form.get("code") ?? "").replace(/\s/g, "");
+  if (!/^\d{6}$/.test(code)) return { error: "Saisissez les 6 chiffres affichés par votre application." };
+  const supabase = await createClient();
+  const { data: factors } = await supabase.auth.mfa.listFactors();
+  const factor = factors?.totp.find((f) => f.status === "verified");
+  if (!factor) redirect("/");
+  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
+  if (error) {
+    if (error.status === 429) return { error: "Trop de tentatives. Patientez quelques minutes avant de réessayer." };
+    return { error: "Code incorrect ou expiré. Saisissez le code actuellement affiché." };
+  }
+  const workspace = await getWorkspace();
+  if (workspace) await logEvent(workspace, "auth.login", undefined, { second_factor: true });
+  redirect(safeNextPath(form.get("next")?.toString()));
 }
 
 export async function logout() {

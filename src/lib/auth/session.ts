@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { parseBranding, type Branding } from "@/lib/branding";
+import { needsSecondFactor } from "./mfa";
 import { createClient } from "@/lib/supabase/server";
 
 export type Role = "owner" | "admin" | "editor" | "viewer";
@@ -29,6 +30,8 @@ export async function getWorkspace(): Promise<Workspace | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+  // Second facteur activé mais non vérifié : la session ne donne accès à rien (pages et API).
+  if (await needsSecondFactor(supabase)) return null;
 
   const { data: memberships } = await supabase
     .from("memberships")

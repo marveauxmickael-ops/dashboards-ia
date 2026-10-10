@@ -49,7 +49,9 @@ export function AppHeader({ workspace }: { workspace: Pick<Workspace, "organizat
           ) : (
             <span className="hidden sm:inline">{organization.name}</span>
           )}
-          <span className="hidden md:inline">{user.email}</span>
+          <Link href="/compte/securite" className="hidden hover:text-teal-800 md:inline" title="Sécurité du compte">
+            {user.email}
+          </Link>
           <form action={logout}>
             <button type="submit" className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-50">
               Se déconnecter

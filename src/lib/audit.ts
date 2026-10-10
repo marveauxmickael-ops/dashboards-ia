@@ -16,7 +16,9 @@ export type AuditAction =
   | "branding.updated"
   | "member.invited"
   | "invitation.revoked"
-  | "member.removed";
+  | "member.removed"
+  | "mfa.enabled"
+  | "mfa.disabled";
 
 export const AUDIT_LABEL: Record<string, string> = {
   "auth.login": "Connexion",
@@ -33,6 +35,8 @@ export const AUDIT_LABEL: Record<string, string> = {
   "member.joined": "Invitation acceptée",
   "member.role_changed": "Rôle modifié",
   "member.removed": "Membre retiré",
+  "mfa.enabled": "Double authentification activée",
+  "mfa.disabled": "Double authentification désactivée",
 };
 
 /** Une erreur de journalisation n'interrompt jamais l'action de l'utilisateur ; elle est tracée côté serveur. */

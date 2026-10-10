@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { MFA_PATH } from "@/lib/auth/mfa";
 import { isPublicPath } from "@/lib/auth/redirect";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -36,6 +37,17 @@ export async function proxy(request: NextRequest) {
     url.search = "";
     if (pathname !== "/") url.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(url);
+  }
+  // Double authentification activée mais pas encore vérifiée pour cette session : page de code d'abord.
+  if (user && !pathname.startsWith("/api/") && !isPublicPath(pathname) && pathname !== MFA_PATH) {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (data && data.nextLevel === "aal2" && data.currentLevel !== "aal2") {
+      const url = request.nextUrl.clone();
+      url.pathname = MFA_PATH;
+      url.search = "";
+      url.searchParams.set("next", `${pathname}${search}`);
+      return NextResponse.redirect(url);
+    }
   }
   return response;
 }
