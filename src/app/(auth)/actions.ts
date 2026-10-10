@@ -3,7 +3,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { logEvent } from "@/lib/audit";
 import { safeNextPath } from "@/lib/auth/redirect";
+import { getWorkspace } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 /** `fields` renvoie les saisies non sensibles pour les réafficher après une erreur (jamais le mot de passe). */
@@ -44,6 +46,8 @@ export async function login(_prev: AuthState, form: FormData): Promise<AuthState
     // Même message que l'email existe ou non : on ne révèle pas quels comptes existent.
     return { error: GENERIC_LOGIN_ERROR, fields };
   }
+  const workspace = await getWorkspace();
+  if (workspace) await logEvent(workspace, "auth.login");
   redirect(safeNextPath(form.get("next")?.toString()));
 }
 

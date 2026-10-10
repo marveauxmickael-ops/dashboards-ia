@@ -2,6 +2,7 @@ import { canEdit, getWorkspace } from "@/lib/auth/session";
 import { FiltersSchema, NO_FILTERS } from "@/lib/filters";
 import { ImportError, MAX_FILE_BYTES } from "@/lib/ingest/parse";
 import { IncompatibleFileError, recomputeDashboard, type DashboardResult } from "@/lib/pipeline";
+import { logEvent } from "@/lib/audit";
 import { saveVersion } from "@/lib/dashboards/versions";
 import type { Json } from "@/lib/supabase/database.types";
 
@@ -81,6 +82,7 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
       return Response.json({ error: "La mise à jour n'a pas pu être enregistrée : la version précédente reste affichée." }, { status: 500 });
     }
     await saveVersion(workspace, id, result);
+    await logEvent(workspace, "dashboard.refreshed", { type: "dashboard", id }, { file: result.fileName, rows: result.profile.rowCount });
     if (result.analysis?.writtenBy === "ai") {
       await supabase.from("ai_calls").insert({
         organization_id: organization.id,

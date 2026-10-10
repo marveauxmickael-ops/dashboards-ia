@@ -1,5 +1,6 @@
 "use server";
 
+import { logEvent } from "@/lib/audit";
 import { canEdit, requireWorkspace } from "@/lib/auth/session";
 import { generateShareToken, type ShareAccess } from "@/lib/share";
 
@@ -33,6 +34,7 @@ export async function createShareLink(dashboardId: string, access: ShareAccess):
     .select(SELECT)
     .single();
   if (error || !data) return { ok: false, message: "Le lien n'a pas pu être créé." };
+  await logEvent(workspace, "share.created", { type: "dashboard", id: dashboardId }, { access });
   return { ok: true, share: data as ShareState, token };
 }
 
@@ -41,6 +43,7 @@ export async function updateShare(shareId: string, changes: { enabled?: boolean;
   if (!workspace || (changes.access && !ACCESS.has(changes.access))) return { ok: false, message: "Action non autorisée." };
   const { data, error } = await workspace.supabase.from("dashboard_shares").update(changes).eq("id", shareId).is("revoked_at", null).select(SELECT).maybeSingle();
   if (error || !data) return { ok: false, message: "Le lien n'a pas pu être modifié." };
+  await logEvent(workspace, "share.updated", { type: "share", id: shareId }, changes);
   return { ok: true, share: data as ShareState };
 }
 
@@ -50,5 +53,6 @@ export async function revokeShare(shareId: string): Promise<Outcome> {
   if (!workspace) return { ok: false, message: "Action non autorisée." };
   const { error } = await workspace.supabase.from("dashboard_shares").update({ enabled: false, revoked_at: new Date().toISOString() }).eq("id", shareId);
   if (error) return { ok: false, message: "Le lien n'a pas pu être révoqué." };
+  await logEvent(workspace, "share.revoked", { type: "share", id: shareId });
   return { ok: true, share: null };
 }

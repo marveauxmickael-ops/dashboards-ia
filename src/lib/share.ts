@@ -23,3 +23,8 @@ export function hashShareToken(token: string): string {
 export function isShareTokenFormat(token: string): boolean {
   return /^[A-Za-z0-9_-]{43}$/.test(token);
 }
+
+/** Jeton secret générique (invitations…) : même construction que les liens de partage. */
+export const generateSecretToken = generateShareToken;
+export const hashSecretToken = hashShareToken;
+export const isSecretTokenFormat = isShareTokenFormat;

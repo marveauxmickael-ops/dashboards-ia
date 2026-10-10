@@ -114,6 +114,15 @@ Chaque indicateur affiche sa définition, sa formule, la période couverte, les 
 - Activer / désactiver, niveau d'accès (consultation seule, ou consultation et téléchargement), révocation définitive (un déclencheur empêche toute réactivation).
 - La page `/partage/[jeton]` lit le dashboard par la fonction `shared_dashboard` (SECURITY DEFINER, exécutable sans compte par conception) : elle ne renvoie que les résultats calculés, sans contexte envoyé à l'IA, structure ni listes de filtres. Les données sources ne sont jamais conservées. En-têtes `no-referrer` et `noindex`.
 
+## Organisation : membres, rôles, invitations et journal d'audit (AUTH-05)
+
+- **Rôles** : propriétaire (tous les droits), administrateur (membres, invitations, charte, journal), éditeur (crée, actualise, partage, supprime des dashboards), lecteur (consulte et télécharge).
+- **Invitations** par lien (jeton de 256 bits, seul le hachage est stocké, valable 7 jours, révocable). La personne invitée se connecte avec l'adresse invitée puis ouvre le lien ; la base vérifie le jeton, l'expiration et l'adresse (`accept_invitation`).
+- **Garde-fous en base** : seul un propriétaire attribue ou retire le rôle de propriétaire, l'organisation garde toujours au moins un propriétaire (`set_member_role`, déclencheur sur le retrait d'un membre).
+- **Plusieurs organisations** : sélecteur dans l'en-tête (cookie de l'organisation active, vérifié à chaque requête).
+- **Journal d'audit** (`audit_log`, ajout seul, lisible par propriétaire et administrateurs) : connexions, dashboards créés, actualisés, téléchargés, supprimés, partages, charte, invitations, rôles et retraits. Métadonnées uniquement, jamais de données des fichiers.
+- Les fonctions `invitation_info`, `accept_invitation`, `organization_members` et `set_member_role` sont SECURITY DEFINER et appelables par les utilisateurs connectés par conception (avertissement attendu du conseiller Supabase) : chacune vérifie elle-même les droits de l'appelant.
+
 ## Charte graphique
 
 Page « Charte graphique » (propriétaire ou administrateur) : import du logo (PNG, JPEG, WebP ou SVG, réencodé en PNG redimensionné dans le navigateur, sans script ni métadonnées), couleurs détectées automatiquement dans le logo puis ajustables. Logo et couleurs s'appliquent à tous les dashboards de l'organisation : écran, PDF, export Excel (logo et en-têtes) et liens partagés. Une couleur trop claire est assombrie pour les textes (contraste ≥ 4,5:1) ; les couleurs de signification (hausse, baisse, alertes) ne changent pas.

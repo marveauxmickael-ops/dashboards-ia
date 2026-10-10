@@ -2,6 +2,7 @@ import { AiError } from "@/lib/ai/gateway";
 import { canEdit, getWorkspace } from "@/lib/auth/session";
 import { ImportError, MAX_FILE_BYTES } from "@/lib/ingest/parse";
 import { generateDashboard } from "@/lib/pipeline";
+import { logEvent } from "@/lib/audit";
 import { saveVersion } from "@/lib/dashboards/versions";
 import type { Json } from "@/lib/supabase/database.types";
 
@@ -54,7 +55,10 @@ export async function POST(request: Request) {
     .select("id")
     .single();
   if (saveError) console.error("Enregistrement du dashboard en échec", saveError.code);
-  else await saveVersion(workspace, saved.id, result);
+  else {
+    await saveVersion(workspace, saved.id, result);
+    await logEvent(workspace, "dashboard.created", { type: "dashboard", id: saved.id }, { file: result.fileName, rows: result.profile.rowCount, mode });
+  }
 
   // Journal des appels IA : métadonnées uniquement, jamais le contenu.
   const calls = [result.ai, ...(result.analysis?.writtenBy === "ai" ? [result.analysis] : [])];

@@ -5,7 +5,7 @@ import { DashboardWorkspace } from "@/components/dashboard-workspace";
 import { PrivacyPanel } from "@/components/privacy-panel";
 import { SharePanel } from "@/components/share-panel";
 import { VersionComparison, VersionHistory } from "@/components/version-history";
-import { canEdit, canManage, requireWorkspace } from "@/lib/auth/session";
+import { canEdit, requireWorkspace } from "@/lib/auth/session";
 import type { DashboardResult } from "@/lib/pipeline";
 import { deleteDashboard } from "../actions";
 import type { ShareState } from "./share-actions";
@@ -18,7 +18,8 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const { version } = await searchParams;
   const versionId = typeof version === "string" && UUID.test(version) ? version : null;
   if (!UUID.test(id)) notFound();
-  const { supabase, organization, user, role } = await requireWorkspace();
+  const workspace = await requireWorkspace();
+  const { supabase, organization, role } = workspace;
 
   // Un dashboard d'une autre organisation est invisible (RLS) : il renvoie ici une page introuvable.
   const { data: dashboard } = await supabase.from("dashboards").select("id, result, created_at, updated_at").eq("id", id).maybeSingle();
@@ -48,7 +49,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
 
   return (
     <>
-      <AppHeader organization={organization.name} email={user.email} manage={canManage(role)} />
+      <AppHeader workspace={workspace} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 print:hidden">
           <Link href="/dashboards" className="text-teal-800 underline">

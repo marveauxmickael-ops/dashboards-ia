@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { logEvent } from "@/lib/audit";
 import { getWorkspace } from "@/lib/auth/session";
 import { buildCsv, buildXlsx, exportFileName } from "@/lib/export/dashboard-export";
 import type { DashboardResult } from "@/lib/pipeline";
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/d
     "Cache-Control": "private, no-store",
   };
 
+  await logEvent(workspace, "dashboard.exported", { type: "dashboard", id }, { format });
   if (format === "csv") {
     return new Response(buildCsv(result, meta), { headers: { ...headers, "Content-Type": "text/csv; charset=utf-8" } });
   }

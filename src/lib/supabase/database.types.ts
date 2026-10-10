@@ -85,6 +85,62 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string;
+          created_at: string;
+          details: Json;
+          id: number;
+          organization_id: string;
+          target_id: string | null;
+          target_type: string | null;
+          user_email: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          action: string;
+          created_at?: string;
+          details?: Json;
+          id?: never;
+          organization_id: string;
+          target_id?: string | null;
+          target_type?: string | null;
+          user_email?: string | null;
+          user_id?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["audit_log"]["Insert"]>;
+        Relationships: [];
+      };
+      invitations: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by: string | null;
+          organization_id: string;
+          revoked_at: string | null;
+          role: string;
+          token_hash: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          email: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string | null;
+          organization_id: string;
+          revoked_at?: string | null;
+          role: string;
+          token_hash: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["invitations"]["Insert"]>;
+        Relationships: [];
+      };
       dashboard_versions: {
         Row: {
           created_at: string;
@@ -213,6 +269,10 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       shared_dashboard: { Args: { share_token: string }; Returns: Json };
+      invitation_info: { Args: { invite_token: string }; Returns: Json };
+      accept_invitation: { Args: { invite_token: string }; Returns: string };
+      organization_members: { Args: { org: string }; Returns: { user_id: string; email: string; role: string; joined_at: string }[] };
+      set_member_role: { Args: { org: string; member: string; new_role: string }; Returns: undefined };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
