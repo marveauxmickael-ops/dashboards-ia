@@ -6,8 +6,9 @@ import { BrandSettings } from "@/components/brand-settings";
 import { NO_BRANDING, type Branding } from "@/lib/branding";
 import { Studio } from "@/components/studio";
 import { ImportError } from "@/lib/ingest/parse";
-import type { Recompute } from "@/components/dashboard-workspace";
-import { generateDashboard, IncompatibleFileError, recomputeDashboard } from "@/lib/pipeline";
+import type { AskQuestion, Recompute } from "@/components/dashboard-workspace";
+import { askDashboardQuestion, generateDashboard, IncompatibleFileError, recomputeDashboard } from "@/lib/pipeline";
+import { QuestionError } from "@/lib/questions";
 import type { AiMode } from "@/lib/types";
 
 async function generateInBrowser(file: File, mode: AiMode) {
@@ -26,6 +27,17 @@ const recomputeInBrowser: Recompute = async ({ file, previous, filters, action }
     return { ok: true, result };
   } catch (error) {
     return { ok: false, message: error instanceof ImportError || error instanceof IncompatibleFileError ? error.message : "Le recalcul a échoué." };
+  }
+};
+
+// Questions interprétées par mots-clés dans le navigateur (aucun appel à une IA dans la démo).
+const askInBrowser: AskQuestion = async ({ file, previous, question }) => {
+  try {
+    const answer = await askDashboardQuestion({ previous, fileName: file.name, data: await file.arrayBuffer(), question, mode: "standard", organizationId: "demo-navigateur" });
+    return { ok: true, answer };
+  } catch (error) {
+    const known = error instanceof ImportError || error instanceof IncompatibleFileError || error instanceof QuestionError;
+    return { ok: false, message: known ? (error as Error).message : "La question n'a pas pu être traitée." };
   }
 };
 
@@ -57,7 +69,7 @@ function App() {
           />
         </div>
       </details>
-      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} />
+      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} ask={askInBrowser} aiAvailable={false} />
     </main>
   );
 }

@@ -7,6 +7,7 @@ import { profileDataset } from "@/lib/ingest/profile";
 import { buildAiContext, type AiContext } from "@/lib/privacy/ai-context";
 import { Pseudonymizer } from "@/lib/privacy/pseudonymize";
 import type { DashboardSpec } from "@/lib/ai/spec";
+import { answerQuestion, type QuestionAnswer } from "@/lib/questions";
 import { applyFilters, filterOptions, isFiltered, type FilterOptions, type Filters } from "@/lib/filters";
 import type { AiMode, DatasetProfile, TypedRow } from "@/lib/types";
 
@@ -155,6 +156,24 @@ export async function recomputeDashboard(input: {
     issues: [],
     durationMs: Date.now() - started,
   };
+}
+
+/** Question en langage naturel sur le fichier source d'un dashboard (US-07) ; le fichier n'est pas conservé. */
+export async function askDashboardQuestion(input: {
+  previous: DashboardResult;
+  fileName: string;
+  data: ArrayBuffer;
+  question: string;
+  mode: AiMode;
+  organizationId: string;
+}): Promise<QuestionAnswer> {
+  if (!input.previous.spec) throw new IncompatibleFileError("Ce dashboard a été créé avant les questions : générez-le à nouveau.");
+  const raw = await parseFile(input.fileName, input.data);
+  const { profile, rows } = profileDataset(raw);
+  const problems = compatibilityProblems(input.previous.spec, input.previous.profile, profile);
+  if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
+  const pseudo = Pseudonymizer.forOrganization(pseudonymizationKey(), input.organizationId);
+  return answerQuestion({ question: input.question, spec: input.previous.spec, profile, rows, mode: input.mode, pseudo });
 }
 
 const ROLE_LABEL: Record<string, string> = { measure: "numérique", date: "date", dimension: "catégorie", ignored: "exclue" };

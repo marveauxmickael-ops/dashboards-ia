@@ -309,6 +309,30 @@ export function DashboardView({
   );
 }
 
+/** Graphique isolé, en lecture seule (réponse à une question), aux couleurs de la charte. */
+export function StandaloneChart({ chart, branding }: { chart: ComputedChart; branding?: Branding }) {
+  const noop = () => undefined;
+  return (
+    <ChartCard
+      chart={chart}
+      view={EMPTY_VIEW}
+      size="l"
+      collapsed={false}
+      compactLayout={false}
+      palette={chartPalette(branding)}
+      onHide={noop}
+      onType={noop}
+      onCategories={noop}
+      onSize={noop}
+      onCollapse={noop}
+      onMove={noop}
+      canMoveBack={false}
+      canMoveForward={false}
+      readOnly
+    />
+  );
+}
+
 /** En mise en page compacte, une section longue se replie : un clic l'ouvre. */
 function Collapsible({ enabled, summary, children }: { enabled: boolean; summary: string; children: ReactNode }) {
   if (!enabled) return <>{children}</>;
@@ -572,6 +596,7 @@ function ChartCard({
   onMove,
   canMoveBack,
   canMoveForward,
+  readOnly = false,
 }: {
   chart: ComputedChart;
   view: ViewState;
@@ -587,6 +612,8 @@ function ChartCard({
   onMove: (direction: -1 | 1) => void;
   canMoveBack: boolean;
   canMoveForward: boolean;
+  /** Graphique isolé (réponse à une question) : sans commandes de disposition ni options. */
+  readOnly?: boolean;
 }) {
   const type = chartTypeOf(chart, view);
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
@@ -617,6 +644,7 @@ function ChartCard({
           {chart.title}
         </h3>
         {/* Commandes de disposition : visibles au survol ou au clavier, toujours visibles sur écran tactile. */}
+        {!readOnly && (
         <div
           className="absolute right-1.5 top-1.5 z-10 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white/95 px-1 py-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 print:hidden"
           role="group"
@@ -649,6 +677,7 @@ function ChartCard({
             ×
           </button>
         </div>
+        )}
       </div>
       {!compactLayout && (
         <p className="mt-0.5 text-xs text-slate-500">
@@ -665,7 +694,7 @@ function ChartCard({
         </p>
       ) : (
         <>
-          <details className="mt-1 text-xs print:hidden">
+          <details className={`mt-1 text-xs print:hidden ${readOnly ? "hidden" : ""}`}>
             <summary className="cursor-pointer text-slate-500 hover:text-slate-800">Options</summary>
             <div className="mt-1.5 flex flex-wrap items-start gap-2">
               <div role="group" aria-label="Type de graphique" className="inline-flex overflow-hidden rounded-lg border border-slate-200">

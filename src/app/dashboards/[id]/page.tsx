@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { activeProvider } from "@/lib/ai/gateway";
 import { DashboardWorkspace } from "@/components/dashboard-workspace";
 import { PrivacyPanel } from "@/components/privacy-panel";
 import { SharePanel } from "@/components/share-panel";
@@ -22,7 +23,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const { supabase, organization, role } = workspace;
 
   // Un dashboard d'une autre organisation est invisible (RLS) : il renvoie ici une page introuvable.
-  const { data: dashboard } = await supabase.from("dashboards").select("id, result, created_at, updated_at").eq("id", id).maybeSingle();
+  const { data: dashboard } = await supabase.from("dashboards").select("id, result, created_at, updated_at, ai_mode").eq("id", id).maybeSingle();
   if (!dashboard) notFound();
   const result = dashboard.result as unknown as DashboardResult;
   const refreshedAt = new Date(dashboard.updated_at ?? dashboard.created_at);
@@ -86,7 +87,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
             <DashboardWorkspace key={selected.id} initial={selectedResult} exportable={false} tools={false} branding={organization.branding} />
           </>
         ) : (
-          <DashboardWorkspace initial={result} dashboardId={dashboard.id} canReimport={canEdit(role)} reloadAfterReimport branding={organization.branding} />
+          <DashboardWorkspace initial={result} dashboardId={dashboard.id} canReimport={canEdit(role)} reloadAfterReimport branding={organization.branding} aiAvailable={activeProvider() !== "demo" && dashboard.ai_mode !== "strict"} />
         )}
         {canEdit(role) && <SharePanel dashboardId={dashboard.id} initial={share ? (share as ShareState) : null} />}
         <VersionHistory dashboardId={dashboard.id} versions={versions ?? []} selectedId={selected?.id ?? null} />

@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Branding } from "@/lib/branding";
 import type { DashboardResult } from "@/lib/pipeline";
 import type { AiMode } from "@/lib/types";
-import { DashboardWorkspace, recomputeOnServer, type Recompute } from "./dashboard-workspace";
+import { DashboardWorkspace, recomputeOnServer, type AskQuestion, type Recompute } from "./dashboard-workspace";
 import { PrivacyPanel } from "./privacy-panel";
 
 type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult; dashboardId?: string };
@@ -33,6 +33,8 @@ export function Studio({
   exportable = true,
   recompute = recomputeOnServer,
   branding,
+  ask,
+  aiAvailable,
 }: {
   generateDashboard?: (file: File, mode: AiMode) => Promise<GenerateOutcome>;
   demoFileUrl?: string;
@@ -42,6 +44,8 @@ export function Studio({
   recompute?: Recompute;
   /** Charte graphique de l'organisation (logo, couleurs). */
   branding?: Branding;
+  ask?: AskQuestion;
+  aiAvailable?: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<AiMode>("standard");
@@ -155,6 +159,8 @@ export function Studio({
             initialFile={file}
             recompute={recompute}
             branding={branding}
+            ask={ask}
+            aiAvailable={aiAvailable}
           />
           <PrivacyPanel result={state.result} />
           <p className="text-xs text-slate-500 print:hidden">

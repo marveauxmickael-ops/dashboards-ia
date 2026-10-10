@@ -4,8 +4,27 @@ import { useState } from "react";
 import { isFiltered, NO_FILTERS, type Filters } from "@/lib/filters";
 import type { Branding } from "@/lib/branding";
 import type { DashboardResult } from "@/lib/pipeline";
+import type { QuestionAnswer } from "@/lib/questions";
 import { DashboardView } from "./dashboard-view";
 import { FiltersBar } from "./filters-bar";
+import { QuestionPanel } from "./question-panel";
+
+export type AskQuestion = (input: { file: File; previous: DashboardResult; question: string; dashboardId?: string | null }) => Promise<{ ok: true; answer: QuestionAnswer } | { ok: false; message: string }>;
+
+/** Question par défaut : API du serveur (le dashboard doit être enregistré). */
+export const askOnServer: AskQuestion = async ({ file, question, dashboardId }) => {
+  if (!dashboardId) return { ok: false, message: "Le dashboard doit être enregistré pour poser une question." };
+  const body = new FormData();
+  body.append("file", file);
+  body.append("question", question);
+  try {
+    const response = await fetch(`/api/dashboards/${dashboardId}/question`, { method: "POST", body });
+    const json = await response.json();
+    return response.ok ? { ok: true, answer: json.answer as QuestionAnswer } : { ok: false, message: json.error ?? "La question n'a pas pu être traitée." };
+  } catch {
+    return { ok: false, message: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez." };
+  }
+};
 
 export type RecomputeAction = "filter" | "reimport";
 export type RecomputeOutcome = { ok: true; result: DashboardResult } | { ok: false; message: string };
@@ -42,6 +61,8 @@ export function DashboardWorkspace({
   reloadAfterReimport = false,
   tools = true,
   branding,
+  ask = askOnServer,
+  aiAvailable = true,
 }: {
   initial: DashboardResult;
   dashboardId?: string | null;
@@ -54,6 +75,9 @@ export function DashboardWorkspace({
   /** false : consultation seule (version précédente, lien partagé), sans fichier source ni filtres. */
   tools?: boolean;
   branding?: Branding;
+  /** Questions en langage naturel (US-07) ; la démo navigateur répond localement. */
+  ask?: AskQuestion;
+  aiAvailable?: boolean;
 }) {
   const [base, setBase] = useState(initial);
   const [shown, setShown] = useState(initial);
@@ -132,6 +156,9 @@ export function DashboardWorkspace({
             </p>
           )}
         </section>
+      )}
+      {supported && file && base.filterOptions && (
+        <QuestionPanel ask={(question) => ask({ file, previous: base, question, dashboardId })} branding={branding} aiAvailable={aiAvailable} />
       )}
       {supported && file && base.filterOptions && (
         <FiltersBar key={base.fileName + base.profile.rowCount} options={base.filterOptions} applied={shown.filters ?? NO_FILTERS} busy={busy === "filter"} onApply={(f) => void run("filter", f)} />

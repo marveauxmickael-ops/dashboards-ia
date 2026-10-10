@@ -123,6 +123,10 @@ Chaque indicateur affiche sa définition, sa formule, la période couverte, les 
 - **Journal d'audit** (`audit_log`, ajout seul, lisible par propriétaire et administrateurs) : connexions, dashboards créés, actualisés, téléchargés, supprimés, partages, charte, invitations, rôles et retraits. Métadonnées uniquement, jamais de données des fichiers.
 - Les fonctions `invitation_info`, `accept_invitation`, `organization_members` et `set_member_role` sont SECURITY DEFINER et appelables par les utilisateurs connectés par conception (avertissement attendu du conseiller Supabase) : chacune vérifie elle-même les droits de l'appelant.
 
+## Questions en langage naturel (US-07)
+
+Panneau « Poser une question » (fichier source chargé) : l'IA traduit la question en requête structurée (`QuerySchema` : mesure, regroupement, filtres, période) à partir de la question pseudonymisée (noms de clients ou de commerciaux remplacés par leurs jetons) et de la structure du fichier ; le moteur calcule sur les vraies données et la réponse est rédigée par des règles : aucun chiffre ne vient de l'IA. En mode strict, en démonstration ou si l'IA échoue, la question est interprétée par mots-clés. La requête exécutée et le texte envoyé à l'IA sont affichés.
+
 ## Double authentification (AUTH-04)
 
 Page « Sécurité du compte » (clic sur l'adresse dans l'en-tête) : activation par application TOTP (QR code puis premier code), désactivation depuis une session déjà vérifiée. Une fois activée, un code est demandé après le mot de passe (`/connexion/verification`) ; le proxy redirige toute page, les API refusent la session, et des politiques RLS restrictives (`private.mfa_ok()`) bloquent l'accès aux données tant que la session n'est pas au niveau aal2. Activation, désactivation et connexions sont journalisées.
