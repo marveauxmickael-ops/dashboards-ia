@@ -7,7 +7,18 @@ import { encodeView, isDefaultView, type ViewState } from "@/lib/view";
 // (« Enregistrer au format PDF ») avec une mise en page dédiée ; Excel et CSV sont produits par le serveur.
 // Les exports reprennent la sélection de l'affichage (éléments cochés).
 // Excel et CSV portent sur le dashboard enregistré (non filtré) : `base` sert à traduire la sélection.
-export function ExportActions({ dashboardId, view, base }: { dashboardId?: string | null; view?: ViewState; base?: DashboardResult }) {
+export function ExportActions({
+  dashboardId,
+  view,
+  base,
+  onPrintOnePage,
+}: {
+  dashboardId?: string | null;
+  view?: ViewState;
+  base?: DashboardResult;
+  /** PDF réduit pour tenir sur une seule page A4 paysage. */
+  onPrintOnePage?: () => void;
+}) {
   const vue = view && base && !isDefaultView(view) ? `&vue=${encodeView(view, base)}` : "";
   const link = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800";
   return (
@@ -16,6 +27,11 @@ export function ExportActions({ dashboardId, view, base }: { dashboardId?: strin
       <button type="button" onClick={() => window.print()} className={link} title="Choisissez « Enregistrer au format PDF » comme imprimante">
         PDF
       </button>
+      {onPrintOnePage && (
+        <button type="button" onClick={onPrintOnePage} className={link} title="Tout le dashboard sur une seule page A4 paysage">
+          PDF une page
+        </button>
+      )}
       {dashboardId && (
         <>
           <a href={`/api/dashboards/${dashboardId}/export?format=xlsx${vue}`} className={link} download>

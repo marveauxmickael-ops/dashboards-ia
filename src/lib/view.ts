@@ -20,11 +20,47 @@ export const ViewSchema = z.object({
   /** Dans l'analyse des variations : constats et hypothèses (explications), pistes d'amélioration (suggestions). */
   hideExplanations: z.boolean().default(false),
   hideSuggestions: z.boolean().default(false),
+  /** Mise en page : « compact » resserre tout (indicateurs, graphiques, sections) pour tenir sur un écran ou une page. */
+  layout: z.enum(["standard", "compact"]).default("standard"),
+  /** Taille de chaque graphique : petit (1/4 de largeur), moyen (1/2), grand (pleine largeur). */
+  chartSizes: z.record(z.string().max(64), z.enum(["s", "m", "l"])).default({}),
+  /** Graphiques réduits : titre et principales valeurs seulement. */
+  collapsedCharts: z.array(z.string().max(64)).max(100).default([]),
+  /** Ordre choisi des graphiques (identifiants) ; les autres suivent dans l'ordre d'origine. */
+  chartOrder: z.array(z.string().max(64)).max(100).default([]),
 });
 
 export type ViewState = z.infer<typeof ViewSchema>;
 
-export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false };
+export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [] };
+
+export type ChartSize = "s" | "m" | "l";
+
+/** Taille d'un graphique : choix de l'utilisateur, sinon petit en mise en page compacte et moyen sinon. */
+export function chartSizeOf(chartId: string, view: ViewState): ChartSize {
+  return view.chartSizes[chartId] ?? (view.layout === "compact" ? "s" : "m");
+}
+
+/** Trie des graphiques selon l'ordre choisi par l'utilisateur (stable pour les autres). */
+export function orderCharts<T extends { id: string }>(charts: T[], view: ViewState): T[] {
+  const rank = new Map(view.chartOrder.map((id, i) => [id, i]));
+  return charts
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => (rank.get(a.c.id) ?? view.chartOrder.length + a.i) - (rank.get(b.c.id) ?? view.chartOrder.length + b.i))
+    .map(({ c }) => c);
+}
+
+/** Déplace un graphique d'un cran parmi `siblings` (même section) ; renvoie le nouvel ordre complet. */
+export function moveChart(allIds: string[], siblings: string[], id: string, direction: -1 | 1): string[] {
+  const i = siblings.indexOf(id);
+  const j = i + direction;
+  if (i === -1 || j < 0 || j >= siblings.length) return allIds;
+  const order = [...allIds];
+  const a = order.indexOf(id);
+  const b = order.indexOf(siblings[j]);
+  [order[a], order[b]] = [order[b], order[a]];
+  return order;
+}
 
 export function isDefaultView(v: ViewState): boolean {
   return (
@@ -32,6 +68,10 @@ export function isDefaultView(v: ViewState): boolean {
     v.hiddenCharts.length === 0 &&
     Object.values(v.hiddenCategories).every((l) => l.length === 0) &&
     Object.keys(v.chartTypes).length === 0 &&
+    v.layout === "standard" &&
+    Object.keys(v.chartSizes).length === 0 &&
+    v.collapsedCharts.length === 0 &&
+    v.chartOrder.length === 0 &&
     !v.hideInsights &&
     !v.hideAnalysis &&
     !v.hideExplanations &&
@@ -66,7 +106,7 @@ export function applyView(result: DashboardResult, view: ViewState): DashboardRe
   return {
     ...result,
     kpis: result.kpis.filter((k) => !hiddenKpis.has(k.id)),
-    charts: result.charts
+    charts: orderCharts(result.charts, view)
       .filter((c) => !hiddenCharts.has(c.id))
       .map((c) => {
         const data = visibleData(c, view);

@@ -20,7 +20,7 @@ import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
-import { allowedChartTypes, analysisView, chartTypeOf, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
+import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, moveChart, orderCharts, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
@@ -63,12 +63,14 @@ export function DashboardView({
     Object.values(view.hiddenCategories).reduce((n, l) => n + l.length, 0);
   const periodLabel = result.period ? (result.period.from === result.period.to ? formatPeriod(result.period.from) : `${formatPeriod(result.period.from)} → ${formatPeriod(result.period.to)}`) : "Pas de colonne de date";
   const filtersLabel = result.filters && isFiltered(result.filters) ? describeFilters(result.filters, formatPeriod).join(" · ") : "Aucun (toutes les lignes)";
+  const compactLayout = view.layout === "compact";
+  const orderedIds = orderCharts(result.charts, view).map((c) => c.id);
   const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div id="dashboard-print-root" className={`flex flex-col ${compactLayout ? "gap-3" : "gap-6"}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{result.title}</h2>
+        <h2 className={`font-semibold tracking-tight text-slate-900 ${compactLayout ? "text-xl" : "text-2xl"}`}>{result.title}</h2>
         <p className="text-sm text-slate-500">
           {result.fileName} · {result.profile.rowCount.toLocaleString("fr-FR")} lignes{result.period && ` · ${periodLabel}`}
         </p>
@@ -83,7 +85,26 @@ export function DashboardView({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        {exportable ? <ExportActions dashboardId={dashboardId} view={view} base={base} /> : <span />}
+        <ExportActions dashboardId={exportable ? dashboardId : null} view={view} base={base} onPrintOnePage={printOnePage} />
+        <div className="flex flex-wrap items-center gap-2">
+        <div role="group" aria-label="Mise en page" className="inline-flex overflow-hidden rounded-lg border border-slate-300 text-sm">
+          {(
+            [
+              ["standard", "Standard"],
+              ["compact", "Compacte"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={view.layout === value}
+              onClick={() => setView({ ...view, layout: value })}
+              className={`px-3 py-1.5 font-medium ${view.layout === value ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           aria-expanded={customizing}
@@ -92,6 +113,7 @@ export function DashboardView({
         >
           Personnaliser l&apos;affichage{maskedCount > 0 && ` · ${maskedCount} élément(s) masqué(s)`}
         </button>
+        </div>
       </div>
 
       {customizing && (
@@ -142,15 +164,23 @@ export function DashboardView({
       )}
 
       {kpis.length > 0 && (
-        <section aria-label="Indicateurs clés" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <section
+          aria-label="Indicateurs clés"
+          className={`kpi-grid ${compactLayout ? "grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}
+        >
           {kpis.map((k) => (
-            <article key={k.id} className="group relative rounded-xl border border-slate-200 bg-white p-4">
+            <article key={k.id} className={`group relative rounded-xl border border-slate-200 bg-white print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-4"}`}>
               <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />
               <p className="pr-6 text-sm font-medium text-slate-600">{k.label}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{formatValue(k.value, k.format)}</p>
+              <p className={`mt-1 font-semibold tabular-nums text-slate-900 ${compactLayout ? "text-lg" : "text-2xl"}`}>{formatValue(k.value, k.format)}</p>
               {k.value === null && <p className="mt-1 text-xs text-amber-800">Donnée indisponible : aucune valeur exploitable, rien n&apos;est estimé.</p>}
-              <p className="mt-2 text-xs text-slate-500">{k.description}</p>
-              {k.quality?.map((q) => (
+              {!compactLayout && <p className="mt-2 text-xs text-slate-500">{k.description}</p>}
+              {compactLayout && k.quality && (
+                <p className="mt-0.5 text-[11px] text-amber-800" title={k.quality.map((q) => `${q.missing} ligne(s) sans valeur pour « ${q.column} »`).join(" ; ")}>
+                  ⚠ {k.quality.reduce((n, q) => n + q.missing, 0)} valeur(s) manquante(s) ignorée(s)
+                </p>
+              )}
+              {!compactLayout && k.quality?.map((q) => (
                 <p key={q.column} className="mt-1 text-xs text-amber-800">
                   {q.missing.toLocaleString("fr-FR")} ligne(s) sans valeur exploitable pour « {q.column} »
                   {q.invalid > 0 && ` (dont ${q.invalid.toLocaleString("fr-FR")} non conforme(s))`}, ignorée(s) dans le calcul.
@@ -201,25 +231,40 @@ export function DashboardView({
         </section>
       )}
 
-      {!view.hideAnalysis && hasAnalysis && result.analysis && <AnalysisPanel analysis={analysisView(result.analysis, view)} dashboardId={dashboardId} />}
+      {!view.hideAnalysis && hasAnalysis && result.analysis && (
+        <Collapsible enabled={compactLayout} summary={`Analyse des variations (${result.analysis.variations.length})`}>
+          <AnalysisPanel analysis={analysisView(result.analysis, view)} dashboardId={dashboardId} />
+        </Collapsible>
+      )}
 
-      {groupCharts(charts).map((group) => (
-        <section key={group.title} aria-label={group.title} className="flex flex-col gap-3">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{group.title}</h3>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {group.charts.map((c) => (
-              <ChartCard
-                key={c.id}
-                chart={c}
-                view={view}
-                onHide={() => setView({ ...view, hiddenCharts: [...view.hiddenCharts, c.id] })}
-                onType={(type) => setView({ ...view, chartTypes: { ...view.chartTypes, [c.id]: type } })}
-                onCategories={(hidden) => setView({ ...view, hiddenCategories: { ...view.hiddenCategories, [c.id]: hidden } })}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+      {groupCharts(orderCharts(charts, view)).map((group) => {
+        const siblings = group.charts.map((c) => c.id);
+        return (
+          <section key={group.title} aria-label={group.title} className={`flex flex-col ${compactLayout ? "gap-2" : "gap-3"}`}>
+            <h3 className={`font-semibold uppercase tracking-wide text-slate-500 ${compactLayout ? "text-xs" : "text-sm"}`}>{group.title}</h3>
+            <div className={`chart-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${compactLayout ? "gap-2" : "gap-3"}`}>
+              {group.charts.map((c, i) => (
+                <ChartCard
+                  key={c.id}
+                  chart={c}
+                  view={view}
+                  size={chartSizeOf(c.id, view)}
+                  collapsed={view.collapsedCharts.includes(c.id)}
+                  compactLayout={compactLayout}
+                  onHide={() => setView({ ...view, hiddenCharts: [...view.hiddenCharts, c.id] })}
+                  onType={(type) => setView({ ...view, chartTypes: { ...view.chartTypes, [c.id]: type } })}
+                  onCategories={(hidden) => setView({ ...view, hiddenCategories: { ...view.hiddenCategories, [c.id]: hidden } })}
+                  onSize={(size) => setView({ ...view, chartSizes: { ...view.chartSizes, [c.id]: size } })}
+                  onCollapse={() => setView({ ...view, collapsedCharts: toggle(view.collapsedCharts, c.id) })}
+                  onMove={(direction) => setView({ ...view, chartOrder: moveChart(orderedIds, siblings, c.id, direction) })}
+                  canMoveBack={i > 0}
+                  canMoveForward={i < group.charts.length - 1}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
 
       {kpis.length === 0 && charts.length === 0 && (
         <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">
@@ -242,6 +287,88 @@ export function DashboardView({
       )}
     </div>
   );
+}
+
+/** En mise en page compacte, une section longue se replie : un clic l'ouvre. */
+function Collapsible({ enabled, summary, children }: { enabled: boolean; summary: string; children: ReactNode }) {
+  if (!enabled) return <>{children}</>;
+  return (
+    <details className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+      <summary className="cursor-pointer text-sm font-semibold text-slate-800">{summary}</summary>
+      <div className="mt-2">{children}</div>
+    </details>
+  );
+}
+
+// Largeur et hauteur imprimables d'une page A4 paysage (marges de 8 mm), en pixels CSS.
+const PAGE_WIDTH = 1062;
+const PAGE_HEIGHT = 733;
+
+/**
+ * PDF sur une seule page : le dashboard est mis en page à la largeur d'une A4 paysage, puis réduit
+ * à l'échelle pour que toute sa hauteur tienne sur la page. Rien n'est coupé ni masqué.
+ */
+function printOnePage() {
+  const root = document.getElementById("dashboard-print-root");
+  if (!root) return window.print();
+  const style = document.createElement("style");
+  // La grille est fixée explicitement : la largeur d'une page imprimée ne doit pas changer le nombre de colonnes.
+  style.textContent = `#dashboard-print-root.one-page .chart-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+#dashboard-print-root.one-page .kpi-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+#dashboard-print-root.one-page .span-s { grid-column: span 1 / span 1 !important; }
+#dashboard-print-root.one-page .span-m { grid-column: span 2 / span 2 !important; }
+#dashboard-print-root.one-page .span-l { grid-column: 1 / -1 !important; }
+@page { size: A4 landscape; margin: 8mm; }
+@media print {
+  body * { visibility: hidden !important; }
+  #dashboard-print-root, #dashboard-print-root * { visibility: visible !important; }
+  #dashboard-print-root .recharts-tooltip-wrapper, #dashboard-print-root .recharts-tooltip-wrapper * { visibility: hidden !important; }
+  html, body { height: ${PAGE_HEIGHT}px !important; overflow: hidden !important; }
+  #dashboard-print-root { position: absolute; left: 0; top: 0; }
+}`;
+  document.head.appendChild(style);
+  const previous = { width: root.style.width, zoom: root.style.zoom };
+  root.style.width = `${PAGE_WIDTH}px`;
+  root.classList.add("one-page");
+  const restore = () => {
+    root.classList.remove("one-page");
+    root.style.width = previous.width;
+    root.style.zoom = previous.zoom;
+    style.remove();
+    window.removeEventListener("afterprint", restore);
+  };
+  window.addEventListener("afterprint", restore);
+  const wait = () => new Promise((resolve) => window.setTimeout(resolve, 350));
+  const contentHeight = () =>
+    Math.max(
+      1,
+      [...root.children].reduce((h, el) => (getComputedStyle(el).display === "none" ? h : Math.max(h, (el as HTMLElement).offsetTop + (el as HTMLElement).offsetHeight)), 0) -
+        root.offsetTop,
+    );
+  // Deux passes : mesure à la largeur de la page, puis mise en page élargie dans les proportions de la page
+  // pour en occuper toute la largeur une fois réduite. Les graphiques se redessinent entre les deux mesures.
+  void (async () => {
+    await wait();
+    let scale = Math.min(1, PAGE_HEIGHT / contentHeight());
+    if (scale < 1) {
+      const width = PAGE_WIDTH / scale;
+      root.style.width = `${width}px`;
+      await wait();
+      scale = Math.min(PAGE_WIDTH / width, PAGE_HEIGHT / contentHeight());
+    }
+    // En dessous de 45 %, le texte devient illisible : on prévient avant d'imprimer.
+    if (
+      scale < 0.45 &&
+      !window.confirm(
+        `Pour tenir sur une page, le dashboard serait réduit à ${Math.round(scale * 100)} % et difficile à lire.\n\nConseil : passez en mise en page compacte, réduisez ou masquez des graphiques.\n\nImprimer quand même ?`,
+      )
+    ) {
+      restore();
+      return;
+    }
+    root.style.zoom = String(scale);
+    window.print();
+  })();
 }
 
 // Sélection mémorisée par dashboard dans ce navigateur : simple confort, l'affichage reste complet
@@ -401,19 +528,43 @@ const SECTION_FLAG: Record<string, "hideInsights" | "hideAnalysis" | "hideExplan
 
 const TYPE_LABEL: Record<ChartType, string> = { bar: "Barres", line: "Courbe", pie: "Secteurs", table: "Tableau" };
 
+const SIZE_LABEL: Record<ChartSize, string> = { s: "Petit", m: "Moyen", l: "Grand" };
+/** Largeur dans la grille de 4 colonnes : petit = 1, moyen = 2, grand = toute la ligne. */
+const SPAN: Record<ChartSize, string> = { s: "span-s", m: "span-m sm:col-span-2", l: "span-l col-span-full" };
+const BASE_HEIGHT: Record<ChartSize, number> = { s: 190, m: 250, l: 300 };
+
+const iconButton =
+  "inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-800";
+
 // Graphiques sans animation : l'impression (export PDF) capture toujours le graphique complet.
 function ChartCard({
   chart,
   view,
+  size,
+  collapsed,
+  compactLayout,
   onHide,
   onType,
   onCategories,
+  onSize,
+  onCollapse,
+  onMove,
+  canMoveBack,
+  canMoveForward,
 }: {
   chart: ComputedChart;
   view: ViewState;
+  size: ChartSize;
+  collapsed: boolean;
+  compactLayout: boolean;
   onHide: () => void;
   onType: (type: ChartType) => void;
   onCategories: (hidden: string[]) => void;
+  onSize: (size: ChartSize) => void;
+  onCollapse: () => void;
+  onMove: (direction: -1 | 1) => void;
+  canMoveBack: boolean;
+  canMoveForward: boolean;
 }) {
   const type = chartTypeOf(chart, view);
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
@@ -426,131 +577,191 @@ function ChartCard({
   const toggleCategory = (category: string) => onCategories(hidden.has(category) ? [...hidden].filter((x) => x !== category) : [...hidden, category]);
   // Catégories masquées présentes dans les données affichées (une vue filtrée peut en exclure).
   const hiddenCount = chart.data.filter((d) => hidden.has(d.category)).length;
-  // Barres horizontales : la hauteur suit le nombre de catégories pour que chaque libellé reste lisible.
-  const barHeight = Math.max(220, data.length * 34 + 40);
+
+  const small = size === "s" || compactLayout;
+  const height = Math.round(BASE_HEIGHT[size] * (compactLayout ? 0.8 : 1));
+  const font = small ? 10 : 11;
+  // Barres horizontales : une ligne par catégorie, plus serrée sur un petit graphique.
+  const barHeight = Math.max(height, data.length * (small ? 20 : 30) + 30);
+  const labelWidth = size === "s" ? 90 : size === "m" ? 130 : 160;
+  const top = [...data].filter((d) => d.value !== null).slice(0, 3);
 
   return (
-    <article className="relative min-w-0 rounded-xl border border-slate-200 bg-white p-4 print:break-inside-avoid">
-      <HideButton label={`Masquer le graphique ${chart.title}`} onClick={onHide} />
-      <h3 className="pr-8 text-base font-semibold text-slate-900">{chart.title}</h3>
-      <p className="mb-3 text-xs text-slate-500">
-        {chart.formula}
-        {chart.othersCount > 0 && ` · ${chart.othersCount} autre(s) catégorie(s) non affichée(s)`}
-        {hiddenCount > 0 && ` · ${hiddenCount} catégorie(s) masquée(s)`}
-      </p>
-
-      <div className="mb-3 flex flex-wrap items-start gap-2 print:hidden">
-        <div role="group" aria-label="Type de graphique" className="inline-flex overflow-hidden rounded-lg border border-slate-200">
-          {allowedChartTypes(chart).map((t) => (
-            <button
-              key={t}
-              type="button"
-              aria-pressed={t === type}
-              onClick={() => onType(t)}
-              className={`px-2.5 py-1 text-xs font-medium ${t === type ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
-            >
-              {TYPE_LABEL[t]}
-            </button>
-          ))}
+    <article
+      className={`group relative min-w-0 rounded-xl border border-slate-200 bg-white print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""}`}
+    >
+      <div>
+        <h3 className={`min-w-0 font-semibold text-slate-900 ${small ? "text-sm" : "text-base"}`} title={chart.formula}>
+          {chart.title}
+        </h3>
+        {/* Commandes de disposition : visibles au survol ou au clavier, toujours visibles sur écran tactile. */}
+        <div
+          className="absolute right-1.5 top-1.5 z-10 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white/95 px-1 py-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 print:hidden"
+          role="group"
+          aria-label={`Disposition de ${chart.title}`}
+        >
+          <button type="button" className={iconButton} disabled={!canMoveBack} onClick={() => onMove(-1)} aria-label="Déplacer avant" title="Déplacer avant">
+            ‹
+          </button>
+          <button type="button" className={iconButton} disabled={!canMoveForward} onClick={() => onMove(1)} aria-label="Déplacer après" title="Déplacer après">
+            ›
+          </button>
+          <span className="mx-0.5 inline-flex overflow-hidden rounded border border-slate-200" role="group" aria-label="Taille">
+            {(["s", "m", "l"] as const).map((x) => (
+              <button
+                key={x}
+                type="button"
+                aria-pressed={x === size}
+                title={`Taille : ${SIZE_LABEL[x]}`}
+                onClick={() => onSize(x)}
+                className={`px-1.5 text-[11px] font-semibold ${x === size ? "bg-teal-800 text-white" : "text-slate-600 hover:bg-slate-50"}`}
+              >
+                {x.toUpperCase()}
+              </button>
+            ))}
+          </span>
+          <button type="button" className={iconButton} onClick={onCollapse} aria-expanded={!collapsed} aria-label={collapsed ? "Agrandir" : "Réduire"} title={collapsed ? "Agrandir" : "Réduire"}>
+            {collapsed ? "▸" : "▾"}
+          </button>
+          <button type="button" className={iconButton} onClick={onHide} aria-label={`Masquer le graphique ${chart.title}`} title="Masquer">
+            ×
+          </button>
         </div>
-        {chart.data.length > 1 && (
-          <details className="min-w-0 text-xs">
-            <summary className="cursor-pointer rounded-lg border border-slate-200 px-2.5 py-1 font-medium text-slate-700 hover:bg-slate-50">
-              {chart.chronological ? "Périodes" : "Catégories"} affichées : {chart.data.length - hiddenCount}/{chart.data.length}
-            </summary>
-            <div className="mt-2 rounded-lg border border-slate-200 bg-white p-2">
-              <div className="mb-1.5 flex gap-3">
-                <button type="button" onClick={() => onCategories([])} className="text-teal-900 underline">
-                  Tout cocher
-                </button>
-                <button type="button" onClick={() => onCategories(chart.data.map((d) => d.category))} className="text-teal-900 underline">
-                  Tout décocher
-                </button>
-              </div>
-              <ul className="grid max-h-48 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
-                {chart.data.map((d) => (
-                  <li key={d.category}>
-                    <label className="flex cursor-pointer items-center gap-2 text-slate-800">
-                      <input type="checkbox" checked={!hidden.has(d.category)} onChange={() => toggleCategory(d.category)} className="size-3.5 accent-teal-800" />
-                      <span className="truncate">{chart.chronological ? formatPeriod(d.category) : d.category}</span>
-                    </label>
-                  </li>
+      </div>
+      {!compactLayout && (
+        <p className="mt-0.5 text-xs text-slate-500">
+          {chart.formula}
+          {chart.othersCount > 0 && ` · ${chart.othersCount} autre(s) catégorie(s) non affichée(s)`}
+          {hiddenCount > 0 && ` · ${hiddenCount} catégorie(s) masquée(s)`}
+        </p>
+      )}
+
+      {collapsed ? (
+        <p className="mt-1 text-xs text-slate-600">
+          {top.length === 0 ? "Aucune donnée." : top.map((d) => `${d.label} : ${fmt(d.value)}`).join(" · ")}
+          {data.length > top.length && " …"}
+        </p>
+      ) : (
+        <>
+          <details className="mt-1 text-xs print:hidden">
+            <summary className="cursor-pointer text-slate-500 hover:text-slate-800">Options</summary>
+            <div className="mt-1.5 flex flex-wrap items-start gap-2">
+              <div role="group" aria-label="Type de graphique" className="inline-flex overflow-hidden rounded-lg border border-slate-200">
+                {allowedChartTypes(chart).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={t === type}
+                    onClick={() => onType(t)}
+                    className={`px-2 py-0.5 font-medium ${t === type ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+                  >
+                    {TYPE_LABEL[t]}
+                  </button>
                 ))}
-              </ul>
+              </div>
+              {chart.data.length > 1 && (
+                <details className="min-w-0">
+                  <summary className="cursor-pointer rounded-lg border border-slate-200 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-50">
+                    {chart.chronological ? "Périodes" : "Catégories"} : {chart.data.length - hiddenCount}/{chart.data.length}
+                  </summary>
+                  <div className="mt-1.5 rounded-lg border border-slate-200 bg-white p-2">
+                    <div className="mb-1.5 flex gap-3">
+                      <button type="button" onClick={() => onCategories([])} className="text-teal-900 underline">
+                        Tout cocher
+                      </button>
+                      <button type="button" onClick={() => onCategories(chart.data.map((d) => d.category))} className="text-teal-900 underline">
+                        Tout décocher
+                      </button>
+                    </div>
+                    <ul className="grid max-h-48 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
+                      {chart.data.map((d) => (
+                        <li key={d.category}>
+                          <label className="flex cursor-pointer items-center gap-2 text-slate-800">
+                            <input type="checkbox" checked={!hidden.has(d.category)} onChange={() => toggleCategory(d.category)} className="size-3.5 accent-teal-800" />
+                            <span className="truncate">{chart.chronological ? formatPeriod(d.category) : d.category}</span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </details>
+              )}
             </div>
           </details>
-        )}
-      </div>
 
-      {data.length === 0 ? (
-        <p className="py-12 text-center text-sm text-slate-500">
-          {chart.data.length === 0 ? "Pas assez de données pour ce graphique." : "Aucune catégorie cochée."}
-        </p>
-      ) : type === "table" ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-                <th className="py-1 pr-4 font-medium">{chart.chronological ? "Période" : "Catégorie"}</th>
-                <th className="py-1 pr-4 text-right font-medium">{chart.measureLabel}</th>
-                {chart.format !== "percent" && total > 0 && <th className="py-1 text-right font-medium">Part</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((d) => (
-                <tr key={d.category} className="border-b border-slate-100 last:border-0">
-                  <td className="py-1.5 pr-4 text-slate-700">{d.label}</td>
-                  <td className="py-1.5 pr-4 text-right tabular-nums text-slate-900">{fmt(d.value)}</td>
-                  {chart.format !== "percent" && total > 0 && (
-                    <td className="py-1.5 text-right tabular-nums text-slate-600">{d.value !== null ? `${Math.round((d.value / total) * 1000) / 10} %` : "—"}</td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div style={{ height: type === "bar" && !chart.chronological ? barHeight : 288 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            {type === "line" ? (
-              <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} />
-                <YAxis tickFormatter={compact} tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} width={48} />
-                <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
-                <Line type="monotone" dataKey="value" stroke={PALETTE[0]} strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} />
-              </LineChart>
-            ) : type === "pie" ? (
-              <PieChart>
-                <Tooltip formatter={(v) => [`${fmt(v)}${share(v)}`, chart.measureLabel]} />
-                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-                <Pie data={data} dataKey="value" nameKey="label" innerRadius="45%" outerRadius="75%" paddingAngle={2} isAnimationActive={false}>
-                  {data.map((d, i) => (
-                    <Cell key={d.category} fill={PALETTE[i % PALETTE.length]} />
-                  ))}
-                </Pie>
-              </PieChart>
-            ) : chart.chronological ? (
-              <BarChart data={data} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} />
-                <YAxis tickFormatter={compact} tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} width={48} />
-                <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
-                <Bar dataKey="value" fill={PALETTE[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-              </BarChart>
+          <div className="mt-2">
+            {data.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-500">
+                {chart.data.length === 0 ? "Pas assez de données pour ce graphique." : "Aucune catégorie cochée."}
+              </p>
+            ) : type === "table" ? (
+              <div className="overflow-x-auto" style={{ maxHeight: barHeight }}>
+                <table className={`w-full ${small ? "text-xs" : "text-sm"}`}>
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+                      <th className="py-1 pr-3 font-medium">{chart.chronological ? "Période" : "Catégorie"}</th>
+                      <th className="py-1 pr-3 text-right font-medium">{chart.measureLabel}</th>
+                      {chart.format !== "percent" && total > 0 && <th className="py-1 text-right font-medium">Part</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((d) => (
+                      <tr key={d.category} className="border-b border-slate-100 last:border-0">
+                        <td className="py-1 pr-3 text-slate-700">{d.label}</td>
+                        <td className="py-1 pr-3 text-right tabular-nums text-slate-900">{fmt(d.value)}</td>
+                        {chart.format !== "percent" && total > 0 && (
+                          <td className="py-1 text-right tabular-nums text-slate-600">{d.value !== null ? `${Math.round((d.value / total) * 1000) / 10} %` : "—"}</td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
-              <BarChart data={data} layout="vertical" margin={{ top: 0, right: 56, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" horizontal={false} />
-                <XAxis type="number" tickFormatter={compact} tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} />
-                <YAxis type="category" dataKey="label" width={150} tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} />
-                <Tooltip formatter={(v) => [`${fmt(v)}${share(v)}`, chart.measureLabel]} />
-                <Bar dataKey="value" fill={PALETTE[0]} radius={[0, 4, 4, 0]} isAnimationActive={false}>
-                  <LabelList dataKey="value" position="right" formatter={(v: unknown) => (typeof v === "number" ? compact(v) : "")} style={{ fontSize: 11, fill: "#334155" }} />
-                </Bar>
-              </BarChart>
+              <div style={{ height: type === "bar" && !chart.chronological ? barHeight : height }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  {type === "line" ? (
+                    <LineChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
+                      <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} minTickGap={8} />
+                      <YAxis tickFormatter={compact} tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} axisLine={false} width={small ? 38 : 48} />
+                      <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
+                      <Line type="monotone" dataKey="value" stroke={PALETTE[0]} strokeWidth={2} dot={{ r: small ? 2 : 3 }} isAnimationActive={false} />
+                    </LineChart>
+                  ) : type === "pie" ? (
+                    <PieChart>
+                      <Tooltip formatter={(v) => [`${fmt(v)}${share(v)}`, chart.measureLabel]} />
+                      <Legend verticalAlign="bottom" iconType="circle" iconSize={small ? 8 : 10} wrapperStyle={{ fontSize: small ? 10 : 12 }} />
+                      <Pie data={data} dataKey="value" nameKey="label" innerRadius="45%" outerRadius="75%" paddingAngle={2} isAnimationActive={false}>
+                        {data.map((d, i) => (
+                          <Cell key={d.category} fill={PALETTE[i % PALETTE.length]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  ) : chart.chronological ? (
+                    <BarChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: 0 }}>
+                      <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} minTickGap={8} />
+                      <YAxis tickFormatter={compact} tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} axisLine={false} width={small ? 38 : 48} />
+                      <Tooltip formatter={(v) => [fmt(v), chart.measureLabel]} />
+                      <Bar dataKey="value" fill={PALETTE[0]} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                    </BarChart>
+                  ) : (
+                    <BarChart data={data} layout="vertical" margin={{ top: 0, right: small ? 40 : 56, bottom: 0, left: 0 }}>
+                      <CartesianGrid stroke="#e2e8f0" horizontal={false} />
+                      <XAxis type="number" tickFormatter={compact} tick={{ fontSize: font, fill: "#64748b" }} tickLine={false} />
+                      <YAxis type="category" dataKey="label" width={labelWidth} tick={{ fontSize: font, fill: "#334155" }} tickLine={false} axisLine={false} />
+                      <Tooltip formatter={(v) => [`${fmt(v)}${share(v)}`, chart.measureLabel]} />
+                      <Bar dataKey="value" fill={PALETTE[0]} radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                        <LabelList dataKey="value" position="right" formatter={(v: unknown) => (typeof v === "number" ? compact(v) : "")} style={{ fontSize: font, fill: "#334155" }} />
+                      </Bar>
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
             )}
-          </ResponsiveContainer>
-        </div>
+          </div>
+        </>
       )}
     </article>
   );
