@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit",
     "prebuild": "node scripts/generate-demo-data.mjs",
-    "build:demo": "node demo-web/build.mjs"
+    "build:demo": "node demo-web/build.mjs",
+    "build:site": "node demo-web/build.mjs && node site/copy-demo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.34.4",

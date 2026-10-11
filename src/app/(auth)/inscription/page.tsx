@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AuthForm, AuthShell, Field } from "@/components/auth-form";
 import { signup } from "../actions";
 
-export const metadata = { title: "Créer un compte — Dashboards IA" };
+export const metadata = { title: "Créer un compte — Lisio" };
 
 export default function SignupPage() {
   return (
@@ -12,7 +12,7 @@ export default function SignupPage() {
       footer={
         <>
           Déjà inscrit ?{" "}
-          <Link href="/connexion" className="font-medium text-teal-800 underline">
+          <Link href="/connexion" className="font-medium text-brand-800 underline">
             Se connecter
           </Link>
         </>

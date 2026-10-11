@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrandSettings } from "@/components/brand-settings";
+import { LisioLogo } from "@/components/lisio-logo";
 import { NO_BRANDING, type Branding } from "@/lib/branding";
 import { Studio } from "@/components/studio";
 import { ImportError, parseFile } from "@/lib/ingest/parse";
@@ -67,13 +68,19 @@ function App() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
       <header className="flex flex-col gap-2 print:hidden">
-        <p className="text-xs font-semibold uppercase tracking-widest text-teal-800">Démo navigateur</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <LisioLogo size={32} />
+          <a href="../" className="text-sm text-brand-800 underline">
+            ← Retour au site
+          </a>
+        </div>
+        <p className="mt-4 font-mono text-xs uppercase tracking-widest text-slate-500">Démo navigateur</p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Votre fichier devient un tableau de bord</h1>
         <p className="max-w-2xl text-slate-600">
           Importez un export Excel ou CSV. Les données identifiantes sont pseudonymisées avant la conception du dashboard ; chaque chiffre
           est ensuite recalculé sur vos données et affiché en clair.
         </p>
-        <p className="max-w-2xl rounded-lg bg-teal-50 px-3 py-2 text-sm text-teal-900">
+        <p className="max-w-2xl rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-900">
           Tout s&apos;exécute dans votre navigateur : aucun fichier n&apos;est envoyé. La conception utilise le mode démonstration, sans appel à Claude.
         </p>
       </header>

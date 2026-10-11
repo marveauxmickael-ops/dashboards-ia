@@ -118,7 +118,7 @@ export function BrandSettings({ initial, onSave, organization }: { initial: Bran
                   {c}
                 </span>
               ))}
-              <button type="button" className="text-teal-900 underline" onClick={() => setBranding((b) => ({ ...b, colors: suggested }))}>
+              <button type="button" className="text-brand-900 underline" onClick={() => setBranding((b) => ({ ...b, colors: suggested }))}>
                 Utiliser ces couleurs
               </button>
             </div>
@@ -157,7 +157,7 @@ export function BrandSettings({ initial, onSave, organization }: { initial: Bran
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button type="button" disabled={busy} onClick={() => void save()} className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900 disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={() => void save()} className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50">
             {busy ? "Enregistrement…" : "Enregistrer la charte"}
           </button>
           <button type="button" disabled={busy} onClick={() => setBranding({ logo: null, colors: [] })} className="text-sm text-slate-600 underline">

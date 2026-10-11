@@ -1,4 +1,4 @@
-# Dashboards IA — prototype
+# Lisio (ex-Dashboards IA) — prototype
 
 SaaS de génération de tableaux de bord à partir de fichiers Excel et CSV. L'IA (Claude) conçoit le dashboard **sur des données pseudonymisées** ; le backend vérifie sa proposition, calcule chaque chiffre sur les vraies données et restitue le dashboard **en clair**.
 
@@ -107,6 +107,13 @@ L'IA choisit les indicateurs clés et définit les mesures métier (marge, taux 
 ## Fiabilité des KPI (US-03)
 
 Chaque indicateur affiche sa définition, sa formule, la période couverte, les filtres appliqués et le nombre de lignes. Une valeur absente ou non conforme n'est jamais remplacée par zéro : elle est ignorée et signalée sur l'indicateur et dans l'export Excel.
+
+## Marque Lisio, navigation et site web
+
+- **Marque** : nom Lisio, symbole (axe et courbe montante) dans `src/components/lisio-logo.tsx` et `src/app/icon.svg`. Couleurs en jetons Tailwind `brand-*` (ardoise #1F3A4D) et `accent-*` (cuivre #C8743A) dans `src/app/globals.css` ; polices Bricolage Grotesque (titres), Source Sans 3 (texte) et IBM Plex Mono, servies par l'application via `next/font`. Palette des graphiques par défaut : `DEFAULT_PALETTE` (`src/lib/branding.ts`), remplacée par la charte de l'organisation si elle en a une.
+- **Navigation** : trois onglets (Nouveau dashboard · Mes dashboards · Paramètres), menu « Compte » (sécurité, déconnexion). Paramètres regroupe Membres et invitations, Charte graphique, Journal d'audit et Sécurité (`SettingsShell`).
+- **Page d'un dashboard** : onglets Dashboard · Partage · Historique · Données et confidentialité (`?onglet=`). Une version consultée (`?version=`) s'ouvre sur l'onglet Dashboard avec la comparaison.
+- **Site web** (`site/`) : page statique responsive, polices auto-hébergées, démo navigateur intégrée dans `site/demo` (régénérer avec `npm run build:site`). À déployer comme **projet Vercel séparé** : *Add New Project* → même dépôt → *Root Directory* `site` → *Framework Preset* « Other », sans commande de build. Les liens « Se connecter » et « Créer un compte » pointent vers `https://dashboards-ia-creetacrea.vercel.app` : à remplacer dans `site/index.html` le jour où l'outil a son domaine.
 
 ## Renommer un dashboard
 

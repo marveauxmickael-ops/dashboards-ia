@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AuthForm, AuthShell, Field } from "@/components/auth-form";
 import { requestPasswordReset } from "../actions";
 
-export const metadata = { title: "Mot de passe oublié — Dashboards IA" };
+export const metadata = { title: "Mot de passe oublié — Lisio" };
 
 export default function ForgotPasswordPage() {
   return (
@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
       title="Mot de passe oublié"
       subtitle="Recevez un lien pour choisir un nouveau mot de passe."
       footer={
-        <Link href="/connexion" className="font-medium text-teal-800 underline">
+        <Link href="/connexion" className="font-medium text-brand-800 underline">
           Retour à la connexion
         </Link>
       }

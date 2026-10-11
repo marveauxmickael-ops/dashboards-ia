@@ -53,7 +53,7 @@ export function QuestionPanel({ ask, branding, aiAvailable }: { ask: Ask; brandi
           aria-label="Votre question"
           className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
-        <button type="submit" disabled={busy || question.trim().length < 3} className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900 disabled:opacity-50">
+        <button type="submit" disabled={busy || question.trim().length < 3} className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50">
           {busy ? "Calcul…" : "Demander"}
         </button>
       </form>

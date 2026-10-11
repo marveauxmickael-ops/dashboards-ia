@@ -117,7 +117,7 @@ export function DashboardView({
               type="button"
               aria-pressed={view.layout === value}
               onClick={() => setView({ ...view, layout: value })}
-              className={`px-3 py-1.5 font-medium ${view.layout === value ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+              className={`px-3 py-1.5 font-medium ${view.layout === value ? "bg-brand-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
             >
               {label}
             </button>
@@ -136,7 +136,7 @@ export function DashboardView({
               aria-pressed={view.grouping === value}
               title={value === "free" ? "Une seule grille : glissez-déposez les graphiques où vous voulez" : "Graphiques regroupés : évolutions, puis par dimension"}
               onClick={() => setView({ ...view, grouping: value })}
-              className={`px-3 py-1.5 font-medium ${view.grouping === value ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+              className={`px-3 py-1.5 font-medium ${view.grouping === value ? "bg-brand-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
             >
               {label}
             </button>
@@ -146,7 +146,7 @@ export function DashboardView({
           type="button"
           aria-expanded={customizing}
           onClick={() => setCustomizing((v) => !v)}
-          className="rounded-lg border border-teal-800 bg-white px-3 py-1.5 text-sm font-medium text-teal-900 hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+          className="rounded-lg border border-brand-800 bg-white px-3 py-1.5 text-sm font-medium text-brand-900 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-800"
         >
           Personnaliser l&apos;affichage{maskedCount > 0 && ` · ${maskedCount} élément(s) masqué(s)`}
         </button>
@@ -154,7 +154,7 @@ export function DashboardView({
       </div>
 
       {customizing && (
-        <section aria-label="Personnaliser l'affichage" className="flex flex-col gap-4 rounded-xl border border-teal-200 bg-teal-50/40 p-4 print:hidden">
+        <section aria-label="Personnaliser l'affichage" className="flex flex-col gap-4 rounded-xl border border-brand-200 bg-brand-50/40 p-4 print:hidden">
           <p className="text-sm text-slate-700">
             Cochez ce que vous voulez voir. Les valeurs ne changent pas : les éléments décochés sont seulement masqués, à l&apos;écran comme dans les
             téléchargements (PDF, Excel, CSV). Les catégories de chaque graphique se choisissent depuis le graphique.
@@ -193,7 +193,7 @@ export function DashboardView({
             />
           </div>
           <div>
-            <button type="button" onClick={() => setView(EMPTY_VIEW)} className="text-sm font-medium text-teal-900 underline">
+            <button type="button" onClick={() => setView(EMPTY_VIEW)} className="text-sm font-medium text-brand-900 underline">
               Tout réafficher
             </button>
           </div>
@@ -230,7 +230,7 @@ export function DashboardView({
               {/* Dans le PDF, le calcul est affiché en clair à la place du lien. */}
               <p className="mt-2 hidden font-mono text-[11px] text-slate-600 print:block">Calcul : {k.formula}</p>
               <details className="mt-2 text-xs text-slate-500 print:hidden">
-                <summary className="cursor-pointer text-teal-800">Comment est-il calculé ?</summary>
+                <summary className="cursor-pointer text-brand-800">Comment est-il calculé ?</summary>
                 <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 rounded bg-slate-50 px-2 py-1.5 text-slate-700">
                   <dt className="font-medium">Définition</dt>
                   <dd>{k.description}</dd>
@@ -331,7 +331,7 @@ export function DashboardView({
       {kpis.length === 0 && charts.length === 0 && (
         <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">
           Tous les indicateurs et graphiques sont masqués.{" "}
-          <button type="button" onClick={() => setView(EMPTY_VIEW)} className="font-medium text-teal-900 underline">
+          <button type="button" onClick={() => setView(EMPTY_VIEW)} className="font-medium text-brand-900 underline">
             Tout réafficher
           </button>
         </p>
@@ -633,10 +633,10 @@ function CheckGroup({
     <fieldset className="min-w-0 rounded-lg border border-slate-200 bg-white p-3">
       <legend className="px-1 text-sm font-semibold text-slate-900">{legend}</legend>
       <div className="mb-2 flex gap-3 text-xs">
-        <button type="button" onClick={() => onAll(true)} className="text-teal-900 underline">
+        <button type="button" onClick={() => onAll(true)} className="text-brand-900 underline">
           Tout cocher
         </button>
-        <button type="button" onClick={() => onAll(false)} className="text-teal-900 underline">
+        <button type="button" onClick={() => onAll(false)} className="text-brand-900 underline">
           Tout décocher
         </button>
       </div>
@@ -648,7 +648,7 @@ function CheckGroup({
             return (
               <div key={g.title}>
                 <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <input type="checkbox" checked={allOn} onChange={() => onGroup(g.ids, !allOn)} className="size-3.5 accent-teal-800" />
+                  <input type="checkbox" checked={allOn} onChange={() => onGroup(g.ids, !allOn)} className="size-3.5 accent-brand-800" />
                   {g.title}
                 </label>
                 <CheckList items={groupItems} onToggle={onToggle} />
@@ -674,7 +674,7 @@ function CheckList({ items, onToggle }: { items: CheckItem[]; onToggle: (id: str
               checked={item.checked && !item.disabled}
               disabled={item.disabled}
               onChange={() => onToggle(item.id)}
-              className="mt-0.5 size-4 accent-teal-800"
+              className="mt-0.5 size-4 accent-brand-800"
             />
             <span className="min-w-0">{item.label}</span>
           </label>
@@ -701,7 +701,7 @@ function HideButton({ label, onClick }: { label: string; onClick: () => void }) 
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="absolute right-2 top-2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-800 print:hidden"
+      className="absolute right-2 top-2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-800 print:hidden"
     >
       <svg viewBox="0 0 16 16" aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
@@ -725,7 +725,7 @@ const SPAN: Record<ChartSize, string> = { s: "span-s", m: "span-m sm:col-span-2"
 const BASE_HEIGHT: Record<ChartSize, number> = { s: 190, m: 250, l: 300 };
 
 const iconButton =
-  "inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-800";
+  "inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-800";
 
 // Graphiques sans animation : l'impression (export PDF) capture toujours le graphique complet.
 function ChartCard({
@@ -788,7 +788,7 @@ function ChartCard({
   return (
     <article
       className={`group relative min-w-0 rounded-xl border bg-white transition print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""} ${
-        drag?.target ? "border-teal-600 ring-2 ring-teal-600/40" : "border-slate-200"
+        drag?.target ? "border-brand-600 ring-2 ring-brand-600/40" : "border-slate-200"
       } ${drag?.active ? "opacity-40" : ""}`}
       onDragOver={
         drag
@@ -854,7 +854,7 @@ function ChartCard({
                 aria-pressed={x === size}
                 title={`Taille : ${SIZE_LABEL[x]}`}
                 onClick={() => onSize(x)}
-                className={`px-1.5 text-[11px] font-semibold ${x === size ? "bg-teal-800 text-white" : "text-slate-600 hover:bg-slate-50"}`}
+                className={`px-1.5 text-[11px] font-semibold ${x === size ? "bg-brand-800 text-white" : "text-slate-600 hover:bg-slate-50"}`}
               >
                 {x.toUpperCase()}
               </button>
@@ -894,7 +894,7 @@ function ChartCard({
                     type="button"
                     aria-pressed={t === type}
                     onClick={() => onType(t)}
-                    className={`px-2 py-0.5 font-medium ${t === type ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+                    className={`px-2 py-0.5 font-medium ${t === type ? "bg-brand-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
                   >
                     {TYPE_LABEL[t]}
                   </button>
@@ -907,10 +907,10 @@ function ChartCard({
                   </summary>
                   <div className="mt-1.5 rounded-lg border border-slate-200 bg-white p-2">
                     <div className="mb-1.5 flex gap-3">
-                      <button type="button" onClick={() => onCategories([])} className="text-teal-900 underline">
+                      <button type="button" onClick={() => onCategories([])} className="text-brand-900 underline">
                         Tout cocher
                       </button>
-                      <button type="button" onClick={() => onCategories(chart.data.map((d) => d.category))} className="text-teal-900 underline">
+                      <button type="button" onClick={() => onCategories(chart.data.map((d) => d.category))} className="text-brand-900 underline">
                         Tout décocher
                       </button>
                     </div>
@@ -918,7 +918,7 @@ function ChartCard({
                       {chart.data.map((d) => (
                         <li key={d.category}>
                           <label className="flex cursor-pointer items-center gap-2 text-slate-800">
-                            <input type="checkbox" checked={!hidden.has(d.category)} onChange={() => toggleCategory(d.category)} className="size-3.5 accent-teal-800" />
+                            <input type="checkbox" checked={!hidden.has(d.category)} onChange={() => toggleCategory(d.category)} className="size-3.5 accent-brand-800" />
                             <span className="truncate">{chart.chronological ? formatPeriod(d.category) : d.category}</span>
                           </label>
                         </li>

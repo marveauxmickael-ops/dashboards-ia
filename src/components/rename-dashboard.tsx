@@ -59,7 +59,7 @@ export function RenameDashboard({ id, title, label = "Renommer" }: { id: string;
           aria-label="Nouveau nom du dashboard"
           className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1.5 text-sm sm:w-72"
         />
-        <button type="submit" disabled={busy || value.trim() === ""} className="rounded-lg bg-teal-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-900 disabled:opacity-50">
+        <button type="submit" disabled={busy || value.trim() === ""} className="rounded-lg bg-brand-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50">
           {busy ? "Enregistrement…" : "Enregistrer"}
         </button>
         <button type="button" disabled={busy} onClick={() => setEditing(false)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50">

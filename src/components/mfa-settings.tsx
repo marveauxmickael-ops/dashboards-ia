@@ -55,7 +55,7 @@ export function MfaSettings({ enabled: initiallyEnabled }: { enabled: boolean })
       <p className={`text-sm font-medium ${enabled ? "text-emerald-800" : "text-amber-800"}`}>{enabled ? "Activée" : "Non activée"}</p>
 
       {!enabled && !enrollment && (
-        <button type="button" disabled={busy} onClick={() => void start()} className={`${button} w-fit bg-teal-800 text-white hover:bg-teal-900`}>
+        <button type="button" disabled={busy} onClick={() => void start()} className={`${button} w-fit bg-brand-800 text-white hover:bg-brand-900`}>
           Activer la double authentification
         </button>
       )}
@@ -83,7 +83,7 @@ export function MfaSettings({ enabled: initiallyEnabled }: { enabled: boolean })
                 className="w-32 rounded-lg border border-slate-300 px-3 py-1.5 font-mono tracking-widest"
               />
             </label>
-            <button type="button" disabled={busy} onClick={() => void confirm()} className={`${button} bg-teal-800 text-white hover:bg-teal-900`}>
+            <button type="button" disabled={busy} onClick={() => void confirm()} className={`${button} bg-brand-800 text-white hover:bg-brand-900`}>
               Confirmer
             </button>
             <button type="button" disabled={busy} onClick={() => setEnrollment(null)} className="text-sm text-slate-600 underline">

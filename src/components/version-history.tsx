@@ -39,7 +39,7 @@ export function VersionHistory({ dashboardId, versions, selectedId }: { dashboar
           </thead>
           <tbody>
             {versions.map((v, i) => (
-              <tr key={v.id} className={`border-b border-slate-100 last:border-0 ${v.id === selectedId ? "bg-teal-50" : ""}`}>
+              <tr key={v.id} className={`border-b border-slate-100 last:border-0 ${v.id === selectedId ? "bg-brand-50" : ""}`}>
                 <td className="py-1.5 pr-3 text-slate-800">{dateFormat.format(new Date(v.created_at))}</td>
                 <td className="py-1.5 pr-3 text-slate-700">{periodText(v.period_start, v.period_end)}</td>
                 <td className="py-1.5 pr-3 text-slate-700">{v.file_name}</td>
@@ -48,11 +48,11 @@ export function VersionHistory({ dashboardId, versions, selectedId }: { dashboar
                   {i === 0 ? (
                     <span className="text-xs font-medium text-emerald-800">Version actuelle</span>
                   ) : v.id === selectedId ? (
-                    <Link href={`/dashboards/${dashboardId}`} className="text-xs font-medium text-teal-900 underline">
+                    <Link href={`/dashboards/${dashboardId}`} className="text-xs font-medium text-brand-900 underline">
                       Revenir à la version actuelle
                     </Link>
                   ) : (
-                    <Link href={`/dashboards/${dashboardId}?version=${v.id}`} className="text-xs font-medium text-teal-900 underline">
+                    <Link href={`/dashboards/${dashboardId}?version=${v.id}`} className="text-xs font-medium text-brand-900 underline">
                       Consulter et comparer
                     </Link>
                   )}
@@ -73,7 +73,7 @@ export function VersionComparison({ previous, current }: { previous: DashboardRe
   if (rows.length === 0) return null;
   const pct = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 1, signDisplay: "always" });
   return (
-    <section aria-label="Comparaison des versions" className="rounded-xl border border-teal-200 bg-white p-4">
+    <section aria-label="Comparaison des versions" className="rounded-xl border border-brand-200 bg-white p-4">
       <h3 className="text-base font-semibold text-slate-900">Comparaison avec la version actuelle</h3>
       <p className="mt-1 text-sm text-slate-600">
         {periodText(previous.period?.from, previous.period?.to)} ({previous.fileName}) comparé à {periodText(current.period?.from, current.period?.to)} (

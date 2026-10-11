@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { SettingsShell } from "@/components/settings-shell";
 import { AUDIT_LABEL } from "@/lib/audit";
 import { canManage, requireWorkspace } from "@/lib/auth/session";
 
@@ -29,9 +30,9 @@ export default async function AuditPage({ searchParams }: PageProps<"/organisati
   return (
     <>
       <AppHeader workspace={workspace} />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10">
+      <SettingsShell workspace={workspace}>
         <header>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Journal d&apos;audit</h1>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Journal d&apos;audit</h2>
           <p className="mt-1 max-w-2xl text-slate-600">
             Qui a fait quoi et quand dans {workspace.organization.name}. Le journal ne contient aucune donnée des fichiers et ne peut être ni modifié ni
             effacé depuis l&apos;application.
@@ -82,7 +83,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/organisati
             </tbody>
           </table>
         </div>
-      </main>
+      </SettingsShell>
     </>
   );
 }

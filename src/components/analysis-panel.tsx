@@ -132,13 +132,13 @@ function VariationCard({ variation: v, insight, dashboardId }: { variation: Vari
       )}
 
       {insight && insight.suggestions.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-lg bg-teal-50/60 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-teal-900">Pistes d&apos;amélioration</p>
+        <div className="flex flex-col gap-2 rounded-lg bg-brand-50/60 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-900">Pistes d&apos;amélioration</p>
           <ul className="flex flex-col gap-2">
             {insight.suggestions.map((s, i) => (
               <li key={i} className="flex flex-col gap-2 text-sm sm:flex-row sm:items-start sm:justify-between">
                 <span className="text-slate-800">
-                  <span className="mr-2 inline-flex rounded-full bg-white px-2 py-0.5 text-xs font-medium text-teal-900 ring-1 ring-teal-200">Suggestion</span>
+                  <span className="mr-2 inline-flex rounded-full bg-white px-2 py-0.5 text-xs font-medium text-brand-900 ring-1 ring-brand-200">Suggestion</span>
                   {s.text}
                 </span>
                 {dashboardId && <Feedback dashboardId={dashboardId} variationId={v.id} suggestionIndex={i} />}
@@ -168,11 +168,11 @@ function Feedback({ dashboardId, variationId, suggestionIndex }: { dashboardId: 
       setState("error");
     }
   }
-  if (state === "sent") return <span className="shrink-0 text-xs text-teal-900 print:hidden">Merci pour votre avis</span>;
+  if (state === "sent") return <span className="shrink-0 text-xs text-brand-900 print:hidden">Merci pour votre avis</span>;
   return (
     <span className="flex shrink-0 items-center gap-1 print:hidden" role="group" aria-label="Cette suggestion vous est-elle utile ?">
       {state === "error" && <span className="text-xs text-red-700">Avis non enregistré.</span>}
-      <button type="button" disabled={state === "sending"} onClick={() => void send(true)} className="rounded border border-teal-200 bg-white px-2 py-0.5 text-xs text-teal-900 hover:bg-teal-50 disabled:opacity-50">
+      <button type="button" disabled={state === "sending"} onClick={() => void send(true)} className="rounded border border-brand-200 bg-white px-2 py-0.5 text-xs text-brand-900 hover:bg-brand-50 disabled:opacity-50">
         Utile
       </button>
       <button type="button" disabled={state === "sending"} onClick={() => void send(false)} className="rounded border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50">

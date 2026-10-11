@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app-header";
+import { SettingsShell } from "@/components/settings-shell";
 import { MfaSettings } from "@/components/mfa-settings";
 import { requireWorkspace } from "@/lib/auth/session";
 
@@ -9,13 +10,13 @@ export default async function SecurityPage() {
   return (
     <>
       <AppHeader workspace={workspace} />
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
+      <SettingsShell workspace={workspace}>
         <header>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Sécurité du compte</h1>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Sécurité et double authentification</h2>
           <p className="mt-1 text-slate-600">{workspace.user.email}</p>
         </header>
         <MfaSettings enabled={enabled} />
-      </main>
+      </SettingsShell>
     </>
   );
 }

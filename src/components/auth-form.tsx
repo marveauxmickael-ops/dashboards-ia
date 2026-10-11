@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import type { AuthState } from "@/app/(auth)/actions";
+import { LisioLogo } from "./lisio-logo";
 
 export function AuthShell({ title, subtitle, children, footer }: { title: string; subtitle?: string; children: ReactNode; footer?: ReactNode }) {
   return (
     <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 px-4 py-12">
       <div className="flex flex-col gap-1">
-        <Link href="/" className="text-xs font-semibold uppercase tracking-widest text-teal-800">
-          Dashboards IA
+        <Link href="/" className="mb-2 self-start" aria-label="Lisio">
+          <LisioLogo size={32} />
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
         {subtitle && <p className="text-sm text-slate-600">{subtitle}</p>}
@@ -56,7 +57,7 @@ export function AuthForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-60"
+        className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-800 disabled:opacity-60"
       >
         {pending ? "Patientez…" : submitLabel}
       </button>
@@ -78,7 +79,7 @@ export function Field({
       <input
         id={id}
         name={id}
-        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/20"
+        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20"
         {...input}
       />
       {hint && <p className="text-xs text-slate-500">{hint}</p>}

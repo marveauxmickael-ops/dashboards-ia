@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/app-header";
 import { canEdit, requireWorkspace } from "@/lib/auth/session";
 import { RenameDashboard } from "@/components/rename-dashboard";
 
-export const metadata = { title: "Mes dashboards — Dashboards IA" };
+export const metadata = { title: "Mes dashboards — Lisio" };
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Paris" });
 
@@ -23,7 +23,7 @@ export default async function DashboardsPage() {
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Mes dashboards</h1>
-          <Link href="/" className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900">
+          <Link href="/" className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900">
             Nouveau dashboard
           </Link>
         </div>
@@ -53,7 +53,7 @@ export default async function DashboardsPage() {
                 {dashboards.map((d) => (
                   <tr key={d.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                     <td className="px-4 py-2">
-                      <Link href={`/dashboards/${d.id}`} className="font-medium text-teal-800 underline">
+                      <Link href={`/dashboards/${d.id}`} className="font-medium text-brand-800 underline">
                         {d.title}
                       </Link>
                     </td>

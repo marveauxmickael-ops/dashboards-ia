@@ -5,7 +5,7 @@ import { safeNextPath } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/server";
 import { logout, verifySecondFactor } from "../../actions";
 
-export const metadata = { title: "Vérification — Dashboards IA" };
+export const metadata = { title: "Vérification — Lisio" };
 
 export default async function SecondFactorPage({ searchParams }: PageProps<"/connexion/verification">) {
   const params = await searchParams;
@@ -23,7 +23,7 @@ export default async function SecondFactorPage({ searchParams }: PageProps<"/con
       subtitle="Saisissez le code à 6 chiffres affiché par votre application d'authentification."
       footer={
         <form action={logout}>
-          <button type="submit" className="text-teal-800 underline">
+          <button type="submit" className="text-brand-800 underline">
             Se connecter avec un autre compte
           </button>
         </form>

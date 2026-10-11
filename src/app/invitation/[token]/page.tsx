@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LisioLogo } from "@/components/lisio-logo";
 import { ROLE_LABEL, type Role } from "@/lib/auth/session";
 import { isSecretTokenFormat } from "@/lib/share";
 import { createClient } from "@/lib/supabase/server";
@@ -24,7 +25,7 @@ export default async function InvitationPage({ params, searchParams }: PageProps
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-col gap-4 px-4 py-20">
-      <p className="text-xs font-semibold uppercase tracking-widest text-teal-800">Dashboards IA</p>
+      <LisioLogo size={32} />
       {!info ? (
         <>
           <h1 className="text-2xl font-semibold text-slate-900">Invitation indisponible</h1>
@@ -37,7 +38,7 @@ export default async function InvitationPage({ params, searchParams }: PageProps
             Vous êtes connecté avec {user?.email}. Déconnectez-vous puis connectez-vous, ou créez votre compte, avec l&apos;adresse {info.email} pour
             rejoindre {info.organization}.
           </p>
-          <Link href="/connexion" className="text-teal-800 underline">
+          <Link href="/connexion" className="text-brand-800 underline">
             Changer de compte
           </Link>
         </>
@@ -54,7 +55,7 @@ export default async function InvitationPage({ params, searchParams }: PageProps
           )}
           <form action={acceptInvitation}>
             <input type="hidden" name="token" value={token} />
-            <button type="submit" className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900">
+            <button type="submit" className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900">
               Accepter l&apos;invitation
             </button>
           </form>

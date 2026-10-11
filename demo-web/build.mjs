@@ -42,7 +42,7 @@ const css = readFileSync(path.join(out, "styles.css"), "utf-8");
 
 writeFileSync(
   path.join(out, "index.html"),
-  `<meta charset="utf-8">\n<title>Dashboards IA</title>\n<meta name="description" content="Démo navigateur du prototype de génération de dashboards">\n<style>${css}</style>\n<div id="app"></div>\n<script>${js}</script>\n`,
+  `<meta charset="utf-8">\n<title>Lisio</title>\n<meta name="description" content="Démo navigateur du prototype de génération de dashboards">\n<style>${css}</style>\n<div id="app"></div>\n<script>${js}</script>\n`,
 );
 copyFileSync(path.join(root, "public/demo/ventes-demo.csv"), path.join(out, "ventes-demo.csv"));
 console.log(`index.html : ${(readFileSync(path.join(out, "index.html")).length / 1024).toFixed(0)} Ko`);

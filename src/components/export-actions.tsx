@@ -23,7 +23,7 @@ export function ExportActions({
   onPrintContinuous?: () => void;
 }) {
   const vue = view && base && !isDefaultView(view) ? `&vue=${encodeView(view, base)}` : "";
-  const link = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800";
+  const link = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-800";
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden" role="group" aria-label="Télécharger le dashboard">
       <span className="text-sm text-slate-600">Télécharger :</span>

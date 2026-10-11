@@ -2,5 +2,32 @@
 @source "../src";
 @source "./main.tsx";
 
+/* Polices du site (démo hébergée dans site/demo) ; à défaut, polices système. */
+@font-face { font-family: "Bricolage Grotesque"; src: url("../fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Source Sans 3"; src: url("../fonts/source-sans-3-latin-wght-normal.woff2") format("woff2"); font-weight: 200 900; font-display: swap; }
+
+/* Charte Lisio : ardoise (couleur principale) et cuivre (accent, onglet actif). */
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-50: #eef3f6;
+  --color-brand-100: #dce6ec;
+  --color-brand-200: #b9ccd8;
+  --color-brand-300: #8fb3c9;
+  --color-brand-400: #6890a9;
+  --color-brand-500: #4a738d;
+  --color-brand-600: #355c74;
+  --color-brand-700: #28495f;
+  --color-brand-800: #1f3a4d;
+  --color-brand-900: #172c3b;
+  --color-brand-950: #0f1d27;
+  --color-accent-50: #fbf3ec;
+  --color-accent-100: #f5e2d1;
+  --color-accent-500: #c8743a;
+  --color-accent-600: #b0622d;
+  --color-accent-700: #8f4e23;
+}
+
+
 html { color-scheme: light; }
-body { background: #f8fafc; color: #0f172a; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { background: #f8fafc; color: #0f172a; font-family: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+h1, h2, h3 { font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; }

@@ -139,7 +139,7 @@ export function Studio({
             ).map(([value, label, hint]) => (
               <label
                 key={value}
-                className={`flex flex-1 cursor-pointer flex-col rounded-lg border p-3 text-sm ${mode === value ? "border-teal-700 bg-teal-50" : "border-slate-200"}`}
+                className={`flex flex-1 cursor-pointer flex-col rounded-lg border p-3 text-sm ${mode === value ? "border-brand-700 bg-brand-50" : "border-slate-200"}`}
               >
                 <span className="flex items-center gap-2 font-medium text-slate-900">
                   <input id={`mode-${value}`} type="radio" name="mode" value={value} checked={mode === value} onChange={() => setMode(value)} />
@@ -155,7 +155,7 @@ export function Studio({
           <button
             type="submit"
             disabled={!file || loading}
-            className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {withCorrections ? "Générer le dashboard avec les corrections" : "Générer le dashboard"}
           </button>
@@ -163,7 +163,7 @@ export function Studio({
             type="button"
             disabled={loading}
             onClick={() => void loadDemo()}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800 disabled:opacity-50"
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-800 disabled:opacity-50"
           >
             Essayer avec le fichier de démonstration
           </button>

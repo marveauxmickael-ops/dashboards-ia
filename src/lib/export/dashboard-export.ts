@@ -69,7 +69,7 @@ function sheetName(base: string, used: Set<string>): string {
 
 export async function buildXlsx(result: DashboardResult, meta: ExportMeta): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Dashboards IA";
+  wb.creator = "Lisio";
   wb.created = meta.exportedAt;
   const used = new Set<string>();
   const brand = chartPalette(meta.branding)[0];

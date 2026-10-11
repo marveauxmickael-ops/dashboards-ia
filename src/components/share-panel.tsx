@@ -37,7 +37,7 @@ export function SharePanel({ dashboardId, initial }: { dashboardId: string; init
       <div>
         <h3 className="text-base font-semibold text-slate-900">Partager par lien sécurisé</h3>
         <p className="mt-1 text-sm text-slate-600">
-          Les personnes qui ont le lien consultent les résultats sur Dashboards IA, sans créer de compte. Elles n&apos;ont jamais accès au fichier source, qui n&apos;est
+          Les personnes qui ont le lien consultent les résultats sur Lisio, sans créer de compte. Elles n&apos;ont jamais accès au fichier source, qui n&apos;est
           pas conservé, ni aux données envoyées à l&apos;IA.
         </p>
       </div>
@@ -69,10 +69,10 @@ export function SharePanel({ dashboardId, initial }: { dashboardId: string; init
             {share.enabled ? "Partage actif" : "Partage désactivé : le lien ne donne plus accès"} · lien créé le {dateFormat.format(new Date(share.created_at))}
           </p>
           {link && (
-            <div className="flex flex-col gap-1 rounded-lg bg-teal-50 p-2">
-              <span className="text-xs text-teal-900">Copiez le lien maintenant : pour des raisons de sécurité, il ne sera plus affiché.</span>
+            <div className="flex flex-col gap-1 rounded-lg bg-brand-50 p-2">
+              <span className="text-xs text-brand-900">Copiez le lien maintenant : pour des raisons de sécurité, il ne sera plus affiché.</span>
               <div className="flex gap-2">
-                <input readOnly value={link} className="min-w-0 flex-1 rounded border border-teal-200 bg-white px-2 py-1 font-mono text-xs" onFocus={(e) => e.target.select()} />
+                <input readOnly value={link} className="min-w-0 flex-1 rounded border border-brand-200 bg-white px-2 py-1 font-mono text-xs" onFocus={(e) => e.target.select()} />
                 <button
                   type="button"
                   className={button}
@@ -110,7 +110,7 @@ export function SharePanel({ dashboardId, initial }: { dashboardId: string; init
             type="button"
             disabled={busy}
             onClick={() => void run(() => createShareLink(dashboardId, access))}
-            className="rounded-lg bg-teal-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-900 disabled:opacity-50"
+            className="rounded-lg bg-brand-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50"
           >
             Activer le partage
           </button>

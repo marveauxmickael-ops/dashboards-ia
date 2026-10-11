@@ -65,10 +65,10 @@ export function FiltersBar({
               </summary>
               <div className="absolute z-10 mt-1 w-64 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
                 <div className="mb-1.5 flex gap-3 text-xs">
-                  <button type="button" className="text-teal-900 underline" onClick={() => setDimension(d.column, d.values, d.values)}>
+                  <button type="button" className="text-brand-900 underline" onClick={() => setDimension(d.column, d.values, d.values)}>
                     Tout cocher
                   </button>
-                  <button type="button" className="text-teal-900 underline" onClick={() => setDimension(d.column, [], d.values)}>
+                  <button type="button" className="text-brand-900 underline" onClick={() => setDimension(d.column, [], d.values)}>
                     Tout décocher
                   </button>
                 </div>
@@ -78,7 +78,7 @@ export function FiltersBar({
                       <label className="flex cursor-pointer items-center gap-2 text-slate-800">
                         <input
                           type="checkbox"
-                          className="size-3.5 accent-teal-800"
+                          className="size-3.5 accent-brand-800"
                           checked={selected.includes(v)}
                           onChange={() => setDimension(d.column, selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v], d.values)}
                         />
@@ -95,7 +95,7 @@ export function FiltersBar({
           type="button"
           disabled={!changed || busy || Object.values(draft.dimensions).some((v) => v.length === 0)}
           onClick={() => onApply(draft)}
-          className="rounded-lg bg-teal-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-brand-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? "Calcul…" : "Appliquer les filtres"}
         </button>

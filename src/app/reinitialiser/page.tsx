@@ -1,7 +1,7 @@
 import { AuthForm, AuthShell, Field } from "@/components/auth-form";
 import { updatePassword } from "../(auth)/actions";
 
-export const metadata = { title: "Nouveau mot de passe — Dashboards IA" };
+export const metadata = { title: "Nouveau mot de passe — Lisio" };
 
 // Accessible uniquement avec la session ouverte par le lien de réinitialisation.
 export default function ResetPasswordPage() {

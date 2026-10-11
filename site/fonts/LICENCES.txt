@@ -1,0 +1,5 @@
+Polices auto-hébergées (aucun appel à un service tiers depuis le navigateur des visiteurs), sous licence SIL Open Font License 1.1 :
+- Bricolage Grotesque (fichier bricolage-grotesque-latin-wght-normal.woff2), © The Bricolage Grotesque Project Authors
+- Source Sans 3 (source-sans-3-latin-wght-normal.woff2), © Adobe
+- IBM Plex Mono (ibm-plex-mono-latin-400/500-normal.woff2), © IBM Corp.
+Fichiers issus des paquets npm @fontsource. Licence : https://openfontlicense.org

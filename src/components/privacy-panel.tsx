@@ -5,7 +5,7 @@ import type { AiTreatment } from "@/lib/types";
 
 const TREATMENT: Record<AiTreatment, { label: string; className: string }> = {
   send: { label: "Transmise", className: "bg-slate-100 text-slate-700" },
-  tokenize: { label: "Jetons", className: "bg-teal-50 text-teal-800" },
+  tokenize: { label: "Jetons", className: "bg-brand-50 text-brand-800" },
   drop: { label: "Supprimée", className: "bg-red-50 text-red-800" },
   block: { label: "Bloquée (RGPD)", className: "bg-red-100 text-red-900" },
   exclude: { label: "Exclue", className: "bg-amber-50 text-amber-800" },
@@ -71,14 +71,14 @@ export function PrivacyPanel({ result }: { result: DashboardResult }) {
       )}
 
       <details className="text-sm">
-        <summary className="cursor-pointer font-medium text-teal-800">Afficher la requête exacte envoyée à l&apos;IA</summary>
+        <summary className="cursor-pointer font-medium text-brand-800">Afficher la requête exacte envoyée à l&apos;IA</summary>
         <pre className="mt-2 max-h-96 overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-xs leading-relaxed text-slate-100">
           {JSON.stringify(aiContext, null, 2)}
         </pre>
       </details>
       {result.analysis?.sentToAi && (
         <details className="text-sm">
-          <summary className="cursor-pointer font-medium text-teal-800">Afficher les données envoyées pour l&apos;analyse des variations</summary>
+          <summary className="cursor-pointer font-medium text-brand-800">Afficher les données envoyées pour l&apos;analyse des variations</summary>
           <pre className="mt-2 max-h-96 overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-xs leading-relaxed text-slate-100">
             {JSON.stringify(result.analysis.sentToAi, null, 2)}
           </pre>

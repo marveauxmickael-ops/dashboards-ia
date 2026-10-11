@@ -159,17 +159,17 @@ export function MembersPanel({
                 ))}
               </select>
             </label>
-            <button type="submit" disabled={busy} className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-900 disabled:opacity-50">
+            <button type="submit" disabled={busy} className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-50">
               Créer l&apos;invitation
             </button>
           </form>
           {link && (
-            <div className="flex flex-col gap-1 rounded-lg bg-teal-50 p-2 text-sm">
-              <span className="text-xs text-teal-900">
+            <div className="flex flex-col gap-1 rounded-lg bg-brand-50 p-2 text-sm">
+              <span className="text-xs text-brand-900">
                 Envoyez ce lien à la personne invitée (valable 7 jours). Il ne sera plus affiché. Elle se connecte, ou crée son compte, avec l&apos;adresse
                 invitée puis ouvre le lien.
               </span>
-              <input readOnly value={link} onFocus={(e) => e.target.select()} className="rounded border border-teal-200 bg-white px-2 py-1 font-mono text-xs" />
+              <input readOnly value={link} onFocus={(e) => e.target.select()} className="rounded border border-brand-200 bg-white px-2 py-1 font-mono text-xs" />
             </div>
           )}
           {invitations.length > 0 && (
