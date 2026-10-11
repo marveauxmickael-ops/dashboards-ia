@@ -1,8 +1,37 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logEvent } from "@/lib/audit";
-import { canEdit, requireWorkspace } from "@/lib/auth/session";
+import { canEdit, getWorkspace, requireWorkspace } from "@/lib/auth/session";
+import { DASHBOARD_TITLE_MAX, normalizeTitle } from "@/lib/dashboards/title";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export type RenameOutcome = { ok: true; title: string } | { ok: false; message: string };
+
+/** Renomme un dashboard enregistré : seul le nom change (ni les chiffres ni la date d'actualisation). */
+export async function renameDashboard(id: string, rawTitle: string): Promise<RenameOutcome> {
+  const workspace = await getWorkspace();
+  if (!workspace) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
+  if (!canEdit(workspace.role)) return { ok: false, message: "Votre rôle (lecteur) ne permet pas de renommer un dashboard." };
+  const title = normalizeTitle(rawTitle);
+  if (!title) return { ok: false, message: `Le nom doit contenir entre 1 et ${DASHBOARD_TITLE_MAX} caractères.` };
+  if (!UUID.test(id)) return { ok: false, message: "Dashboard introuvable." };
+
+  const { supabase } = workspace;
+  const { data: before } = await supabase.from("dashboards").select("title").eq("id", id).maybeSingle();
+  if (!before) return { ok: false, message: "Dashboard introuvable." };
+  if (before.title === title) return { ok: true, title };
+  // La RLS limite la modification aux éditeurs de l'organisation du dashboard.
+  const { data, error } = await supabase.from("dashboards").update({ title }).eq("id", id).select("title");
+  if (error || !data || data.length === 0) return { ok: false, message: "Le nom n'a pas pu être enregistré. Réessayez." };
+
+  await logEvent(workspace, "dashboard.renamed", { type: "dashboard", id }, { "ancien nom": before.title, "nouveau nom": title });
+  revalidatePath("/dashboards");
+  revalidatePath(`/dashboards/${id}`);
+  return { ok: true, title };
+}
 
 export async function deleteDashboard(form: FormData) {
   const workspace = await requireWorkspace();

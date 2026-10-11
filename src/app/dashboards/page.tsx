@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
-import { requireWorkspace } from "@/lib/auth/session";
+import { canEdit, requireWorkspace } from "@/lib/auth/session";
+import { RenameDashboard } from "@/components/rename-dashboard";
 
 export const metadata = { title: "Mes dashboards — Dashboards IA" };
 
@@ -8,7 +9,8 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeS
 
 export default async function DashboardsPage() {
   const workspace = await requireWorkspace();
-  const { supabase, organization } = workspace;
+  const { supabase, organization, role } = workspace;
+  const editable = canEdit(role);
   const { data: dashboards, error } = await supabase
     .from("dashboards")
     .select("id, title, file_name, row_count, ai_mode, created_at")
@@ -44,6 +46,7 @@ export default async function DashboardsPage() {
                   <th className="px-4 py-2 text-right font-medium">Lignes</th>
                   <th className="px-4 py-2 font-medium">Mode IA</th>
                   <th className="px-4 py-2 font-medium">Créé le</th>
+                  {editable && <th className="px-4 py-2 font-medium"><span className="sr-only">Actions</span></th>}
                 </tr>
               </thead>
               <tbody>
@@ -58,6 +61,11 @@ export default async function DashboardsPage() {
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{d.row_count.toLocaleString("fr-FR")}</td>
                     <td className="px-4 py-2 text-slate-700">{d.ai_mode === "strict" ? "Strict" : "Standard"}</td>
                     <td className="px-4 py-2 text-slate-700">{dateFormat.format(new Date(d.created_at))}</td>
+                    {editable && (
+                      <td className="px-4 py-2 text-right">
+                        <RenameDashboard id={d.id} title={d.title} />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

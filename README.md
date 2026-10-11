@@ -108,6 +108,10 @@ L'IA choisit les indicateurs clés et définit les mesures métier (marge, taux 
 
 Chaque indicateur affiche sa définition, sa formule, la période couverte, les filtres appliqués et le nombre de lignes. Une valeur absente ou non conforme n'est jamais remplacée par zéro : elle est ignorée et signalée sur l'indicateur et dans l'export Excel.
 
+## Renommer un dashboard
+
+Depuis « Mes dashboards » ou la page d'un dashboard, les éditeurs, administrateurs et propriétaires peuvent le renommer (1 à 120 caractères). Seule la colonne `title` change : ni les chiffres, ni la date d'actualisation, ni l'historique des versions. Le nom enregistré prime sur le titre proposé à la création, à l'écran, dans le PDF, les exports, le lien partagé et après une actualisation. Chaque renommage est inscrit au journal d'audit (ancien et nouveau nom).
+
 ## Contrôle qualité du fichier (US-11)
 
 Dès qu'un fichier est choisi, le moteur (sans IA, route `/api/qualite` ou navigateur pour la démo) repère : doublons exacts (avec l'effet sur le chiffre d'affaires avant / après), quasi-doublons (même n° de commande ou de facture, lignes différentes), cellules vides par colonne, variantes d'une même catégorie (« Nord », « nord », « NORD ») et texte dans une colonne de montants ou de dates, ligne par ligne. Chaque correction est proposée, jamais appliquée d'office : l'utilisateur coche (doublons, fusion), choisit par colonne le traitement des vides (ignorer par défaut, exclure les lignes, « Non renseigné » pour une catégorie, 0 pour un montant après confirmation) et des valeurs incohérentes. Le plan validé (`CleaningPlan`, `src/lib/quality`) est appliqué à une copie avant le profilage ; le fichier source n'est ni modifié ni conservé. Les corrections sont rappelées sur le dashboard, dans le PDF et dans les exports Excel / CSV, et rejouées à chaque filtre, question ou actualisation. Le fichier corrigé peut être téléchargé en CSV (généré à la demande, non conservé).

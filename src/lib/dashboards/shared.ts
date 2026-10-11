@@ -1,4 +1,5 @@
 import type { DashboardResult } from "@/lib/pipeline";
+import { withTitle } from "./title";
 import { isShareTokenFormat, type ShareAccess } from "@/lib/share";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,5 +21,6 @@ export async function loadSharedDashboard(token: string): Promise<SharedDashboar
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("shared_dashboard", { share_token: token });
   if (error || !data) return null;
-  return data as unknown as SharedDashboard;
+  const shared = data as unknown as SharedDashboard;
+  return { ...shared, result: withTitle(shared.result, shared.title) };
 }

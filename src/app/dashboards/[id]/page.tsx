@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { RenameDashboard } from "@/components/rename-dashboard";
+import { withTitle } from "@/lib/dashboards/title";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { activeProvider } from "@/lib/ai/gateway";
@@ -23,9 +25,9 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const { supabase, organization, role } = workspace;
 
   // Un dashboard d'une autre organisation est invisible (RLS) : il renvoie ici une page introuvable.
-  const { data: dashboard } = await supabase.from("dashboards").select("id, result, created_at, updated_at, ai_mode").eq("id", id).maybeSingle();
+  const { data: dashboard } = await supabase.from("dashboards").select("id, title, result, created_at, updated_at, ai_mode").eq("id", id).maybeSingle();
   if (!dashboard) notFound();
-  const result = dashboard.result as unknown as DashboardResult;
+  const result = withTitle(dashboard.result as unknown as DashboardResult, dashboard.title);
   const refreshedAt = new Date(dashboard.updated_at ?? dashboard.created_at);
 
   const { data: versions } = await supabase
@@ -38,7 +40,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const { data: selected } = versionId
     ? await supabase.from("dashboard_versions").select("id, result, created_at").eq("id", versionId).eq("dashboard_id", id).maybeSingle()
     : { data: null };
-  const selectedResult = selected ? (selected.result as unknown as DashboardResult) : null;
+  const selectedResult = selected ? withTitle(selected.result as unknown as DashboardResult, dashboard.title) : null;
   const { data: share } = await supabase
     .from("dashboard_shares")
     .select("id, access, enabled, created_at")
@@ -56,11 +58,12 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
           <Link href="/dashboards" className="text-teal-800 underline">
             ← Mes dashboards
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span>
               Créé le {dateFormat.format(new Date(dashboard.created_at))} · <strong className="font-medium text-slate-800">Dernière actualisation réussie</strong> le{" "}
               {dateFormat.format(refreshedAt)}
             </span>
+            {canEdit(role) && <RenameDashboard id={dashboard.id} title={dashboard.title} />}
             {canEdit(role) && (
               <form action={deleteDashboard}>
                 <input type="hidden" name="id" value={dashboard.id} />

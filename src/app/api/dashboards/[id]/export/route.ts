@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { withTitle } from "@/lib/dashboards/title";
 import { logEvent } from "@/lib/audit";
 import { getWorkspace } from "@/lib/auth/session";
 import { buildCsv, buildXlsx, exportFileName } from "@/lib/export/dashboard-export";
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/d
   if (!dashboard) return Response.json({ error: "Dashboard introuvable." }, { status: 404 });
 
   // L'export reprend la sélection affichée à l'écran (éléments cochés), sans modifier aucune valeur.
-  const saved = dashboard.result as unknown as DashboardResult;
+  const saved = withTitle(dashboard.result as unknown as DashboardResult, dashboard.title);
   const result = applyView(saved, decodeView(request.nextUrl.searchParams.get("vue"), saved));
   const meta = { organization: workspace.organization.name, createdAt: new Date(dashboard.created_at), exportedAt: new Date(), aiMode: dashboard.ai_mode, branding: workspace.organization.branding };
   const fileName = exportFileName(dashboard.title, meta.exportedAt, format);
