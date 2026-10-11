@@ -2,6 +2,7 @@ import { AiError } from "@/lib/ai/gateway";
 import { canEdit, getWorkspace } from "@/lib/auth/session";
 import { ImportError, MAX_FILE_BYTES } from "@/lib/ingest/parse";
 import { generateDashboard } from "@/lib/pipeline";
+import { CleaningPlanSchema, type CleaningPlan } from "@/lib/quality";
 import { logEvent } from "@/lib/audit";
 import { saveVersion } from "@/lib/dashboards/versions";
 import type { Json } from "@/lib/supabase/database.types";
@@ -28,10 +29,23 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) return Response.json({ error: "Aucun fichier reçu." }, { status: 400 });
   if (file.size > MAX_FILE_BYTES) return Response.json({ error: "Le fichier dépasse 20 Mo." }, { status: 413 });
 
+  // Corrections validées par l'utilisateur au contrôle qualité (US-11), appliquées avant tout calcul.
+  let cleaning: CleaningPlan | undefined;
+  const cleaningField = form.get("cleaning");
+  if (typeof cleaningField === "string" && cleaningField !== "") {
+    try {
+      const parsed = CleaningPlanSchema.safeParse(JSON.parse(cleaningField));
+      if (!parsed.success) return Response.json({ error: "Corrections invalides." }, { status: 400 });
+      cleaning = parsed.data;
+    } catch {
+      return Response.json({ error: "Corrections invalides." }, { status: 400 });
+    }
+  }
+
   let result;
   try {
     // La clé de pseudonymisation est dérivée par organisation : jetons propres à chaque client.
-    result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: workspace.organization.id });
+    result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: workspace.organization.id, cleaning });
   } catch (error) {
     if (error instanceof ImportError) return Response.json({ error: error.message }, { status: 400 });
     if (error instanceof AiError) return Response.json({ error: error.message }, { status: 502 });
@@ -57,7 +71,7 @@ export async function POST(request: Request) {
   if (saveError) console.error("Enregistrement du dashboard en échec", saveError.code);
   else {
     await saveVersion(workspace, saved.id, result);
-    await logEvent(workspace, "dashboard.created", { type: "dashboard", id: saved.id }, { file: result.fileName, rows: result.profile.rowCount, mode });
+    await logEvent(workspace, "dashboard.created", { type: "dashboard", id: saved.id }, { file: result.fileName, rows: result.profile.rowCount, mode, corrections: result.cleaning?.log.lines.length ?? 0 });
   }
 
   // Journal des appels IA : métadonnées uniquement, jamais le contenu.

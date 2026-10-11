@@ -105,6 +105,14 @@ export async function buildXlsx(result: DashboardResult, meta: ExportMeta): Prom
     row.getCell(1).font = { bold: true };
   }
 
+  // Corrections du contrôle qualité (US-11) validées par l'utilisateur, appliquées avant le calcul.
+  const cleaning = result.cleaning?.log;
+  if (cleaning && cleaning.lines.length > 0) {
+    summary.addRow([]);
+    header(summary.addRow([`Corrections appliquées au fichier (${cleaning.rowsBefore} → ${cleaning.rowsAfter} lignes)`, "", "", "", ""]));
+    for (const line of cleaning.lines) summary.addRow([line]).alignment = { wrapText: false, vertical: "top" };
+  }
+
   summary.addRow([]);
   header(summary.addRow(["Indicateur", "Valeur", "Calcul", "Définition", "Données manquantes"]));
   for (const k of result.kpis) {
@@ -184,6 +192,7 @@ export function buildCsv(result: DashboardResult, meta: ExportMeta): string {
   const rows: (string | number | null)[][] = [
     ["Dashboard", result.title, "", ""],
     ["Exporté le", dateFr(meta.exportedAt), "", ""],
+    ...(result.cleaning?.log.lines ?? []).map((line) => ["Correction appliquée", line, "", ""]),
     [],
     ["Section", "Libellé", "Catégorie", "Valeur"],
     ...result.kpis.map((k) => ["Indicateur", k.label, "", k.value]),

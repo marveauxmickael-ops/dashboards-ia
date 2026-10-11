@@ -33,7 +33,7 @@ export function profileDataset(ds: RawDataset): { profile: DatasetProfile; rows:
 
   const warnings: string[] = [];
   if (duplicateRows > 0) {
-    warnings.push(`${duplicateRows} ligne(s) strictement identique(s) à une autre. Elles sont conservées : vérifiez qu'il ne s'agit pas de doublons.`);
+    warnings.push(`${duplicateRows} ligne(s) strictement identique(s) à une autre. Elles sont conservées : le contrôle qualité permet de les supprimer.`);
   }
   for (const c of columns) {
     if (c.invalid > 0) warnings.push(`Colonne « ${c.name} » : ${c.invalid} valeur(s) non conforme(s) au type ${labelType(c.type)}, ignorée(s) dans les calculs.`);

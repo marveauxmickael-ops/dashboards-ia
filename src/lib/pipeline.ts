@@ -2,14 +2,15 @@ import { designDashboard, type DesignResult } from "@/lib/ai/gateway";
 import { explainVariations, type AnalysisResult } from "@/lib/analysis";
 import { completeSpec } from "@/lib/engine/complete";
 import { checkInsights, computeDashboard, validateSpec, type CheckedInsight, type ComputedChart, type ComputedKpi } from "@/lib/engine/compute";
-import { parseFile } from "@/lib/ingest/parse";
+import { ImportError, parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
 import { buildAiContext, type AiContext } from "@/lib/privacy/ai-context";
 import { Pseudonymizer } from "@/lib/privacy/pseudonymize";
 import type { DashboardSpec } from "@/lib/ai/spec";
 import { answerQuestion, type QuestionAnswer } from "@/lib/questions";
 import { applyFilters, filterOptions, isFiltered, type FilterOptions, type Filters } from "@/lib/filters";
-import type { AiMode, DatasetProfile, TypedRow } from "@/lib/types";
+import { applyCleaning, isEmptyPlan, type CleaningLog, type CleaningPlan } from "@/lib/quality";
+import type { AiMode, DatasetProfile, RawDataset, TypedRow } from "@/lib/types";
 
 // Cycle complet : import → profilage → pseudonymisation (aller) → conception par l'IA
 // → validation → calcul sur les vraies données → ré-identification (retour) → dashboard en clair.
@@ -37,6 +38,11 @@ export interface DashboardResult {
   filters?: Filters;
   /** Période couverte par les lignes calculées (mois AAAA-MM), si le fichier a une date. */
   period?: { from: string; to: string } | null;
+  /**
+   * Corrections du contrôle qualité validées par l'utilisateur (US-11) : rappelées sur le dashboard,
+   * le PDF et les exports, et rejouées à chaque actualisation. Absent : fichier pris tel quel.
+   */
+  cleaning?: { plan: CleaningPlan; log: CleaningLog };
   issues: string[];
   tokensUsed: number;
   durationMs: number;
@@ -49,9 +55,11 @@ export async function generateDashboard(input: {
   data: ArrayBuffer;
   mode: AiMode;
   organizationId: string;
+  /** Corrections validées au contrôle qualité, appliquées avant tout calcul. */
+  cleaning?: CleaningPlan;
 }): Promise<DashboardResult> {
   const started = Date.now();
-  const raw = await parseFile(input.fileName, input.data);
+  const { raw, cleaning } = await loadDataset(input.fileName, input.data, input.cleaning);
   const { profile, rows } = profileDataset(raw);
 
   // Aller : pseudonymisation. La table de correspondance reste dans cette instance, côté serveur.
@@ -94,6 +102,7 @@ export async function generateDashboard(input: {
     spec,
     filterOptions: filterOptions(profile, rows),
     period: periodOf(profile, rows),
+    cleaning,
     issues,
     tokensUsed: pseudo.size,
     durationMs: Date.now() - started,
@@ -123,7 +132,7 @@ export async function recomputeDashboard(input: {
   if (!previous.spec) throw new IncompatibleFileError("Ce dashboard a été créé avant les filtres : générez-le à nouveau pour pouvoir le filtrer ou le mettre à jour.");
   const spec = previous.spec;
 
-  const raw = await parseFile(input.fileName, input.data);
+  const { raw, cleaning } = await loadDataset(input.fileName, input.data, previous.cleaning?.plan);
   const { profile, rows: allRows } = profileDataset(raw);
   const problems = compatibilityProblems(spec, previous.profile, profile);
   if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
@@ -153,6 +162,7 @@ export async function recomputeDashboard(input: {
     filterOptions: options,
     filters: isFiltered(input.filters) ? input.filters : undefined,
     period: periodOf(profile, rows),
+    cleaning,
     issues: [],
     durationMs: Date.now() - started,
   };
@@ -168,12 +178,21 @@ export async function askDashboardQuestion(input: {
   organizationId: string;
 }): Promise<QuestionAnswer> {
   if (!input.previous.spec) throw new IncompatibleFileError("Ce dashboard a été créé avant les questions : générez-le à nouveau.");
-  const raw = await parseFile(input.fileName, input.data);
+  const { raw } = await loadDataset(input.fileName, input.data, input.previous.cleaning?.plan);
   const { profile, rows } = profileDataset(raw);
   const problems = compatibilityProblems(input.previous.spec, input.previous.profile, profile);
   if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
   const pseudo = Pseudonymizer.forOrganization(pseudonymizationKey(), input.organizationId);
   return answerQuestion({ question: input.question, spec: input.previous.spec, profile, rows, mode: input.mode, pseudo });
+}
+
+/** Lit le fichier puis applique les corrections validées (copie en mémoire : le fichier n'est ni modifié ni conservé). */
+async function loadDataset(fileName: string, data: ArrayBuffer, plan: CleaningPlan | undefined): Promise<{ raw: RawDataset; cleaning?: DashboardResult["cleaning"] }> {
+  const raw = await parseFile(fileName, data);
+  if (!plan || isEmptyPlan(plan)) return { raw };
+  const { dataset, log } = applyCleaning(raw, plan);
+  if (dataset.rows.length === 0) throw new ImportError("Les corrections choisies excluent toutes les lignes du fichier : assouplissez-les.");
+  return { raw: dataset, cleaning: { plan, log } };
 }
 
 const ROLE_LABEL: Record<string, string> = { measure: "numérique", date: "date", dimension: "catégorie", ignored: "exclue" };

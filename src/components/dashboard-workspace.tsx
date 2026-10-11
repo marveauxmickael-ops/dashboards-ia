@@ -8,6 +8,7 @@ import type { QuestionAnswer } from "@/lib/questions";
 import { DashboardView } from "./dashboard-view";
 import { FiltersBar } from "./filters-bar";
 import { QuestionPanel } from "./question-panel";
+import { downloadCleanedOnServer, type DownloadCleaned } from "./quality-panel";
 
 export type AskQuestion = (input: { file: File; previous: DashboardResult; question: string; dashboardId?: string | null }) => Promise<{ ok: true; answer: QuestionAnswer } | { ok: false; message: string }>;
 
@@ -63,6 +64,7 @@ export function DashboardWorkspace({
   branding,
   ask = askOnServer,
   aiAvailable = true,
+  downloadCleaned = downloadCleanedOnServer,
 }: {
   initial: DashboardResult;
   dashboardId?: string | null;
@@ -78,6 +80,8 @@ export function DashboardWorkspace({
   /** Questions en langage naturel (US-07) ; la démo navigateur répond localement. */
   ask?: AskQuestion;
   aiAvailable?: boolean;
+  /** Fichier corrigé (US-11) : les corrections du dashboard appliquées au fichier chargé. */
+  downloadCleaned?: DownloadCleaned;
 }) {
   const [base, setBase] = useState(initial);
   const [shown, setShown] = useState(initial);
@@ -144,10 +148,23 @@ export function DashboardWorkspace({
                 {busy === "reimport" ? "Mise à jour…" : "Mettre à jour le dashboard avec ce fichier"}
               </button>
             )}
+            {file && base.cleaning && (
+              <button
+                type="button"
+                onClick={() => {
+                  void downloadCleaned(file, base.cleaning!.plan).then((outcome) => {
+                    if (!outcome.ok) setMessage({ tone: "error", text: outcome.message });
+                  });
+                }}
+                className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-800 hover:bg-slate-50"
+              >
+                Télécharger le fichier corrigé (CSV)
+              </button>
+            )}
           </div>
           <p className="text-xs text-slate-500">
             {file
-              ? "Le fichier est lu pour chaque calcul puis oublié : il n'est jamais conservé. Les filtres n'appellent pas l'IA."
+              ? `Le fichier est lu pour chaque calcul puis oublié : il n'est jamais conservé. Les filtres n'appellent pas l'IA.${base.cleaning ? " Les corrections du contrôle qualité sont réappliquées à chaque calcul." : ""}`
               : "Pour filtrer le dashboard ou le mettre à jour avec un fichier plus récent, chargez le fichier source. Il n'est jamais conservé."}
           </p>
           {message && (

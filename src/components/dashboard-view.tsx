@@ -24,6 +24,7 @@ import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, moveChart, o
 import { AnalysisPanel } from "./analysis-panel";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
+import { CleaningNotice } from "./quality-panel";
 import { chartPalette, readableOnWhite, type Branding } from "@/lib/branding";
 import { describeFilters, isFiltered } from "@/lib/filters";
 
@@ -94,6 +95,7 @@ export function DashboardView({
 
       {children}
       <ActiveFilters filters={result.filters} />
+      <CleaningNotice cleaning={result.cleaning} compact={compactLayout} />
       {exportable && result.filters && (
         <p className="text-xs text-slate-500 print:hidden">
           Le PDF reprend la vue filtrée ; les téléchargements Excel et CSV portent sur le dashboard complet.

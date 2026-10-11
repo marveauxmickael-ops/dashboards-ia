@@ -5,20 +5,41 @@ import { createRoot } from "react-dom/client";
 import { BrandSettings } from "@/components/brand-settings";
 import { NO_BRANDING, type Branding } from "@/lib/branding";
 import { Studio } from "@/components/studio";
-import { ImportError } from "@/lib/ingest/parse";
+import { ImportError, parseFile } from "@/lib/ingest/parse";
 import type { AskQuestion, Recompute } from "@/components/dashboard-workspace";
+import { saveBlob, type AnalyzeQuality, type DownloadCleaned } from "@/components/quality-panel";
 import { askDashboardQuestion, generateDashboard, IncompatibleFileError, recomputeDashboard } from "@/lib/pipeline";
 import { QuestionError } from "@/lib/questions";
+import { analyzeQuality, applyCleaning, cleanedCsv, cleanedFileName, type CleaningPlan } from "@/lib/quality";
 import type { AiMode } from "@/lib/types";
 
-async function generateInBrowser(file: File, mode: AiMode) {
+async function generateInBrowser(file: File, mode: AiMode, cleaning?: CleaningPlan) {
   try {
-    const result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: "demo-navigateur" });
+    const result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: "demo-navigateur", cleaning });
     return { ok: true as const, result };
   } catch (error) {
     return { ok: false as const, message: error instanceof ImportError ? error.message : "Le fichier n'a pas pu être analysé." };
   }
 }
+
+// Contrôle qualité et fichier corrigé, calculés dans le navigateur.
+const analyzeInBrowser: AnalyzeQuality = async (file) => {
+  try {
+    return { ok: true, report: analyzeQuality(await parseFile(file.name, await file.arrayBuffer())) };
+  } catch (error) {
+    return { ok: false, message: error instanceof ImportError ? error.message : "Le fichier n'a pas pu être analysé." };
+  }
+};
+
+const downloadInBrowser: DownloadCleaned = async (file, plan) => {
+  try {
+    const { dataset } = applyCleaning(await parseFile(file.name, await file.arrayBuffer()), plan);
+    saveBlob(new Blob([cleanedCsv(dataset)], { type: "text/csv;charset=utf-8" }), cleanedFileName(file.name));
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: error instanceof ImportError ? error.message : "Le fichier corrigé n'a pas pu être produit." };
+  }
+};
 
 // Filtres calculés dans le navigateur, comme la génération : aucun envoi de fichier.
 const recomputeInBrowser: Recompute = async ({ file, previous, filters, action }) => {
@@ -69,7 +90,7 @@ function App() {
           />
         </div>
       </details>
-      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} ask={askInBrowser} aiAvailable={false} />
+      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} ask={askInBrowser} aiAvailable={false} analyzeQuality={analyzeInBrowser} downloadCleaned={downloadInBrowser} />
     </main>
   );
 }
