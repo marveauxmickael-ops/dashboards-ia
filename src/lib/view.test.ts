@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { generateDashboard } from "@/lib/pipeline";
-import { applyView, decodeView, EMPTY_VIEW, encodeView, isDefaultView, type ViewState } from "./view";
+import { applyView, decodeView, EMPTY_VIEW, encodeView, isDefaultView, placeChart, type ViewState } from "./view";
 
 const demo = readFileSync(path.resolve(import.meta.dirname, "../../public/demo/ventes-demo.csv"), "utf-8");
 
@@ -45,5 +45,13 @@ describe("personnalisation de l'affichage", () => {
     expect(decodeView(encoded, result)).toEqual(view);
     expect(isDefaultView(decodeView("pas-du-base64!", result))).toBe(true);
     expect(isDefaultView(decodeView(encodeView({ ...EMPTY_VIEW, chartTypes: { c1: "radar" } } as unknown as ViewState, result), result))).toBe(true);
+  });
+
+  it("place un graphique déposé avant ou après la cible selon le sens du déplacement", () => {
+    const ids = ["a", "b", "c", "d"];
+    expect(placeChart(ids, "a", "c")).toEqual(["b", "c", "a", "d"]);
+    expect(placeChart(ids, "d", "b")).toEqual(["a", "d", "b", "c"]);
+    expect(placeChart(ids, "b", "b")).toEqual(ids);
+    expect(placeChart(ids, "x", "b")).toEqual(ids);
   });
 });

@@ -12,12 +12,15 @@ export function ExportActions({
   view,
   base,
   onPrintOnePage,
+  onPrintContinuous,
 }: {
   dashboardId?: string | null;
   view?: ViewState;
   base?: DashboardResult;
   /** PDF réduit pour tenir sur une seule page A4 paysage. */
   onPrintOnePage?: () => void;
+  /** PDF d'une seule page continue, aux dimensions du dashboard : défilement vertical et horizontal. */
+  onPrintContinuous?: () => void;
 }) {
   const vue = view && base && !isDefaultView(view) ? `&vue=${encodeView(view, base)}` : "";
   const link = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800";
@@ -25,11 +28,16 @@ export function ExportActions({
     <div className="flex flex-wrap items-center gap-2 print:hidden" role="group" aria-label="Télécharger le dashboard">
       <span className="text-sm text-slate-600">Télécharger :</span>
       <button type="button" onClick={() => window.print()} className={link} title="Choisissez « Enregistrer au format PDF » comme imprimante">
-        PDF
+        PDF (pages A4)
       </button>
+      {onPrintContinuous && (
+        <button type="button" onClick={onPrintContinuous} className={link} title="Une seule page sans coupure, à faire défiler de haut en bas et de gauche à droite">
+          PDF continu
+        </button>
+      )}
       {onPrintOnePage && (
         <button type="button" onClick={onPrintOnePage} className={link} title="Tout le dashboard sur une seule page A4 paysage">
-          PDF une page
+          PDF une page A4
         </button>
       )}
       {dashboardId && (

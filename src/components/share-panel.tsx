@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { linkOriginWarning, noSubscription, publicOrigin } from "@/lib/site";
+import { useState, useSyncExternalStore } from "react";
 import { createShareLink, revokeShare, updateShare, type ShareState } from "@/app/dashboards/[id]/share-actions";
 import { SHARE_ACCESS_LABEL, type ShareAccess } from "@/lib/share";
 
@@ -14,6 +15,8 @@ export function SharePanel({ dashboardId, initial }: { dashboardId: string; init
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // Lu côté navigateur seulement (pas de différence entre rendu serveur et hydratation).
+  const originWarning = useSyncExternalStore(noSubscription, linkOriginWarning, () => null);
 
   async function run(action: () => ReturnType<typeof updateShare>) {
     setBusy(true);
@@ -23,7 +26,7 @@ export function SharePanel({ dashboardId, initial }: { dashboardId: string; init
     if (!outcome.ok) return setError(outcome.message);
     setShare(outcome.share);
     if (outcome.share) setAccess(outcome.share.access);
-    setLink(outcome.token ? `${window.location.origin}/partage/${outcome.token}` : null);
+    setLink(outcome.token ? `${publicOrigin()}/partage/${outcome.token}` : null);
     setCopied(false);
   }
 
@@ -34,11 +37,12 @@ export function SharePanel({ dashboardId, initial }: { dashboardId: string; init
       <div>
         <h3 className="text-base font-semibold text-slate-900">Partager par lien sécurisé</h3>
         <p className="mt-1 text-sm text-slate-600">
-          Les personnes qui ont le lien consultent les résultats calculés, sans compte. Elles n&apos;ont jamais accès au fichier source, qui n&apos;est
+          Les personnes qui ont le lien consultent les résultats sur Dashboards IA, sans créer de compte. Elles n&apos;ont jamais accès au fichier source, qui n&apos;est
           pas conservé, ni aux données envoyées à l&apos;IA.
         </p>
       </div>
 
+      {originWarning && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{originWarning}</p>}
       <label className="flex flex-col gap-1 text-sm text-slate-700 sm:flex-row sm:items-center sm:gap-2">
         Niveau d&apos;accès
         <select

@@ -131,6 +131,15 @@ Panneau « Poser une question » (fichier source chargé) : l'IA traduit la ques
 
 Page « Sécurité du compte » (clic sur l'adresse dans l'en-tête) : activation par application TOTP (QR code puis premier code), désactivation depuis une session déjà vérifiée. Une fois activée, un code est demandé après le mot de passe (`/connexion/verification`) ; le proxy redirige toute page, les API refusent la session, et des politiques RLS restrictives (`private.mfa_ok()`) bloquent l'accès aux données tant que la session n'est pas au niveau aal2. Activation, désactivation et connexions sont journalisées.
 
+## Disposition et PDF
+
+- **Glisser-déposer** : poignée ⠿ (au survol d'un graphique) à déposer sur un autre graphique. « Par sections » : déplacement dans la section ; « Libre » : une seule grille où chaque graphique va n'importe où. La grille comble automatiquement les espaces vides (`grid-flow-row-dense`).
+- **PDF (pages A4)** : impression classique. **PDF une page A4** : tout réduit sur une page paysage. **PDF continu** : une seule page aux dimensions du dashboard, mise en page figée telle qu'à l'écran, à faire défiler de haut en bas et de gauche à droite.
+
+## Liens envoyés (partage, invitations)
+
+Les liens sont construits à partir de `NEXT_PUBLIC_SITE_URL` (adresse de production), jamais de l'adresse affichée : un lien créé depuis une adresse de prévisualisation Vercel (`…-git-…` ou `…-<hash>-….vercel.app`), protégée par la « Deployment Protection » de Vercel, obligerait le destinataire à se connecter à Vercel. Sans `NEXT_PUBLIC_SITE_URL`, un avertissement s'affiche sur une adresse de prévisualisation.
+
 ## Charte graphique
 
 Page « Charte graphique » (propriétaire ou administrateur) : import du logo (PNG, JPEG, WebP ou SVG, réencodé en PNG redimensionné dans le navigateur, sans script ni métadonnées), couleurs détectées automatiquement dans le logo puis ajustables. Logo et couleurs s'appliquent à tous les dashboards de l'organisation : écran, PDF, export Excel (logo et en-têtes) et liens partagés. Une couleur trop claire est assombrie pour les textes (contraste ≥ 4,5:1) ; les couleurs de signification (hausse, baisse, alertes) ne changent pas.

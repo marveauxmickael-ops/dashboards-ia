@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { linkOriginWarning, noSubscription, publicOrigin } from "@/lib/site";
+import { useState, useSyncExternalStore } from "react";
 import { changeRole, inviteMember, removeMember, revokeInvitation } from "@/app/organisation/actions";
 import type { Role } from "@/lib/auth/session";
 
@@ -43,6 +44,8 @@ export function MembersPanel({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("editor");
   const [busy, setBusy] = useState(false);
+  // Lu côté navigateur seulement (pas de différence entre rendu serveur et hydratation).
+  const originWarning = useSyncExternalStore(noSubscription, linkOriginWarning, () => null);
 
   async function run(action: () => Promise<{ ok: true; token?: string } | { ok: false; message: string }>, success?: string) {
     setBusy(true);
@@ -50,7 +53,7 @@ export function MembersPanel({
     const outcome = await action();
     setBusy(false);
     if (!outcome.ok) return setMessage({ tone: "error", text: outcome.message });
-    if (outcome.token) setLink(`${window.location.origin}/invitation/${outcome.token}`);
+    if (outcome.token) setLink(`${publicOrigin()}/invitation/${outcome.token}`);
     if (success) setMessage({ tone: "success", text: success });
   }
 
@@ -134,6 +137,7 @@ export function MembersPanel({
       {manager && (
         <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="text-base font-semibold text-slate-900">Inviter un membre</h2>
+          {originWarning && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{originWarning}</p>}
           <form
             className="flex flex-col gap-2 sm:flex-row sm:items-end"
             onSubmit={(e) => {

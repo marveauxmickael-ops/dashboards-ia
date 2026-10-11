@@ -28,11 +28,13 @@ export const ViewSchema = z.object({
   collapsedCharts: z.array(z.string().max(64)).max(100).default([]),
   /** Ordre choisi des graphiques (identifiants) ; les autres suivent dans l'ordre d'origine. */
   chartOrder: z.array(z.string().max(64)).max(100).default([]),
+  /** Disposition : par sections (évolutions, puis une section par dimension) ou libre (une seule grille, tout se déplace). */
+  grouping: z.enum(["sections", "free"]).default("sections"),
 });
 
 export type ViewState = z.infer<typeof ViewSchema>;
 
-export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [] };
+export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], grouping: "sections" };
 
 export type ChartSize = "s" | "m" | "l";
 
@@ -62,6 +64,20 @@ export function moveChart(allIds: string[], siblings: string[], id: string, dire
   return order;
 }
 
+/**
+ * Glisser-déposer : place `id` à l'emplacement de `targetId`. Vers l'avant, il se place après la cible ;
+ * vers l'arrière, avant elle (comportement habituel d'une liste réordonnable).
+ */
+export function placeChart(allIds: string[], id: string, targetId: string): string[] {
+  if (id === targetId) return allIds;
+  const from = allIds.indexOf(id);
+  const to = allIds.indexOf(targetId);
+  if (from === -1 || to === -1) return allIds;
+  const order = allIds.filter((x) => x !== id);
+  order.splice(order.indexOf(targetId) + (from < to ? 1 : 0), 0, id);
+  return order;
+}
+
 export function isDefaultView(v: ViewState): boolean {
   return (
     v.hiddenKpis.length === 0 &&
@@ -72,6 +88,7 @@ export function isDefaultView(v: ViewState): boolean {
     Object.keys(v.chartSizes).length === 0 &&
     v.collapsedCharts.length === 0 &&
     v.chartOrder.length === 0 &&
+    v.grouping === "sections" &&
     !v.hideInsights &&
     !v.hideAnalysis &&
     !v.hideExplanations &&

@@ -20,7 +20,7 @@ import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
-import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, moveChart, orderCharts, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
+import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
@@ -57,6 +57,9 @@ export function DashboardView({
   const accent = readableOnWhite(palette[0]);
   const [view, setView] = useDashboardView(dashboardId);
   const [customizing, setCustomizing] = useState(false);
+  // Glisser-déposer : graphique saisi et graphique survolé.
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
   const hiddenKpis = new Set(view.hiddenKpis);
   const hiddenCharts = new Set(view.hiddenCharts);
   const kpis = result.kpis.filter((k) => !hiddenKpis.has(k.id));
@@ -98,7 +101,7 @@ export function DashboardView({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <ExportActions dashboardId={exportable ? dashboardId : null} view={view} base={base} onPrintOnePage={printOnePage} />
+        <ExportActions dashboardId={exportable ? dashboardId : null} view={view} base={base} onPrintOnePage={printOnePage} onPrintContinuous={printContinuous} />
         <div className="flex flex-wrap items-center gap-2">
         <div role="group" aria-label="Mise en page" className="inline-flex overflow-hidden rounded-lg border border-slate-300 text-sm">
           {(
@@ -113,6 +116,25 @@ export function DashboardView({
               aria-pressed={view.layout === value}
               onClick={() => setView({ ...view, layout: value })}
               className={`px-3 py-1.5 font-medium ${view.layout === value ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div role="group" aria-label="Disposition des graphiques" className="inline-flex overflow-hidden rounded-lg border border-slate-300 text-sm">
+          {(
+            [
+              ["sections", "Par sections"],
+              ["free", "Libre"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={view.grouping === value}
+              title={value === "free" ? "Une seule grille : glissez-déposez les graphiques où vous voulez" : "Graphiques regroupés : évolutions, puis par dimension"}
+              onClick={() => setView({ ...view, grouping: value })}
+              className={`px-3 py-1.5 font-medium ${view.grouping === value ? "bg-teal-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
             >
               {label}
             </button>
@@ -254,14 +276,15 @@ export function DashboardView({
         </Collapsible>
       )}
 
-      {groupCharts(orderCharts(charts, view)).map((group) => {
+      {(view.grouping === "free" ? [{ title: "Graphiques", charts: orderCharts(charts, view) }] : groupCharts(orderCharts(charts, view))).map((group) => {
         const siblings = group.charts.map((c) => c.id);
         return (
           <section key={group.title} aria-label={group.title} className={`flex flex-col ${compactLayout ? "gap-2" : "gap-3"}`}>
             <h3 className={`font-semibold uppercase tracking-wide ${compactLayout ? "text-xs" : "text-sm"}`} style={{ color: accent }}>
               {group.title}
             </h3>
-            <div className={`chart-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${compactLayout ? "gap-2" : "gap-3"}`}>
+            {/* « dense » : un petit graphique vient combler un espace laissé libre plus haut dans la grille. */}
+            <div className={`chart-grid grid grid-flow-row-dense grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${compactLayout ? "gap-2" : "gap-3"}`}>
               {group.charts.map((c, i) => (
                 <ChartCard
                   key={c.id}
@@ -279,6 +302,23 @@ export function DashboardView({
                   onMove={(direction) => setView({ ...view, chartOrder: moveChart(orderedIds, siblings, c.id, direction) })}
                   canMoveBack={i > 0}
                   canMoveForward={i < group.charts.length - 1}
+                  drag={{
+                    active: dragging === c.id,
+                    target: dropTarget === c.id && dragging !== null && dragging !== c.id && siblings.includes(dragging),
+                    onStart: () => setDragging(c.id),
+                    onEnd: () => {
+                      setDragging(null);
+                      setDropTarget(null);
+                    },
+                    onEnter: () => {
+                      if (dragging && siblings.includes(dragging)) setDropTarget(c.id);
+                    },
+                    onDrop: () => {
+                      if (dragging && dragging !== c.id && siblings.includes(dragging)) setView({ ...view, chartOrder: placeChart(orderedIds, dragging, c.id) });
+                      setDragging(null);
+                      setDropTarget(null);
+                    },
+                  }}
                 />
               ))}
             </div>
@@ -344,6 +384,122 @@ function Collapsible({ enabled, summary, children }: { enabled: boolean; summary
   );
 }
 
+// Taille maximale d'une page PDF (200 pouces), en pixels CSS : au-delà, le dashboard est réduit à l'échelle.
+const MAX_PDF_SIDE = 19200;
+
+/**
+ * Isole le dashboard pour l'impression : tout ce qui n'est pas le dashboard ou l'un de ses parents est retiré
+ * de la page imprimée (et ne prend donc aucune place). Renvoie la fonction qui rétablit la page.
+ */
+function isolateForPrint(root: HTMLElement, pageCss: string, rootCss: string): () => void {
+  const marked: HTMLElement[] = [];
+  for (let node: HTMLElement | null = root; node && node !== document.body; node = node.parentElement) {
+    const parent: HTMLElement | null = node.parentElement;
+    if (!parent) break;
+    if (parent !== document.body) {
+      parent.dataset.printPath = "";
+      marked.push(parent);
+    }
+    for (const sibling of Array.from(parent.children) as HTMLElement[]) {
+      if (sibling !== node) {
+        sibling.dataset.printHide = "";
+        marked.push(sibling);
+      }
+    }
+  }
+  const style = document.createElement("style");
+  style.textContent = `${pageCss}
+@media print {
+  [data-print-hide] { display: none !important; }
+  [data-print-path] { margin: 0 !important; padding: 0 !important; border: 0 !important; max-width: none !important; width: auto !important; min-height: 0 !important; }
+  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  #dashboard-print-root { ${rootCss} }
+  #dashboard-print-root .recharts-tooltip-wrapper { display: none !important; }
+}`;
+  document.head.appendChild(style);
+  return () => {
+    for (const el of marked) {
+      delete el.dataset.printHide;
+      delete el.dataset.printPath;
+    }
+    style.remove();
+  };
+}
+
+function printThen(cleanup: () => void) {
+  const done = () => {
+    cleanup();
+    window.removeEventListener("afterprint", done);
+  };
+  window.addEventListener("afterprint", done);
+  window.print();
+}
+
+function contentHeight(root: HTMLElement): number {
+  return Math.max(
+    1,
+    [...root.children].reduce((h, el) => (getComputedStyle(el).display === "none" ? h : Math.max(h, (el as HTMLElement).offsetTop + (el as HTMLElement).offsetHeight)), 0) -
+      root.offsetTop,
+  );
+}
+
+/**
+ * Fige la mise en page affichée (colonnes de chaque grille, largeur de chaque élément) en styles en ligne :
+ * à l'impression, les points de rupture changeraient sinon le nombre de colonnes. Renvoie la restauration.
+ */
+function freezeLayout(root: HTMLElement): () => void {
+  const saved: [HTMLElement, string][] = [];
+  const set = (el: HTMLElement, css: string) => {
+    saved.push([el, el.style.cssText]);
+    el.style.cssText += css;
+  };
+  set(root, `width: ${root.offsetWidth}px !important;`);
+  for (const el of Array.from(root.querySelectorAll<HTMLElement>("*"))) {
+    const style = getComputedStyle(el);
+    if (style.display === "grid") set(el, `grid-template-columns: ${style.gridTemplateColumns} !important;`);
+    const parent = el.parentElement;
+    if (parent && getComputedStyle(parent).display === "grid") set(el, `grid-column: ${style.gridColumnStart} / ${style.gridColumnEnd} !important;`);
+  }
+  return () => {
+    for (const [el, css] of saved.reverse()) el.style.cssText = css;
+  };
+}
+
+/** Hauteur du dashboard tel qu'il sera imprimé (éléments réservés à l'écran masqués, ceux réservés à l'impression affichés). */
+function printedHeight(root: HTMLElement): number {
+  const preview = document.createElement("style");
+  preview.textContent = `#dashboard-print-root .print\\:hidden { display: none !important; }
+#dashboard-print-root .print\\:block { display: block !important; }`;
+  document.head.appendChild(preview);
+  const height = contentHeight(root);
+  preview.remove();
+  return height;
+}
+
+/**
+ * PDF continu : une seule page aux dimensions exactes du dashboard tel qu'il est affiché, sans coupure.
+ * Dans le lecteur PDF, on fait défiler de haut en bas et, en zoomant, de gauche à droite.
+ */
+function printContinuous() {
+  const root = document.getElementById("dashboard-print-root");
+  if (!root) return window.print();
+  const unfreeze = freezeLayout(root);
+  const width = Math.ceil(root.offsetWidth);
+  const height = Math.ceil(printedHeight(root));
+  const margin = 24;
+  const scale = Math.min(1, MAX_PDF_SIDE / (Math.max(width, height) + 2 * margin));
+  const isolate = isolateForPrint(
+    root,
+    // Quelques pixels de marge en bas absorbent les arrondis du moteur d'impression.
+    `@page { size: ${Math.ceil((width + 2 * margin) * scale)}px ${Math.ceil((height + 2 * margin + 16) * scale)}px; margin: 0; }`,
+    `margin: ${margin}px !important; zoom: ${scale};`,
+  );
+  printThen(() => {
+    isolate();
+    unfreeze();
+  });
+}
+
 // Largeur et hauteur imprimables d'une page A4 paysage (marges de 8 mm), en pixels CSS.
 const PAGE_WIDTH = 1062;
 const PAGE_HEIGHT = 733;
@@ -355,63 +511,52 @@ const PAGE_HEIGHT = 733;
 function printOnePage() {
   const root = document.getElementById("dashboard-print-root");
   if (!root) return window.print();
-  const style = document.createElement("style");
+  root.classList.add("one-page");
+  const previous = { width: root.style.width, zoom: root.style.zoom };
+  const grid = document.createElement("style");
   // La grille est fixée explicitement : la largeur d'une page imprimée ne doit pas changer le nombre de colonnes.
-  style.textContent = `#dashboard-print-root.one-page .chart-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  grid.textContent = `#dashboard-print-root.one-page .chart-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
 #dashboard-print-root.one-page .kpi-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
 #dashboard-print-root.one-page .span-s { grid-column: span 1 / span 1 !important; }
 #dashboard-print-root.one-page .span-m { grid-column: span 2 / span 2 !important; }
-#dashboard-print-root.one-page .span-l { grid-column: 1 / -1 !important; }
-@page { size: A4 landscape; margin: 8mm; }
-@media print {
-  body * { visibility: hidden !important; }
-  #dashboard-print-root, #dashboard-print-root * { visibility: visible !important; }
-  #dashboard-print-root .recharts-tooltip-wrapper, #dashboard-print-root .recharts-tooltip-wrapper * { visibility: hidden !important; }
-  html, body { height: ${PAGE_HEIGHT}px !important; overflow: hidden !important; }
-  #dashboard-print-root { position: absolute; left: 0; top: 0; }
-}`;
-  document.head.appendChild(style);
-  const previous = { width: root.style.width, zoom: root.style.zoom };
-  root.style.width = `${PAGE_WIDTH}px`;
-  root.classList.add("one-page");
-  const restore = () => {
+#dashboard-print-root.one-page .span-l { grid-column: 1 / -1 !important; }`;
+  document.head.appendChild(grid);
+  const restoreLayout = () => {
     root.classList.remove("one-page");
     root.style.width = previous.width;
     root.style.zoom = previous.zoom;
-    style.remove();
-    window.removeEventListener("afterprint", restore);
+    grid.remove();
   };
-  window.addEventListener("afterprint", restore);
+  root.style.width = `${PAGE_WIDTH}px`;
   const wait = () => new Promise((resolve) => window.setTimeout(resolve, 350));
-  const contentHeight = () =>
-    Math.max(
-      1,
-      [...root.children].reduce((h, el) => (getComputedStyle(el).display === "none" ? h : Math.max(h, (el as HTMLElement).offsetTop + (el as HTMLElement).offsetHeight)), 0) -
-        root.offsetTop,
-    );
   // Deux passes : mesure à la largeur de la page, puis mise en page élargie dans les proportions de la page
   // pour en occuper toute la largeur une fois réduite. Les graphiques se redessinent entre les deux mesures.
   void (async () => {
     await wait();
-    let scale = Math.min(1, PAGE_HEIGHT / contentHeight());
+    let width = PAGE_WIDTH;
+    let scale = Math.min(1, PAGE_HEIGHT / contentHeight(root));
     if (scale < 1) {
-      const width = PAGE_WIDTH / scale;
+      width = PAGE_WIDTH / scale;
       root.style.width = `${width}px`;
       await wait();
-      scale = Math.min(PAGE_WIDTH / width, PAGE_HEIGHT / contentHeight());
+      scale = Math.min(PAGE_WIDTH / width, PAGE_HEIGHT / contentHeight(root));
     }
     // En dessous de 45 %, le texte devient illisible : on prévient avant d'imprimer.
     if (
       scale < 0.45 &&
       !window.confirm(
-        `Pour tenir sur une page, le dashboard serait réduit à ${Math.round(scale * 100)} % et difficile à lire.\n\nConseil : passez en mise en page compacte, réduisez ou masquez des graphiques.\n\nImprimer quand même ?`,
+        `Pour tenir sur une page, le dashboard serait réduit à ${Math.round(scale * 100)} % et difficile à lire.\n\nConseil : passez en mise en page compacte, réduisez ou masquez des graphiques, ou choisissez « PDF continu ».\n\nImprimer quand même ?`,
       )
     ) {
-      restore();
+      restoreLayout();
       return;
     }
     root.style.zoom = String(scale);
-    window.print();
+    const cleanup = isolateForPrint(root, "@page { size: A4 landscape; margin: 8mm; }", `width: ${width}px !important;`);
+    printThen(() => {
+      cleanup();
+      restoreLayout();
+    });
   })();
 }
 
@@ -597,6 +742,7 @@ function ChartCard({
   canMoveBack,
   canMoveForward,
   readOnly = false,
+  drag,
 }: {
   chart: ComputedChart;
   view: ViewState;
@@ -614,6 +760,8 @@ function ChartCard({
   canMoveForward: boolean;
   /** Graphique isolé (réponse à une question) : sans commandes de disposition ni options. */
   readOnly?: boolean;
+  /** Glisser-déposer : saisie par la poignée ⠿, dépôt sur un autre graphique de la même grille. */
+  drag?: { active: boolean; target: boolean; onStart: () => void; onEnd: () => void; onEnter: () => void; onDrop: () => void };
 }) {
   const type = chartTypeOf(chart, view);
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
@@ -637,7 +785,26 @@ function ChartCard({
 
   return (
     <article
-      className={`group relative min-w-0 rounded-xl border border-slate-200 bg-white print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""}`}
+      className={`group relative min-w-0 rounded-xl border bg-white transition print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""} ${
+        drag?.target ? "border-teal-600 ring-2 ring-teal-600/40" : "border-slate-200"
+      } ${drag?.active ? "opacity-40" : ""}`}
+      onDragOver={
+        drag
+          ? (e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              drag.onEnter();
+            }
+          : undefined
+      }
+      onDrop={
+        drag
+          ? (e) => {
+              e.preventDefault();
+              drag.onDrop();
+            }
+          : undefined
+      }
     >
       <div>
         <h3 className={`min-w-0 font-semibold text-slate-900 ${small ? "text-sm" : "text-base"}`} title={chart.formula}>
@@ -650,6 +817,27 @@ function ChartCard({
           role="group"
           aria-label={`Disposition de ${chart.title}`}
         >
+          {drag && (
+            <span
+              draggable
+              role="button"
+              tabIndex={-1}
+              aria-label="Glisser pour déplacer"
+              title="Glisser-déposer sur un autre graphique"
+              className={`${iconButton} cursor-grab active:cursor-grabbing`}
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/plain", chart.id);
+                e.dataTransfer.effectAllowed = "move";
+                // Le graphique entier suit le pointeur, pas seulement la poignée.
+                const card = e.currentTarget.closest("article");
+                if (card) e.dataTransfer.setDragImage(card, 24, 24);
+                drag.onStart();
+              }}
+              onDragEnd={drag.onEnd}
+            >
+              ⠿
+            </span>
+          )}
           <button type="button" className={iconButton} disabled={!canMoveBack} onClick={() => onMove(-1)} aria-label="Déplacer avant" title="Déplacer avant">
             ‹
           </button>
