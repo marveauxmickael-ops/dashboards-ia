@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 import ExcelJS from "exceljs";
 import type { CellValue, RawDataset, Row } from "@/lib/types";
+import { extractPdfTable, PdfTableError } from "./pdf";
 
 export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 export const MAX_ROWS = 200_000;
@@ -15,7 +16,8 @@ export async function parseFile(fileName: string, data: ArrayBuffer): Promise<Ra
   const lower = fileName.toLowerCase();
   if (lower.endsWith(".csv")) return parseCsv(fileName, new TextDecoder("utf-8").decode(data));
   if (lower.endsWith(".xlsx")) return parseXlsx(fileName, data);
-  throw new ImportError("Format non pris en charge. Importez un fichier .csv ou .xlsx.");
+  if (lower.endsWith(".pdf")) return parsePdf(fileName, data);
+  throw new ImportError("Format non pris en charge. Importez un fichier .csv, .xlsx ou .pdf.");
 }
 
 export function parseCsv(fileName: string, text: string): RawDataset {
@@ -65,6 +67,18 @@ export async function parseXlsx(fileName: string, data: ArrayBuffer): Promise<Ra
     if (!empty) rows.push(row);
   });
   return checkRows({ fileName, columns: uniqueColumns(named), rows });
+}
+
+/** PDF : tableau reconstruit par le moteur à partir de la position du texte (sans IA). */
+export async function parsePdf(fileName: string, data: ArrayBuffer): Promise<RawDataset> {
+  try {
+    const { columns, rows, notes } = await extractPdfTable(data);
+    const normalized: Row[] = rows.map((r) => Object.fromEntries(columns.map((c) => [c, normalizeCell(r[c])])));
+    return { ...checkRows({ fileName, columns: uniqueColumns(columns), rows: normalized }), notes };
+  } catch (error) {
+    if (error instanceof PdfTableError) throw new ImportError(error.message);
+    throw error;
+  }
 }
 
 function checkRows(ds: RawDataset): RawDataset {

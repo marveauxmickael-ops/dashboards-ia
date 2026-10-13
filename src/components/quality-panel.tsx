@@ -80,6 +80,13 @@ export function QualityPanel({
 }) {
   const selected = countSelected(plan);
   const measure = report.mainMeasure;
+  const notes = (report.notes ?? []).length > 0 && (
+    <ul className="list-disc rounded-lg bg-white/70 py-2 pl-8 pr-3 text-sm text-slate-700">
+      {report.notes.map((n, i) => (
+        <li key={i}>{n}</li>
+      ))}
+    </ul>
+  );
 
   if (report.issueCount === 0) {
     return (
@@ -88,6 +95,7 @@ export function QualityPanel({
         <p className="mt-1">
           {report.rowCount.toLocaleString("fr-FR")} lignes vérifiées : aucun doublon, aucune cellule vide ni valeur incohérente dans les colonnes analysées.
         </p>
+        {notes}
       </section>
     );
   }
@@ -106,6 +114,7 @@ export function QualityPanel({
           accord, et votre fichier d&apos;origine reste intact (les corrections portent sur une copie, qui n&apos;est pas conservée).
         </p>
       </div>
+      {notes}
 
       {report.duplicates.extraRows > 0 && (
         <fieldset className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">

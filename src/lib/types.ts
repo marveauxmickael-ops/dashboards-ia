@@ -8,6 +8,8 @@ export interface RawDataset {
   fileName: string;
   columns: string[];
   rows: Row[];
+  /** Remarques de lecture (ex. extraction d'un tableau PDF), reprises dans les points d'attention. */
+  notes?: string[];
 }
 
 export type ColumnType = "date" | "number" | "email" | "phone" | "iban" | "category" | "text";

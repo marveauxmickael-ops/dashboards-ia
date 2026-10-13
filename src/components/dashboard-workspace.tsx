@@ -128,7 +128,7 @@ export function DashboardWorkspace({
               {file ? "Changer de fichier" : "Charger le fichier"}
               <input
                 type="file"
-                accept=".csv,.xlsx"
+                accept=".csv,.xlsx,.pdf"
                 className="sr-only"
                 onChange={(e) => {
                   setFile(e.target.files?.[0] ?? null);

@@ -57,6 +57,8 @@ export interface CleaningLog {
 export interface QualityReport {
   fileName: string;
   rowCount: number;
+  /** Remarques de lecture du fichier (ex. tableau extrait d'un PDF : lignes de total ignorées). */
+  notes: string[];
   /** Mesure utilisée pour chiffrer l'effet des corrections (ex. « Montant HT »). */
   mainMeasure: string | null;
   duplicates: {
@@ -205,6 +207,7 @@ export function analyzeQuality(raw: RawDataset): QualityReport {
   const report: QualityReport = {
     fileName: raw.fileName,
     rowCount: raw.rows.length,
+    notes: raw.notes ?? [],
     mainMeasure,
     duplicates: {
       extraRows,
@@ -378,5 +381,5 @@ export function cleanedCsv(dataset: RawDataset): string {
 
 /** Nom du fichier corrigé : « ventes-corrige.csv ». */
 export function cleanedFileName(fileName: string): string {
-  return `${fileName.replace(/\.(csv|xlsx)$/i, "") || "fichier"}-corrige.csv`;
+  return `${fileName.replace(/\.(csv|xlsx|pdf)$/i, "") || "fichier"}-corrige.csv`;
 }

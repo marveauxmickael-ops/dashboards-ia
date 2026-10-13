@@ -31,7 +31,7 @@ export function profileDataset(ds: RawDataset): { profile: DatasetProfile; rows:
     else seen.add(key);
   }
 
-  const warnings: string[] = [];
+  const warnings: string[] = [...(ds.notes ?? [])];
   if (duplicateRows > 0) {
     warnings.push(`${duplicateRows} ligne(s) strictement identique(s) à une autre. Elles sont conservées : le contrôle qualité permet de les supprimer.`);
   }

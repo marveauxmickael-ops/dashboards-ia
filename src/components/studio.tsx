@@ -117,12 +117,13 @@ export function Studio({
       >
         <div className="flex flex-col gap-2">
           <label htmlFor="file" className="text-sm font-medium text-slate-800">
-            Fichier CSV ou Excel (20 Mo maximum)
+            Fichier CSV, Excel ou PDF (20 Mo maximum)
           </label>
+          <p className="text-xs text-slate-500">PDF : export d&apos;un logiciel ou d&apos;un tableur, avec une ligne d&apos;en-têtes. Les documents scannés ne sont pas lus.</p>
           <input
             id="file"
             type="file"
-            accept=".csv,.xlsx"
+            accept=".csv,.xlsx,.pdf"
             onChange={(e) => void select(e.target.files?.[0] ?? null)}
             className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-800 hover:file:bg-slate-200"
           />

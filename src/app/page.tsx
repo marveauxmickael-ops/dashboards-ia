@@ -13,7 +13,7 @@ export default async function Home() {
         <header className="flex flex-col gap-2 print:hidden">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Votre fichier devient un tableau de bord</h1>
           <p className="max-w-2xl text-slate-600">
-            Importez un export Excel ou CSV. Les données identifiantes sont pseudonymisées avant que l&apos;IA ne conçoive le dashboard ;
+            Importez un export Excel, CSV ou PDF. Les données identifiantes sont pseudonymisées avant que l&apos;IA ne conçoive le dashboard ;
             chaque chiffre est ensuite recalculé sur vos données et affiché en clair. Le fichier n&apos;est pas conservé : seul le dashboard est
             enregistré dans votre organisation.
           </p>

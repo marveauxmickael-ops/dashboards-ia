@@ -77,7 +77,7 @@ function App() {
         <p className="mt-4 font-mono text-xs uppercase tracking-widest text-slate-500">Démo navigateur</p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Votre fichier devient un tableau de bord</h1>
         <p className="max-w-2xl text-slate-600">
-          Importez un export Excel ou CSV. Les données identifiantes sont pseudonymisées avant la conception du dashboard ; chaque chiffre
+          Importez un export Excel, CSV ou PDF. Les données identifiantes sont pseudonymisées avant la conception du dashboard ; chaque chiffre
           est ensuite recalculé sur vos données et affiché en clair.
         </p>
         <p className="max-w-2xl rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-900">
