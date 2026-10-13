@@ -20,6 +20,16 @@ const MONEY = /chiffre|\bca\b|montant|prix|co[uû]t|marge|achat|charge|vente|rev
 const NON_ADDITIVE = /taux|%|pourcent|ratio|unitaire|moyen|note|score|[âa]ge\b|remise|d[ée]lai|dur[ée]e|temp[ée]rature|anciennet/i;
 const PERCENT = /taux|%|pourcent|ratio/i;
 
+/**
+ * Format d'une mesure tirée d'une colonne : pourcentage si les valeurs sont des fractions (0,37),
+ * nombre suivi de « (%) » si elles sont déjà en points (37), montant pour les colonnes monétaires.
+ */
+function columnMeasure(m: Measure, column: ColumnProfile | undefined): Measure {
+  if (!column || !PERCENT.test(column.name)) return m;
+  if (column.percentScale === "points") return { ...m, format: "number", label: m.label.includes("%") ? m.label : `${m.label} (%)` };
+  return { ...m, format: "percent" };
+}
+
 export function isAdditiveColumn(name: string): boolean {
   return !NON_ADDITIVE.test(name);
 }
@@ -33,7 +43,8 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
     .sort((a, b) => dimensionRank(a) - dimensionRank(b) || a.distinct - b.distinct);
 
   // 1. Une mesure de base pour chaque colonne numérique que l'IA n'a pas reprise.
-  const measures: Measure[] = [...spec.measures];
+  const columnByName = new Map(profile.columns.map((c) => [c.name, c]));
+  const measures: Measure[] = spec.measures.map((m) => (m.column ? columnMeasure(m, columnByName.get(m.column)) : m));
   const withColumn = new Set(measures.filter((m) => m.column !== null).map((m) => m.column));
   let n = 0;
   const nextId = (prefix: string, taken: Set<string>) => {
@@ -44,15 +55,15 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
   };
   const measureIds = new Set(measures.map((m) => m.id));
   for (const c of usable.filter((c) => c.role === "measure" && !withColumn.has(c.name))) {
-    measures.push({
+    measures.push(columnMeasure({
       id: nextId("auto_m", measureIds),
       label: c.name,
       column: c.name,
       operation: null,
       left: null,
       right: null,
-      format: PERCENT.test(c.name) ? "percent" : MONEY.test(c.name) ? "currency" : "number",
-    });
+      format: MONEY.test(c.name) ? "currency" : "number",
+    }, c));
   }
 
   // Agrégation pertinente par mesure : somme pour les montants et quantités, moyenne pour les taux et prix unitaires.

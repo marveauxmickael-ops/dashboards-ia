@@ -5,7 +5,8 @@ import type { Chart, DashboardSpec, Insight, Kpi, Measure } from "./spec";
 // Il reçoit exactement le même contexte pseudonymisé que Claude et renvoie le même format.
 
 // Chiffre d'affaires : par ordre de préférence, en écartant les prix unitaires et les ventes additionnelles.
-const REVENUE_PRIORITY = [/\bca\b|chiffre/i, /montant|vente|revenu|recette/i];
+// Les montants d'achat sont des coûts, jamais le chiffre d'affaires ; à défaut d'indication, le montant HT d'abord.
+const REVENUE_PRIORITY = [/\bca\b|chiffre/i, /vente.*\bht\b|\bht\b.*vente/i, /vente|revenu|recette/i, /montant/i];
 const COST = /co[uû]t|achat|charge|d[ée]pense/i;
 const MARGIN = /marge/i;
 const SECONDARY = /unitaire|additionnel|compl[ée]mentaire|upsell/i;
@@ -24,12 +25,13 @@ export function buildDemoSpec(ctx: AiContext): DashboardSpec {
     operation: null,
     left: null,
     right: null,
-    format: MONEY.test(c.name) ? "currency" : "number",
+    format: MONEY.test(c.name) && !/taux|%|pourcent|ratio/i.test(c.name) ? "currency" : "number",
   }));
   const primary = measures.filter((m) => !SECONDARY.test(m.label));
-  const revenue = REVENUE_PRIORITY.map((re) => primary.find((m) => re.test(m.label))).find(Boolean) ?? primary[0] ?? measures[0];
+  const revenue =
+    REVENUE_PRIORITY.map((re) => primary.find((m) => re.test(m.label) && !COST.test(m.label) && !MARGIN.test(m.label))).find(Boolean) ?? primary[0] ?? measures[0];
   const cost = primary.find((m) => m !== revenue && COST.test(m.label));
-  const marginColumn = primary.find((m) => m !== revenue && MARGIN.test(m.label));
+  const marginColumn = primary.find((m) => m !== revenue && MARGIN.test(m.label) && !/taux|%|pourcent|ratio/i.test(m.label));
   const addOn = measures.find((m) => ADD_ON.test(m.label) && !MARGIN.test(m.label) && m.format === "currency");
 
   // Marge : la colonne du fichier si elle existe, sinon CA − coûts.

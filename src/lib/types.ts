@@ -37,6 +37,8 @@ export interface ColumnProfile {
   invalid: number;
   /** Raison lisible du traitement appliqué, affichée à l'utilisateur. */
   reason: string;
+  /** Colonne de pourcentage : valeurs en fraction (0,37) ou en points (37). */
+  percentScale?: "fraction" | "points";
 }
 
 export interface DatasetProfile {

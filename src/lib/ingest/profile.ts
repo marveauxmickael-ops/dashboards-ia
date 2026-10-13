@@ -14,9 +14,44 @@ const FREE_TEXT_HEADER = /comment|remarque|\bnotes?\b|observation|description|de
 const PERSON_HEADER = /\bnom\b|name|pr[ée]nom|client|contact|commercial|vendeur|salari[ée]|employ[ée]|collaborateur|fournisseur|soci[ée]t[ée]|entreprise|raison sociale|\bid\b|identifiant|siret|siren/i;
 // Classifications qui mentionnent une personne sans l'identifier (« Segment client », « Type de contact ») : transmises.
 const CLASSIFICATION_HEADER = /segment|type|cat[ée]gor|canal|statut|r[ée]gion|secteur|taille|famille|gamme|niveau/i;
+// Codes et identifiants numériques (EAN, code article, n° de commande) : des étiquettes, jamais des quantités.
+const CODE_HEADER = /(^|[\s_(-])(code|ean|gtin|sku|r[ée]f[ée]rence|ref|n[°o]|num[ée]ro|matricule)(?=$|[\s_).:-])/i;
+// Colonnes de libellé, qui nomment un code voisin (« Libellé rayon » pour « Rayon »).
+const LABEL_PREFIX = /^(libell[ée]s?|lib\.?|intitul[ée]|d[ée]signation|nom)\s+/i;
+const CODE_PREFIX = /^(code|n[°o]|num[ée]ro|id)\s+(de\s+|du\s+|d')?/i;
+export const PERCENT_HEADER = /taux|%|pourcent|ratio/i;
+
+const pairKey = (name: string) =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(LABEL_PREFIX, "")
+    .replace(CODE_PREFIX, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * Codes doublés d'un libellé (« Rayon » et « Libellé rayon ») : seul le libellé est utilisé.
+ * Codes numériques isolés (EAN, code site) : traités comme des catégories, jamais additionnés.
+ */
+function reclassifyCodes(columns: ColumnProfile[]): ColumnProfile[] {
+  const labelled = new Map(columns.filter((c) => LABEL_PREFIX.test(c.name)).map((c) => [pairKey(c.name), c.name]));
+  return columns.map((c) => {
+    if (c.role === "ignored" || LABEL_PREFIX.test(c.name)) return c;
+    const label = labelled.get(pairKey(c.name));
+    if (label && (c.type === "number" || c.type === "category")) {
+      return { ...c, role: "ignored", treatment: "exclude", reason: `Code associé à « ${label} » : le libellé est utilisé à sa place.` };
+    }
+    if (c.type === "number" && CODE_HEADER.test(c.name)) {
+      return { ...c, type: "category", role: "dimension", invalid: 0, reason: "Code ou identifiant : traité comme une catégorie, jamais additionné." };
+    }
+    return c;
+  });
+}
 
 export function profileDataset(ds: RawDataset): { profile: DatasetProfile; rows: TypedRow[] } {
-  const columns = ds.columns.map((name) => profileColumn(name, ds.rows.map((r) => r[name])));
+  const columns = reclassifyCodes(ds.columns.map((name) => profileColumn(name, ds.rows.map((r) => r[name]))));
   const rows: TypedRow[] = ds.rows.map((r) => {
     const out: TypedRow = {};
     for (const c of columns) out[c.name] = typeValue(r[c.name], c.type);
@@ -106,7 +141,13 @@ function profileColumn(name: string, values: (string | number | null)[]): Column
           ? "measure"
           : "dimension";
 
-  return { name, type, role, treatment, missing, distinct, invalid, reason };
+  // Pourcentage : en fraction (0,37) si la plupart des valeurs sont entre -1,5 et 1,5, sinon en points (37).
+  let percentScale: ColumnProfile["percentScale"];
+  if (type === "number" && PERCENT_HEADER.test(name)) {
+    const nums = present.map((v) => parseNumber(v)).filter((n): n is number => n !== null);
+    percentScale = nums.filter((n) => Math.abs(n) <= 1.5).length >= nums.length * 0.8 ? "fraction" : "points";
+  }
+  return { name, type, role, treatment, missing, distinct, invalid, reason, ...(percentScale ? { percentScale } : {}) };
 }
 
 function typeValue(v: string | number | null, type: ColumnType): string | number | null {
