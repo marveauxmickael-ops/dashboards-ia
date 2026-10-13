@@ -22,5 +22,7 @@ export async function loadSharedDashboard(token: string): Promise<SharedDashboar
   const { data, error } = await supabase.rpc("shared_dashboard", { share_token: token });
   if (error || !data) return null;
   const shared = data as unknown as SharedDashboard;
-  return { ...shared, result: withTitle(shared.result, shared.title) };
+  // La fonction retire du résultat ce qui ne concerne pas le lecteur (contexte IA, structure, éléments écartés) :
+  // on rétablit des valeurs vides pour que l'affichage ne dépende pas de ces champs.
+  return { ...shared, result: withTitle({ ...shared.result, issues: shared.result.issues ?? [] }, shared.title) };
 }

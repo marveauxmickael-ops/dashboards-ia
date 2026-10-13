@@ -337,11 +337,11 @@ export function DashboardView({
         </p>
       )}
 
-      {result.issues.length > 0 && (
+      {(result.issues ?? []).length > 0 && (
         <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 print:hidden">
           <h3 className="font-semibold">Éléments proposés par l&apos;IA et écartés par le contrôle</h3>
           <ul className="mt-2 list-disc pl-5">
-            {result.issues.map((issue, i) => (
+            {(result.issues ?? []).map((issue, i) => (
               <li key={i}>{issue}</li>
             ))}
           </ul>

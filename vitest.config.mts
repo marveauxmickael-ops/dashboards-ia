@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     env: {
       // Les tests n'appellent jamais Claude : le concepteur de démonstration est utilisé.
       AI_PROVIDER: "demo",
