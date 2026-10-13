@@ -202,6 +202,7 @@ export type Database = {
           ai_mode: string;
           created_at: string;
           created_by: string | null;
+          display: Json;
           file_name: string;
           id: string;
           organization_id: string;
@@ -214,6 +215,7 @@ export type Database = {
           ai_mode: string;
           created_at?: string;
           created_by?: string | null;
+          display?: Json;
           file_name: string;
           id?: string;
           organization_id: string;

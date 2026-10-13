@@ -16,11 +16,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
-import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
+import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
@@ -28,6 +28,9 @@ import { CleaningNotice } from "./quality-panel";
 import { chartPalette, readableOnWhite, type Branding } from "@/lib/branding";
 import { describeFilters, isFiltered } from "@/lib/filters";
 
+
+/** Enregistrement de l'affichage avec le dashboard (éditeurs) : il s'applique aux lecteurs et au lien de partage. */
+export type SaveView = (view: ViewState) => Promise<{ ok: true } | { ok: false; message: string }>;
 
 const STATUS: Record<InsightStatus, { label: string; className: string }> = {
   verified: { label: "Chiffres vérifiés", className: "bg-emerald-50 text-emerald-800 ring-emerald-200" },
@@ -43,6 +46,9 @@ export function DashboardView({
   exportable = false,
   children,
   branding,
+  savedView,
+  saveView,
+  fixedView,
 }: {
   result: DashboardResult;
   /** Dashboard enregistré (non filtré), auquel se rapportent les exports Excel et CSV. */
@@ -53,10 +59,18 @@ export function DashboardView({
   children?: ReactNode;
   /** Charte graphique de l'organisation : logo et couleurs. */
   branding?: Branding;
+  /** Affichage enregistré avec le dashboard, modifiable et enregistré par `saveView` (éditeurs). */
+  savedView?: ViewState;
+  saveView?: SaveView;
+  /** Affichage imposé par l'éditeur (lecteurs, lien de partage) : appliqué tel quel, sans commandes de personnalisation. */
+  fixedView?: ViewState;
 }) {
   const palette = chartPalette(branding);
   const accent = readableOnWhite(palette[0]);
-  const [view, setView] = useDashboardView(dashboardId);
+  const [editableView, setEditableView, saveStatus] = useDashboardView(dashboardId, savedView && saveView ? { initial: savedView, save: saveView } : undefined);
+  const locked = !!fixedView;
+  const view = fixedView ?? editableView;
+  const setView = locked ? () => undefined : setEditableView;
   const [customizing, setCustomizing] = useState(false);
   // Glisser-déposer : graphique saisi et graphique survolé.
   const [dragging, setDragging] = useState<string | null>(null);
@@ -104,7 +118,13 @@ export function DashboardView({
 
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <ExportActions dashboardId={exportable ? dashboardId : null} view={view} base={base} onPrintOnePage={printOnePage} onPrintContinuous={printContinuous} />
+        {!locked && (
         <div className="flex flex-wrap items-center gap-2">
+        {saveStatus && (
+          <span role={saveStatus === "error" ? "alert" : "status"} className={`text-xs ${saveStatus === "error" ? "text-red-800" : "text-slate-500"}`}>
+            {saveStatus === "saving" ? "Enregistrement de l'affichage…" : saveStatus === "saved" ? "Affichage enregistré · appliqué aux lecteurs et au lien de partage" : "L'affichage n'a pas pu être enregistré."}
+          </span>
+        )}
         <div role="group" aria-label="Mise en page" className="inline-flex overflow-hidden rounded-lg border border-slate-300 text-sm">
           {(
             [
@@ -151,9 +171,10 @@ export function DashboardView({
           Personnaliser l&apos;affichage{maskedCount > 0 && ` · ${maskedCount} élément(s) masqué(s)`}
         </button>
         </div>
+        )}
       </div>
 
-      {customizing && (
+      {customizing && !locked && (
         <section aria-label="Personnaliser l'affichage" className="flex flex-col gap-4 rounded-xl border border-brand-200 bg-brand-50/40 p-4 print:hidden">
           <p className="text-sm text-slate-700">
             Cochez ce que vous voulez voir. Les valeurs ne changent pas : les éléments décochés sont seulement masqués, à l&apos;écran comme dans les
@@ -211,7 +232,7 @@ export function DashboardView({
               className={`group relative rounded-xl border border-t-[3px] border-slate-200 bg-white print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-4"}`}
               style={{ borderTopColor: palette[0] }}
             >
-              <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />
+              {!locked && <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />}
               <p className="pr-6 text-sm font-medium text-slate-600">{k.label}</p>
               <p className={`mt-1 font-semibold tabular-nums text-slate-900 ${compactLayout ? "text-lg" : "text-2xl"}`}>{formatValue(k.value, k.format)}</p>
               {k.value === null && <p className="mt-1 text-xs text-amber-800">Donnée indisponible : aucune valeur exploitable, rien n&apos;est estimé.</p>}
@@ -304,7 +325,8 @@ export function DashboardView({
                   onMove={(direction) => setView({ ...view, chartOrder: moveChart(orderedIds, siblings, c.id, direction) })}
                   canMoveBack={i > 0}
                   canMoveForward={i < group.charts.length - 1}
-                  drag={{
+                  readOnly={locked}
+                  drag={locked ? undefined : {
                     active: dragging === c.id,
                     target: dropTarget === c.id && dragging !== null && dragging !== c.id && siblings.includes(dragging),
                     onStart: () => setDragging(c.id),
@@ -331,9 +353,11 @@ export function DashboardView({
       {kpis.length === 0 && charts.length === 0 && (
         <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">
           Tous les indicateurs et graphiques sont masqués.{" "}
-          <button type="button" onClick={() => setView(EMPTY_VIEW)} className="font-medium text-brand-900 underline">
-            Tout réafficher
-          </button>
+          {!locked && (
+            <button type="button" onClick={() => setView(EMPTY_VIEW)} className="font-medium text-brand-900 underline">
+              Tout réafficher
+            </button>
+          )}
         </p>
       )}
 
@@ -582,19 +606,95 @@ function readStored(key: string | null): string | null {
   }
 }
 
-function useDashboardView(dashboardId?: string | null): [ViewState, (v: ViewState) => void] {
+type SaveStatus = "saving" | "saved" | "error" | null;
+
+function parseStored(raw: string | null): ViewState | null {
+  if (raw === null) return null;
+  try {
+    const parsed = ViewSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Affichage d'un dashboard. Avec `persisted` (dashboard enregistré, éditeur), il est enregistré avec le dashboard
+ * et suit l'utilisateur sur tous ses appareils ; une sélection mémorisée auparavant dans ce navigateur est reprise
+ * une fois puis enregistrée. Sinon (création, démo), il est mémorisé dans ce navigateur.
+ */
+function useDashboardView(dashboardId?: string | null, persisted?: { initial: ViewState; save: SaveView }): [ViewState, (v: ViewState) => void, SaveStatus] {
   const key = dashboardId ? `dashboards-ia:vue:${dashboardId}` : null;
-  const [local, setLocal] = useState<ViewState>(EMPTY_VIEW);
+  const [local, setLocal] = useState<ViewState | null>(null);
+  const [status, setStatus] = useState<SaveStatus>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pending = useRef<(() => void) | null>(null);
+  const sequence = useRef(0);
   const raw = useSyncExternalStore(subscribeStorage, () => readStored(key), () => null);
-  const stored = useMemo(() => {
-    if (raw === null) return null;
+  const stored = useMemo(() => parseStored(raw), [raw]);
+  // Ancienne sélection de ce navigateur, reprise seulement si rien n'est encore enregistré avec le dashboard.
+  const legacy = persisted && isDefaultView(persisted.initial) ? stored : null;
+  const save = persisted?.save;
+
+  const forget = () => {
     try {
-      const parsed = ViewSchema.safeParse(JSON.parse(raw));
-      return parsed.success ? parsed.data : null;
+      if (key) window.localStorage.removeItem(key);
     } catch {
-      return null;
+      // Stockage indisponible : rien à effacer.
     }
-  }, [raw]);
+  };
+
+  const persist = (v: ViewState, delay: number) => {
+    if (!save) return;
+    if (timer.current) clearTimeout(timer.current);
+    setStatus("saving");
+    const run = () => {
+      timer.current = null;
+      pending.current = null;
+      const current = ++sequence.current;
+      void save(v)
+        .then((outcome) => {
+          if (current === sequence.current) setStatus(outcome.ok ? "saved" : "error");
+        })
+        .catch(() => {
+          if (current === sequence.current) setStatus("error");
+        });
+    };
+    pending.current = run;
+    timer.current = setTimeout(run, delay);
+  };
+
+  useEffect(() => {
+    if (!legacy || local !== null || !save) return;
+    const current = ++sequence.current;
+    void save(legacy).then((outcome) => {
+      if (!outcome.ok) return;
+      setLocal(legacy);
+      forget();
+      if (current === sequence.current) setStatus("saved");
+    });
+    // forget ne dépend que de key, déjà suivi par legacy.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [legacy, local, save]);
+
+  // En quittant la page avant la fin du délai, la dernière modification est tout de même enregistrée.
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+      pending.current?.();
+    },
+    [],
+  );
+
+  if (persisted) {
+    const setView = (v: ViewState) => {
+      setLocal(v);
+      forget();
+      persist(v, 600);
+    };
+    return [local ?? legacy ?? persisted.initial, setView, status];
+  }
+
   const setView = (v: ViewState) => {
     setLocal(v);
     try {
@@ -606,7 +706,7 @@ function useDashboardView(dashboardId?: string | null): [ViewState, (v: ViewStat
       // Sans stockage, la sélection vaut pour la page en cours uniquement.
     }
   };
-  return [stored ?? local, setView];
+  return [stored ?? local ?? EMPTY_VIEW, setView, null];
 }
 
 type CheckItem = { id: string; label: string; checked: boolean; disabled?: boolean; indent?: boolean };

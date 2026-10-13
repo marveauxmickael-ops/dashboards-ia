@@ -41,7 +41,7 @@ export default async function SharedDashboardPage({ params }: PageProps<"/partag
           </div>
         )}
       </div>
-      <DashboardWorkspace initial={shared.result} exportable={false} tools={false} branding={parseBranding(shared.branding)} />
+      <DashboardWorkspace initial={shared.result} exportable={false} tools={false} branding={parseBranding(shared.branding)} fixedView={shared.view} />
     </main>
   );
 }

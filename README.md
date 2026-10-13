@@ -165,7 +165,9 @@ Page « Charte graphique » (propriétaire ou administrateur) : import du logo (
 
 ## Personnalisation de l'affichage
 
-« Personnaliser l'affichage » permet de cocher les indicateurs, graphiques et sections à afficher (constats, analyse des variations, et dans l'analyse : explications et/ou suggestions). Chaque graphique peut changer de type (barres, courbe, secteurs, tableau) et masquer des catégories ou des périodes. Les valeurs ne sont jamais recalculées : on masque, on ne modifie pas. La sélection est mémorisée dans le navigateur et s'applique au PDF et aux exports Excel / CSV (paramètre `vue`, positions des catégories uniquement, jamais leurs noms).
+« Personnaliser l'affichage » permet de cocher les indicateurs, graphiques et sections à afficher (constats, analyse des variations, et dans l'analyse : explications et/ou suggestions). Chaque graphique peut changer de type (barres, courbe, secteurs, tableau) et masquer des catégories ou des périodes. Les valeurs ne sont jamais recalculées : on masque, on ne modifie pas. La sélection s'applique au PDF et aux exports Excel / CSV (paramètre `vue`, positions des catégories uniquement, jamais leurs noms).
+
+Sur un dashboard enregistré, l'affichage choisi par un éditeur (propriétaire, administrateur ou éditeur) est enregistré avec le dashboard (colonne `dashboards.display`, validée par `ViewSchema`, action `saveDashboardView`) et le suit sur tous ses appareils. Les **lecteurs** de l'organisation et le **lien de partage** voient exactement cet affichage (indicateurs, graphiques, catégories et sections masqués, ordre, tailles, types de graphique, mise en page), sans les commandes de personnalisation. Pour le lien de partage, la fonction `shared_dashboard` renvoie l'affichage et le serveur l'applique (`applyView`) avant l'envoi : ce qui est masqué n'atteint jamais le navigateur du lecteur ni ses téléchargements Excel / CSV. Une sélection mémorisée auparavant dans le navigateur est reprise et enregistrée à la première ouverture du dashboard.
 
 ## Limites connues du prototype
 

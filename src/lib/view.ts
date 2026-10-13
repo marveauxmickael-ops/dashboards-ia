@@ -36,6 +36,12 @@ export type ViewState = z.infer<typeof ViewSchema>;
 
 export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], grouping: "sections" };
 
+/** Affichage enregistré avec le dashboard (colonne `display`) : vue par défaut si absent ou invalide. */
+export function parseView(raw: unknown): ViewState {
+  const parsed = ViewSchema.safeParse(raw ?? {});
+  return parsed.success ? parsed.data : EMPTY_VIEW;
+}
+
 export type ChartSize = "s" | "m" | "l";
 
 /** Taille d'un graphique : choix de l'utilisateur, sinon petit en mise en page compacte et moyen sinon. */

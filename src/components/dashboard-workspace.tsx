@@ -5,7 +5,8 @@ import { isFiltered, NO_FILTERS, type Filters } from "@/lib/filters";
 import type { Branding } from "@/lib/branding";
 import type { DashboardResult } from "@/lib/pipeline";
 import type { QuestionAnswer } from "@/lib/questions";
-import { DashboardView } from "./dashboard-view";
+import type { ViewState } from "@/lib/view";
+import { DashboardView, type SaveView } from "./dashboard-view";
 import { FiltersBar } from "./filters-bar";
 import { QuestionPanel } from "./question-panel";
 import { downloadCleanedOnServer, type DownloadCleaned } from "./quality-panel";
@@ -65,6 +66,9 @@ export function DashboardWorkspace({
   ask = askOnServer,
   aiAvailable = true,
   downloadCleaned = downloadCleanedOnServer,
+  savedView,
+  saveView,
+  fixedView,
 }: {
   initial: DashboardResult;
   dashboardId?: string | null;
@@ -82,6 +86,11 @@ export function DashboardWorkspace({
   aiAvailable?: boolean;
   /** Fichier corrigé (US-11) : les corrections du dashboard appliquées au fichier chargé. */
   downloadCleaned?: DownloadCleaned;
+  /** Affichage enregistré avec le dashboard et son enregistrement (éditeurs). */
+  savedView?: ViewState;
+  saveView?: SaveView;
+  /** Affichage imposé par l'éditeur (lecteurs, lien de partage). */
+  fixedView?: ViewState;
 }) {
   const [base, setBase] = useState(initial);
   const [shown, setShown] = useState(initial);
@@ -118,7 +127,7 @@ export function DashboardWorkspace({
   }
 
   return (
-    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable} branding={branding}>
+    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable} branding={branding} savedView={savedView} saveView={saveView} fixedView={fixedView}>
       {supported && (
         <section aria-label="Fichier source" className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm print:hidden">
           <div className="flex flex-wrap items-center gap-3">
