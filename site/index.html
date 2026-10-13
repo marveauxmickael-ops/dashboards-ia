@@ -60,19 +60,20 @@
       <p class="note">La démo s'exécute dans votre navigateur : aucun fichier n'est envoyé.</p>
     </div>
 
-    <figure class="preview" aria-label="Aperçu d'un tableau de bord Lisio (valeurs fictives)" style="margin:0">
-      <div class="preview-head"><strong>Activité commerciale</strong><span>ventes.xlsx · 641 lignes</span></div>
+    <figure class="preview" id="apercu" aria-label="Aperçu animé d'un tableau de bord Lisio (fichier de démonstration aux données fictives)" style="margin:0">
+      <div class="preview-head"><strong>Activité commerciale</strong><span id="apercu-periode">Oct. 2025 → sept. 2026 · 641 lignes</span></div>
       <div class="kpis">
-        <div class="kpi"><small>Chiffre d'affaires</small><b>854 011 €</b></div>
-        <div class="kpi"><small>Marge</small><b>43,5 %</b></div>
-        <div class="kpi"><small>Clients</small><b>20</b></div>
+        <div class="kpi" data-kpi="ca" tabindex="0"><small>Chiffre d'affaires</small><b data-valeur="ca">854 011 €</b><em class="trend" data-trend="ca"></em></div>
+        <div class="kpi" data-kpi="marge" tabindex="0"><small>Marge</small><b data-valeur="marge">43,5 %</b><em class="trend" data-trend="marge"></em></div>
+        <div class="kpi" data-kpi="clients" tabindex="0"><small>Clients</small><b data-valeur="clients">20</b><em class="trend" data-trend="clients"></em></div>
       </div>
       <div class="chart">
         <span>Chiffre d'affaires par mois</span>
-        <div class="bars" aria-hidden="true"><i style="height:45%"></i><i style="height:58%"></i><i style="height:52%"></i><i style="height:70%"></i><i style="height:64%"></i><i style="height:88%"></i></div>
+        <div class="bars" id="apercu-barres"></div>
+        <div class="months" id="apercu-mois" aria-hidden="true"></div>
       </div>
-      <p class="callout"><strong>Pourquoi ça bouge ?</strong> Lisio isole les catégories qui expliquent une hausse ou une baisse, chiffres vérifiés par le moteur de calcul.</p>
-      <figcaption class="note" style="font-size:12px">Illustration : fichier de démonstration aux données fictives.</figcaption>
+      <p class="callout" id="apercu-explication"><strong>Pourquoi ça bouge ?</strong> Lisio isole les catégories qui expliquent une hausse ou une baisse, chiffres vérifiés par le moteur de calcul.</p>
+      <figcaption class="note" style="font-size:12px">Illustration animée : fichier de démonstration aux données fictives. Survolez un mois ou un indicateur.</figcaption>
     </figure>
   </section>
 
@@ -172,6 +173,115 @@
 <script>
   // Menu mobile : se referme après le choix d'une rubrique.
   document.querySelectorAll(".menu-panel a").forEach((a) => a.addEventListener("click", () => a.closest("details").removeAttribute("open")));
+</script>
+<script>
+  // Aperçu animé : vraies valeurs mensuelles du fichier de démonstration (données fictives).
+  (() => {
+    const mois = [
+      ["Oct. 2025", 54925, 46.1, 20], ["Nov. 2025", 81129, 42.4, 18], ["Déc. 2025", 107504, 43.9, 19],
+      ["Janv. 2026", 60191, 46.1, 19], ["Févr. 2026", 89051, 41.7, 20], ["Mars 2026", 76018, 44.6, 19],
+      ["Avr. 2026", 59638, 46.6, 19], ["Mai 2026", 65521, 41.8, 18], ["Juin 2026", 70122, 39.9, 18],
+      ["Juil. 2026", 71883, 39.5, 17], ["Août 2026", 43505, 45.0, 20], ["Sept. 2026", 74524, 45.9, 20],
+    ].map(([label, ca, marge, clients]) => ({ label, ca, marge, clients }));
+    const court = ["oct", "nov", "déc", "janv", "févr", "mars", "avr", "mai", "juin", "juil", "août", "sept"];
+    const total = { label: "Oct. 2025 → sept. 2026", ca: 854011, marge: 43.5, clients: 20 };
+    const root = document.getElementById("apercu");
+    if (!root) return;
+    const calme = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const euros = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+    const un = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const format = { ca: (v) => `${euros.format(v)} €`, marge: (v) => `${un.format(v)} %`, clients: (v) => euros.format(v) };
+    const barres = document.getElementById("apercu-barres");
+    const etiquettes = document.getElementById("apercu-mois");
+    const periode = document.getElementById("apercu-periode");
+    const explication = document.getElementById("apercu-explication");
+    const max = Math.max(...mois.map((m) => m.ca));
+    const affiche = { ca: 0, marge: 0, clients: 0 };
+
+    mois.forEach((m, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "bar";
+      b.style.setProperty("--h", `${Math.round((m.ca / max) * 100)}%`);
+      b.style.transitionDelay = calme ? "0s" : `${i * 45}ms`;
+      b.setAttribute("aria-label", `${m.label} : ${format.ca(m.ca)}`);
+      b.innerHTML = `<span class="tip">${format.ca(m.ca)}</span>`;
+      b.addEventListener("mouseenter", () => choisir(i, true));
+      b.addEventListener("focus", () => choisir(i, true));
+      b.addEventListener("click", () => choisir(i, true));
+      barres.append(b);
+      const t = document.createElement("span");
+      t.textContent = court[i];
+      if (i < 2) b.classList.add("bord-gauche");
+      if (i > mois.length - 3) b.classList.add("bord-droit");
+      etiquettes.append(t);
+    });
+    barres.addEventListener("mouseleave", reprendre);
+
+    // Chiffres qui défilent jusqu'à leur nouvelle valeur.
+    function anime(cle, cible) {
+      const el = root.querySelector(`[data-valeur="${cle}"]`);
+      const depart = affiche[cle];
+      affiche[cle] = cible;
+      if (calme) { el.textContent = format[cle](cible); return; }
+      const t0 = performance.now(), duree = 700;
+      const pas = (t) => {
+        const p = Math.min(1, (t - t0) / duree), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = format[cle](depart + (cible - depart) * e);
+        if (p < 1) requestAnimationFrame(pas);
+      };
+      requestAnimationFrame(pas);
+    }
+
+    function tendance(cle, actuel, precedent) {
+      const el = root.querySelector(`[data-trend="${cle}"]`);
+      if (!precedent) { el.textContent = ""; el.className = "trend"; return; }
+      const ecart = cle === "marge" ? actuel - precedent : ((actuel - precedent) / precedent) * 100;
+      const signe = ecart > 0 ? "+" : ecart < 0 ? "−" : "";
+      const unite = cle === "marge" ? " pt" : " %";
+      el.textContent = `${ecart > 0 ? "▲" : ecart < 0 ? "▼" : "="} ${signe}${un.format(Math.abs(ecart))}${unite} vs mois préc.`;
+      el.className = `trend ${ecart > 0 ? "hausse" : ecart < 0 ? "baisse" : ""}`;
+    }
+
+    let courant = -1;
+    function choisir(i, manuel) {
+      if (manuel) pause();
+      courant = i;
+      const m = i < 0 ? total : mois[i];
+      const prec = i > 0 ? mois[i - 1] : null;
+      barres.querySelectorAll(".bar").forEach((b, j) => b.classList.toggle("actif", j === i));
+      periode.textContent = i < 0 ? `${total.label} · 641 lignes` : m.label;
+      for (const cle of ["ca", "marge", "clients"]) { anime(cle, m[cle]); tendance(cle, m[cle], prec && prec[cle]); }
+      if (i > 0) {
+        const ecart = ((m.ca - prec.ca) / prec.ca) * 100;
+        explication.innerHTML = `<strong>Pourquoi ça bouge ?</strong> ${m.label} : chiffre d'affaires ${ecart >= 0 ? "en hausse" : "en baisse"} de ${un.format(Math.abs(ecart))} % par rapport à ${prec.label.toLowerCase()}. Lisio isole les catégories qui l'expliquent.`;
+      } else {
+        explication.innerHTML = "<strong>Pourquoi ça bouge ?</strong> Lisio isole les catégories qui expliquent une hausse ou une baisse, chiffres vérifiés par le moteur de calcul.";
+      }
+    }
+
+    // Lecture automatique des mois, suspendue au survol et pour les visiteurs qui limitent les animations.
+    let minuterie = null;
+    function pause() { clearInterval(minuterie); minuterie = null; }
+    function reprendre() {
+      if (calme || minuterie) return;
+      minuterie = setInterval(() => choisir(courant >= mois.length - 1 ? -1 : courant + 1, false), 2200);
+    }
+
+    // Les indicateurs s'allument au survol ; les barres liées au chiffre d'affaires aussi.
+    root.querySelectorAll(".kpi").forEach((k) => {
+      const allume = () => { pause(); root.dataset.focus = k.dataset.kpi; };
+      const eteint = () => { delete root.dataset.focus; reprendre(); };
+      k.addEventListener("mouseenter", allume); k.addEventListener("focus", allume);
+      k.addEventListener("mouseleave", eteint); k.addEventListener("blur", eteint);
+    });
+
+    const demarre = () => { root.classList.add("pret"); choisir(-1, false); reprendre(); };
+    if ("IntersectionObserver" in window) {
+      const obs = new IntersectionObserver((entrees) => { if (entrees.some((e) => e.isIntersecting)) { obs.disconnect(); demarre(); } }, { threshold: 0.3 });
+      obs.observe(root);
+    } else demarre();
+  })();
 </script>
 </body>
 </html>
