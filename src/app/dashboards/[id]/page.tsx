@@ -40,7 +40,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
 
   const { data: versions } = await supabase
     .from("dashboard_versions")
-    .select("id, file_name, row_count, period_start, period_end, created_at")
+    .select("id, file_name, row_count, period_start, period_end, created_at, label")
     .eq("dashboard_id", id)
     .order("created_at", { ascending: false })
     .limit(24);
@@ -146,6 +146,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
               dashboardId={dashboard.id}
               canReimport={canEdit(role)}
               reloadAfterReimport
+              refreshedAt={refreshedAt.toISOString()}
               branding={organization.branding}
               aiAvailable={activeProvider() !== "demo" && dashboard.ai_mode !== "strict"}
               {...(canEdit(role) ? { savedView: display, saveView } : { fixedView: display })}

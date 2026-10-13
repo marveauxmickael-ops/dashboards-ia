@@ -5,17 +5,21 @@ import type { Branding } from "@/lib/branding";
 import type { DashboardResult } from "@/lib/pipeline";
 import { EMPTY_PLAN, isEmptyPlan, type CleaningPlan, type QualityReport } from "@/lib/quality";
 import type { AiMode } from "@/lib/types";
+import type { ViewState } from "@/lib/view";
+import type { SaveView } from "./dashboard-view";
 import { DashboardWorkspace, recomputeOnServer, type AskQuestion, type Recompute } from "./dashboard-workspace";
 import { PrivacyPanel } from "./privacy-panel";
 import { analyzeOnServer, downloadCleanedOnServer, QualityPanel, type AnalyzeQuality, type DownloadCleaned } from "./quality-panel";
 
 type Quality = { status: "idle" } | { status: "loading" } | { status: "ready"; report: QualityReport } | { status: "error"; message: string };
 
-type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult; dashboardId?: string };
+type State = { status: "idle" } | { status: "loading"; fileName: string } | { status: "error"; message: string } | { status: "done"; result: DashboardResult; dashboardId?: string; display?: ViewState | null; habitualApplied?: boolean };
 
 /** Résultat d'une génération : le dashboard, ou un message d'erreur à afficher. */
 /** `dashboardId` est présent quand le dashboard a été enregistré dans l'organisation. */
-export type GenerateOutcome = { ok: true; result: DashboardResult; dashboardId?: string } | { ok: false; message: string };
+export type GenerateOutcome =
+  | { ok: true; result: DashboardResult; dashboardId?: string; display?: ViewState | null; habitualApplied?: boolean }
+  | { ok: false; message: string };
 
 /** Génération par défaut : envoi du fichier à l'API du serveur. */
 async function generateOnServer(file: File, mode: AiMode, cleaning?: CleaningPlan): Promise<GenerateOutcome> {
@@ -26,7 +30,7 @@ async function generateOnServer(file: File, mode: AiMode, cleaning?: CleaningPla
   try {
     const response = await fetch("/api/dashboard", { method: "POST", body });
     const json = await response.json();
-    return response.ok ? { ok: true, result: json.result as DashboardResult, dashboardId: json.dashboardId } : { ok: false, message: json.error ?? "La génération a échoué." };
+    return response.ok ? { ok: true, result: json.result as DashboardResult, dashboardId: json.dashboardId, display: json.display, habitualApplied: json.habitualApplied } : { ok: false, message: json.error ?? "La génération a échoué." };
   } catch {
     return { ok: false, message: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez." };
   }
@@ -42,6 +46,7 @@ export function Studio({
   aiAvailable,
   analyzeQuality = analyzeOnServer,
   downloadCleaned = downloadCleanedOnServer,
+  saveView,
 }: {
   generateDashboard?: (file: File, mode: AiMode, cleaning?: CleaningPlan) => Promise<GenerateOutcome>;
   demoFileUrl?: string;
@@ -56,6 +61,8 @@ export function Studio({
   /** Contrôle qualité du fichier (US-11) ; la démo navigateur le fait localement. */
   analyzeQuality?: AnalyzeQuality;
   downloadCleaned?: DownloadCleaned;
+  /** Enregistrement de l'affichage avec le dashboard et des réglages habituels (US-13). */
+  saveView?: (dashboardId: string, ...args: Parameters<SaveView>) => ReturnType<SaveView>;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<AiMode>("standard");
@@ -68,7 +75,7 @@ export function Studio({
   async function generate(selected: File, corrections: CleaningPlan = plan) {
     setState({ status: "loading", fileName: selected.name });
     const outcome = await generateDashboard(selected, mode, isEmptyPlan(corrections) ? undefined : corrections);
-    setState(outcome.ok ? { status: "done", result: outcome.result, dashboardId: outcome.dashboardId } : { status: "error", message: outcome.message });
+    setState(outcome.ok ? { status: "done", result: outcome.result, dashboardId: outcome.dashboardId, display: outcome.display, habitualApplied: outcome.habitualApplied } : { status: "error", message: outcome.message });
   }
 
   // Contrôle qualité dès le choix du fichier : propositions de corrections, rien n'est appliqué d'office.
@@ -220,6 +227,9 @@ export function Studio({
             ask={ask}
             aiAvailable={aiAvailable}
             downloadCleaned={downloadCleaned}
+            {...(saveView && state.dashboardId && state.display
+              ? { savedView: state.display, saveView: (view: ViewState, preferences: Parameters<SaveView>[1]) => saveView(state.dashboardId!, view, preferences), habitualApplied: state.habitualApplied }
+              : {})}
           />
           <PrivacyPanel result={state.result} />
           <p className="text-xs text-slate-500 print:hidden">

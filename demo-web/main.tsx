@@ -45,7 +45,7 @@ const downloadInBrowser: DownloadCleaned = async (file, plan) => {
 // Filtres calculés dans le navigateur, comme la génération : aucun envoi de fichier.
 const recomputeInBrowser: Recompute = async ({ file, previous, filters, action }) => {
   try {
-    const result = await recomputeDashboard({ previous, fileName: file.name, data: await file.arrayBuffer(), filters, mode: "standard", organizationId: "demo-navigateur", allowAi: action === "reimport" });
+    const result = await recomputeDashboard({ previous, source: { fileName: file.name, data: await file.arrayBuffer() }, filters, mode: "standard", organizationId: "demo-navigateur", allowAi: action === "reimport" });
     return { ok: true, result };
   } catch (error) {
     return { ok: false, message: error instanceof ImportError || error instanceof IncompatibleFileError ? error.message : "Le recalcul a échoué." };

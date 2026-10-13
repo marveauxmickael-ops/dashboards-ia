@@ -4,6 +4,7 @@ import { ImportError, MAX_FILE_BYTES } from "@/lib/ingest/parse";
 import { IncompatibleFileError, recomputeDashboard, type DashboardResult } from "@/lib/pipeline";
 import { logEvent } from "@/lib/audit";
 import { saveVersion } from "@/lib/dashboards/versions";
+import { sourceFingerprint } from "@/lib/dashboards/fingerprint";
 import type { Json } from "@/lib/supabase/database.types";
 
 export const maxDuration = 120;
@@ -52,11 +53,15 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
   const mode = dashboard.ai_mode === "strict" ? "strict" : "standard";
 
   let result: DashboardResult;
+  let fingerprint: string | null = null;
   try {
     result = await recomputeDashboard({
       previous: dashboard.result as unknown as DashboardResult,
-      fileName: file.name,
-      data: await file.arrayBuffer(),
+      source: { fileName: file.name, data: await file.arrayBuffer() },
+      // Empreinte du fichier de la nouvelle version (US-12) : seul le hachage est conservé.
+      onSource: (raw) => {
+        if (action === "reimport") fingerprint = sourceFingerprint(raw, organization.id);
+      },
       filters,
       mode,
       organizationId: organization.id,
@@ -71,17 +76,17 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
   if (action === "reimport") {
     // Dashboard créé avant l'historique : sa version d'origine est conservée avant d'être remplacée.
     const { count } = await supabase.from("dashboard_versions").select("id", { count: "exact", head: true }).eq("dashboard_id", id);
-    if (count === 0) await saveVersion(workspace, id, dashboard.result as unknown as DashboardResult, dashboard.updated_at ?? dashboard.created_at);
+    if (count === 0) await saveVersion(workspace, id, dashboard.result as unknown as DashboardResult, { createdAt: dashboard.updated_at ?? dashboard.created_at });
     const { error } = await supabase
       .from("dashboards")
-      .update({ result: result as unknown as Json, file_name: result.fileName, row_count: result.profile.rowCount, updated_at: new Date().toISOString() })
+      .update({ result: result as unknown as Json, file_name: result.fileName, row_count: result.profile.rowCount, updated_at: new Date().toISOString(), source_fingerprint: fingerprint })
       .eq("id", id);
     // En cas d'échec, la dernière version valide reste en place : rien n'a été modifié.
     if (error) {
       console.error("Mise à jour du dashboard en échec", error.code);
       return Response.json({ error: "La mise à jour n'a pas pu être enregistrée : la version précédente reste affichée." }, { status: 500 });
     }
-    await saveVersion(workspace, id, result);
+    await saveVersion(workspace, id, result, { fingerprint, label: "Remplacement des données" });
     await logEvent(workspace, "dashboard.refreshed", { type: "dashboard", id }, { file: result.fileName, rows: result.profile.rowCount });
     if (result.analysis?.writtenBy === "ai") {
       await supabase.from("ai_calls").insert({

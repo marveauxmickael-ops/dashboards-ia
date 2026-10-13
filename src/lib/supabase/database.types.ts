@@ -152,6 +152,8 @@ export type Database = {
           period_end: string | null;
           period_start: string | null;
           result: Json;
+          source_fingerprint: string | null;
+          label: string | null;
           row_count: number;
         };
         Insert: {
@@ -164,6 +166,8 @@ export type Database = {
           period_end?: string | null;
           period_start?: string | null;
           result: Json;
+          source_fingerprint?: string | null;
+          label?: string | null;
           row_count: number;
         };
         Update: Partial<Database["public"]["Tables"]["dashboard_versions"]["Insert"]>;
@@ -208,6 +212,7 @@ export type Database = {
           organization_id: string;
           result: Json;
           row_count: number;
+          source_fingerprint: string | null;
           title: string;
           updated_at: string | null;
         };
@@ -221,10 +226,25 @@ export type Database = {
           organization_id: string;
           result: Json;
           row_count: number;
+          source_fingerprint?: string | null;
           title: string;
           updated_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["dashboards"]["Insert"]>;
+        Relationships: [];
+      };
+      display_preferences: {
+        Row: {
+          preferences: Json;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          preferences: Json;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["display_preferences"]["Insert"]>;
         Relationships: [];
       };
       memberships: {

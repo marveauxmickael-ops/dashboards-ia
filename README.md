@@ -169,6 +169,19 @@ Page « Charte graphique » (propriétaire ou administrateur) : import du logo (
 
 Sur un dashboard enregistré, l'affichage choisi par un éditeur (propriétaire, administrateur ou éditeur) est enregistré avec le dashboard (colonne `dashboards.display`, validée par `ViewSchema`, action `saveDashboardView`) et le suit sur tous ses appareils. Les **lecteurs** de l'organisation et le **lien de partage** voient exactement cet affichage (indicateurs, graphiques, catégories et sections masqués, ordre, tailles, types de graphique, mise en page), sans les commandes de personnalisation. Pour le lien de partage, la fonction `shared_dashboard` renvoie l'affichage et le serveur l'applique (`applyView`) avant l'envoi : ce qui est masqué n'atteint jamais le navigateur du lecteur ni ses téléchargements Excel / CSV. Une sélection mémorisée auparavant dans le navigateur est reprise et enregistrée à la première ouverture du dashboard.
 
+**Affichage habituel (US-13).** La case « Utiliser cet affichage pour mes prochains dashboards » (cochée par défaut) enregistre les réglages de l'utilisateur dans `display_preferences` (une ligne par utilisateur, RLS : chacun ne lit et ne modifie que la sienne). Seuls des réglages indépendants du fichier sont retenus (`src/lib/preferences.ts`) : mise en page, disposition, taille par défaut des graphiques, type préféré pour les évolutions et pour les répartitions, sections affichées ; jamais de catégorie, d'indicateur masqué ni d'identifiant. À la création, `/api/dashboard` les applique d'office ; un bandeau l'indique, avec « Revenir à l'affichage standard » (ce dashboard seulement). Les dashboards existants ne changent pas.
+
+## Ajout de données (US-12)
+
+« Ajouter des données » (à côté de « Remplacer les données par ce fichier ») fusionne le fichier de la version en cours et un nouveau fichier qui le recoupe, par le moteur et sans IA (`src/lib/merge.ts`, route `/api/dashboards/[id]/ajout`) :
+
+- une ligne identique à une ligne du fichier précédent est « déjà présente » et ignorée (valeurs comparées quel que soit le format : « 12,5 » = « 12.5 », « 15/01/2024 » = « 2024-01-15 ») ;
+- si une colonne d'identifiant unique existe (n° de commande, de facture…), une ligne au même identifiant mais aux valeurs différentes est « modifiée » ; l'utilisateur garde la nouvelle valeur (par défaut) ou l'ancienne ;
+- le récapitulatif montre lignes déjà présentes, nouvelles, modifiées, période et indicateurs (montants d'abord) avant / après ; le contrôle de compatibilité (US-02) s'applique au nouveau fichier ; les corrections du contrôle qualité sont rejouées sur le résultat fusionné ;
+- la validation crée une version « Ajout : n ligne(s) » dans l'historique et télécharge le fichier fusionné (CSV), à conserver pour le prochain ajout.
+
+Lisio ne conserve aucun fichier : il reconnaît le fichier de la version en cours par son empreinte (`source_fingerprint`, HMAC-SHA-256 du contenu canonique avec une clé propre à l'organisation, dérivée de `PSEUDONYMIZATION_KEY`), enregistrée à la création, au remplacement et à l'ajout. Un dashboard antérieur à l'empreinte peut recevoir un ajout, avec un avertissement. Changer `PSEUDONYMIZATION_KEY` invalide les empreintes : le prochain ajout de chaque dashboard sera alors refusé ; remplacez une fois les données pour repartir d'une empreinte valide.
+
 ## Limites connues du prototype
 
 - Une seule organisation par utilisateur ; l'invitation de membres et la gestion des rôles dans l'interface arrivent au sprint suivant.

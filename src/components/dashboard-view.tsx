@@ -27,10 +27,11 @@ import { ActiveFilters } from "./filters-bar";
 import { CleaningNotice } from "./quality-panel";
 import { chartPalette, readableOnWhite, type Branding } from "@/lib/branding";
 import { describeFilters, isFiltered } from "@/lib/filters";
+import { preferencesFromView, type Preferences } from "@/lib/preferences";
 
 
 /** Enregistrement de l'affichage avec le dashboard (éditeurs) : il s'applique aux lecteurs et au lien de partage. */
-export type SaveView = (view: ViewState) => Promise<{ ok: true } | { ok: false; message: string }>;
+export type SaveView = (view: ViewState, preferences: Preferences | null) => Promise<{ ok: true } | { ok: false; message: string }>;
 
 const STATUS: Record<InsightStatus, { label: string; className: string }> = {
   verified: { label: "Chiffres vérifiés", className: "bg-emerald-50 text-emerald-800 ring-emerald-200" },
@@ -49,6 +50,7 @@ export function DashboardView({
   savedView,
   saveView,
   fixedView,
+  habitualApplied = false,
 }: {
   result: DashboardResult;
   /** Dashboard enregistré (non filtré), auquel se rapportent les exports Excel et CSV. */
@@ -64,10 +66,17 @@ export function DashboardView({
   saveView?: SaveView;
   /** Affichage imposé par l'éditeur (lecteurs, lien de partage) : appliqué tel quel, sans commandes de personnalisation. */
   fixedView?: ViewState;
+  /** Nouveau dashboard : l'affichage habituel de l'utilisateur a été appliqué (US-13). */
+  habitualApplied?: boolean;
 }) {
   const palette = chartPalette(branding);
   const accent = readableOnWhite(palette[0]);
-  const [editableView, setEditableView, saveStatus] = useDashboardView(dashboardId, savedView && saveView ? { initial: savedView, save: saveView } : undefined);
+  // « Utiliser cet affichage pour mes prochains dashboards » (US-13), coché par défaut.
+  const [remember, setRemember] = useState(true);
+  const [habitualNotice, setHabitualNotice] = useState(habitualApplied);
+  const persisted = savedView && saveView ? { initial: savedView, save: saveView, preferences: (v: ViewState) => preferencesFromView(v, result.charts) } : undefined;
+  const [editableView, setEditableViewWith, saveStatus] = useDashboardView(dashboardId, persisted);
+  const setEditableView = (v: ViewState) => setEditableViewWith(v, remember);
   const locked = !!fixedView;
   const view = fixedView ?? editableView;
   const setView = locked ? () => undefined : setEditableView;
@@ -108,6 +117,25 @@ export function DashboardView({
       </div>
 
       {children}
+      {habitualNotice && !locked && (
+        <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-900 print:hidden">
+          Votre affichage habituel a été appliqué.
+          <button
+            type="button"
+            className="font-medium underline"
+            onClick={() => {
+              // Ce dashboard seulement : les réglages habituels ne changent pas.
+              setEditableViewWith(EMPTY_VIEW, false);
+              setHabitualNotice(false);
+            }}
+          >
+            Revenir à l&apos;affichage standard
+          </button>
+          <button type="button" className="ml-auto text-xs text-slate-600 underline" onClick={() => setHabitualNotice(false)}>
+            Fermer
+          </button>
+        </p>
+      )}
       <ActiveFilters filters={result.filters} />
       <CleaningNotice cleaning={result.cleaning} compact={compactLayout} />
       {exportable && result.filters && (
@@ -213,11 +241,23 @@ export function DashboardView({
               onAll={(on) => setView({ ...view, hideInsights: !on, hideAnalysis: !on, hideExplanations: !on, hideSuggestions: !on })}
             />
           </div>
-          <div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <button type="button" onClick={() => setView(EMPTY_VIEW)} className="text-sm font-medium text-brand-900 underline">
               Tout réafficher
             </button>
+            {persisted && (
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-4 accent-brand-800" />
+                Utiliser cet affichage pour mes prochains dashboards
+              </label>
+            )}
           </div>
+          {persisted && (
+            <p className="text-xs text-slate-500">
+              Seuls la mise en page, la disposition, la taille et le type des graphiques et les sections affichées sont repris, jamais les catégories ni les
+              indicateurs masqués.
+            </p>
+          )}
         </section>
       )}
 
@@ -623,7 +663,10 @@ function parseStored(raw: string | null): ViewState | null {
  * et suit l'utilisateur sur tous ses appareils ; une sélection mémorisée auparavant dans ce navigateur est reprise
  * une fois puis enregistrée. Sinon (création, démo), il est mémorisé dans ce navigateur.
  */
-function useDashboardView(dashboardId?: string | null, persisted?: { initial: ViewState; save: SaveView }): [ViewState, (v: ViewState) => void, SaveStatus] {
+function useDashboardView(
+  dashboardId?: string | null,
+  persisted?: { initial: ViewState; save: SaveView; preferences: (v: ViewState) => Preferences },
+): [ViewState, (v: ViewState, remember?: boolean) => void, SaveStatus] {
   const key = dashboardId ? `dashboards-ia:vue:${dashboardId}` : null;
   const [local, setLocal] = useState<ViewState | null>(null);
   const [status, setStatus] = useState<SaveStatus>(null);
@@ -644,7 +687,7 @@ function useDashboardView(dashboardId?: string | null, persisted?: { initial: Vi
     }
   };
 
-  const persist = (v: ViewState, delay: number) => {
+  const persist = (v: ViewState, preferences: Preferences | null, delay: number) => {
     if (!save) return;
     if (timer.current) clearTimeout(timer.current);
     setStatus("saving");
@@ -652,7 +695,7 @@ function useDashboardView(dashboardId?: string | null, persisted?: { initial: Vi
       timer.current = null;
       pending.current = null;
       const current = ++sequence.current;
-      void save(v)
+      void save(v, preferences)
         .then((outcome) => {
           if (current === sequence.current) setStatus(outcome.ok ? "saved" : "error");
         })
@@ -667,7 +710,7 @@ function useDashboardView(dashboardId?: string | null, persisted?: { initial: Vi
   useEffect(() => {
     if (!legacy || local !== null || !save) return;
     const current = ++sequence.current;
-    void save(legacy).then((outcome) => {
+    void save(legacy, null).then((outcome) => {
       if (!outcome.ok) return;
       setLocal(legacy);
       forget();
@@ -687,10 +730,10 @@ function useDashboardView(dashboardId?: string | null, persisted?: { initial: Vi
   );
 
   if (persisted) {
-    const setView = (v: ViewState) => {
+    const setView = (v: ViewState, remember = false) => {
       setLocal(v);
       forget();
-      persist(v, 600);
+      persist(v, remember ? persisted.preferences(v) : null, 600);
     };
     return [local ?? legacy ?? persisted.initial, setView, status];
   }

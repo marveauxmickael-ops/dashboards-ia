@@ -11,6 +11,8 @@ export interface VersionRow {
   period_start: string | null;
   period_end: string | null;
   created_at: string;
+  /** Création, remplacement des données ou « Ajout : n lignes » (US-12) ; absent avant le sprint 6. */
+  label?: string | null;
 }
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Paris" });
@@ -40,7 +42,10 @@ export function VersionHistory({ dashboardId, versions, selectedId }: { dashboar
           <tbody>
             {versions.map((v, i) => (
               <tr key={v.id} className={`border-b border-slate-100 last:border-0 ${v.id === selectedId ? "bg-brand-50" : ""}`}>
-                <td className="py-1.5 pr-3 text-slate-800">{dateFormat.format(new Date(v.created_at))}</td>
+                <td className="py-1.5 pr-3 text-slate-800">
+                  {dateFormat.format(new Date(v.created_at))}
+                  {v.label && <span className="block text-xs text-slate-500">{v.label}</span>}
+                </td>
                 <td className="py-1.5 pr-3 text-slate-700">{periodText(v.period_start, v.period_end)}</td>
                 <td className="py-1.5 pr-3 text-slate-700">{v.file_name}</td>
                 <td className="py-1.5 pr-3 text-right tabular-nums text-slate-700">{v.row_count.toLocaleString("fr-FR")}</td>

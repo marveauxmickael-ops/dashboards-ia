@@ -5,7 +5,10 @@ import { generateDashboard } from "@/lib/pipeline";
 import { CleaningPlanSchema, type CleaningPlan } from "@/lib/quality";
 import { logEvent } from "@/lib/audit";
 import { saveVersion } from "@/lib/dashboards/versions";
+import { sourceFingerprint } from "@/lib/dashboards/fingerprint";
 import type { Json } from "@/lib/supabase/database.types";
+import { viewFromPreferences } from "@/lib/preferences";
+import { isDefaultView } from "@/lib/view";
 
 // La région d'exécution (Paris) est fixée pour tout le projet dans vercel.json.
 export const maxDuration = 120;
@@ -43,9 +46,10 @@ export async function POST(request: Request) {
   }
 
   let result;
+  let fingerprint: string | null = null;
   try {
     // La clé de pseudonymisation est dérivée par organisation : jetons propres à chaque client.
-    result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: workspace.organization.id, cleaning });
+    result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: workspace.organization.id, cleaning, onSource: (raw) => (fingerprint = sourceFingerprint(raw, workspace.organization.id)) });
   } catch (error) {
     if (error instanceof ImportError) return Response.json({ error: error.message }, { status: 400 });
     if (error instanceof AiError) return Response.json({ error: error.message }, { status: 502 });
@@ -55,6 +59,10 @@ export async function POST(request: Request) {
 
   // Le fichier importé n'est pas conservé : seul le résultat est enregistré, sous la RLS de l'utilisateur.
   const { supabase, user, organization } = workspace;
+  // Affichage habituel de l'utilisateur (US-13), appliqué d'office au nouveau dashboard.
+  const { data: habit } = await supabase.from("display_preferences").select("preferences").eq("user_id", user.id).maybeSingle();
+  const display = viewFromPreferences(habit?.preferences, result.charts);
+  const habitualApplied = !!habit && !isDefaultView(display);
   const { data: saved, error: saveError } = await supabase
     .from("dashboards")
     .insert({
@@ -65,12 +73,14 @@ export async function POST(request: Request) {
       row_count: result.profile.rowCount,
       ai_mode: mode,
       result: result as unknown as Json,
+      display: display as unknown as Json,
+      source_fingerprint: fingerprint,
     })
     .select("id")
     .single();
   if (saveError) console.error("Enregistrement du dashboard en échec", saveError.code);
   else {
-    await saveVersion(workspace, saved.id, result);
+    await saveVersion(workspace, saved.id, result, { fingerprint, label: "Création" });
     await logEvent(workspace, "dashboard.created", { type: "dashboard", id: saved.id }, { file: result.fileName, rows: result.profile.rowCount, mode, corrections: result.cleaning?.log.lines.length ?? 0 });
   }
 
@@ -90,5 +100,5 @@ export async function POST(request: Request) {
   );
   if (logError) console.error("Journalisation de l'appel IA en échec", logError.code);
 
-  return Response.json({ result, dashboardId: saved?.id ?? null });
+  return Response.json({ result, dashboardId: saved?.id ?? null, display: saved ? display : null, habitualApplied: !!saved && habitualApplied });
 }

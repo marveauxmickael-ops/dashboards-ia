@@ -10,6 +10,7 @@ export type AuditAction =
   | "dashboard.deleted"
   | "dashboard.renamed"
   | "dashboard.refreshed"
+  | "dashboard.data_added"
   | "dashboard.exported"
   | "share.created"
   | "share.updated"
@@ -27,6 +28,7 @@ export const AUDIT_LABEL: Record<string, string> = {
   "dashboard.deleted": "Dashboard supprimé",
   "dashboard.renamed": "Dashboard renommé",
   "dashboard.refreshed": "Dashboard actualisé",
+  "dashboard.data_added": "Données ajoutées au dashboard",
   "dashboard.exported": "Dashboard téléchargé",
   "share.created": "Lien de partage créé",
   "share.updated": "Lien de partage modifié",

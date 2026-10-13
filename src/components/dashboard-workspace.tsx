@@ -8,6 +8,7 @@ import type { QuestionAnswer } from "@/lib/questions";
 import type { ViewState } from "@/lib/view";
 import { DashboardView, type SaveView } from "./dashboard-view";
 import { FiltersBar } from "./filters-bar";
+import { MergePanel } from "./merge-panel";
 import { QuestionPanel } from "./question-panel";
 import { downloadCleanedOnServer, type DownloadCleaned } from "./quality-panel";
 
@@ -69,6 +70,8 @@ export function DashboardWorkspace({
   savedView,
   saveView,
   fixedView,
+  habitualApplied,
+  refreshedAt,
 }: {
   initial: DashboardResult;
   dashboardId?: string | null;
@@ -91,12 +94,17 @@ export function DashboardWorkspace({
   saveView?: SaveView;
   /** Affichage imposé par l'éditeur (lecteurs, lien de partage). */
   fixedView?: ViewState;
+  /** Nouveau dashboard : affichage habituel de l'utilisateur appliqué (US-13). */
+  habitualApplied?: boolean;
+  /** Date de la version en cours, rappelée lors d'un ajout de données (US-12). */
+  refreshedAt?: string;
 }) {
   const [base, setBase] = useState(initial);
   const [shown, setShown] = useState(initial);
   const [file, setFile] = useState<File | null>(initialFile);
   const [busy, setBusy] = useState<RecomputeAction | null>(null);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
+  const [merging, setMerging] = useState(false);
   const supported = tools && !!base.spec && !!base.filterOptions;
 
   async function run(action: RecomputeAction, filters: Filters, source = file) {
@@ -127,7 +135,7 @@ export function DashboardWorkspace({
   }
 
   return (
-    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable} branding={branding} savedView={savedView} saveView={saveView} fixedView={fixedView}>
+    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable} branding={branding} savedView={savedView} saveView={saveView} fixedView={fixedView} habitualApplied={habitualApplied}>
       {supported && (
         <section aria-label="Fichier source" className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm print:hidden">
           <div className="flex flex-wrap items-center gap-3">
@@ -150,11 +158,24 @@ export function DashboardWorkspace({
                 type="button"
                 disabled={busy !== null}
                 onClick={() => {
-                  if (window.confirm(`Mettre à jour ce dashboard avec « ${file.name} » ? Les chiffres enregistrés seront remplacés.`)) void run("reimport", NO_FILTERS);
+                  if (window.confirm(`Remplacer les données de ce dashboard par « ${file.name} » ? Les chiffres enregistrés seront remplacés ; pour compléter la période, utilisez plutôt « Ajouter des données ».`)) void run("reimport", NO_FILTERS);
                 }}
                 className="rounded-lg bg-slate-800 px-3 py-1.5 font-semibold text-white hover:bg-slate-900 disabled:opacity-50"
               >
-                {busy === "reimport" ? "Mise à jour…" : "Mettre à jour le dashboard avec ce fichier"}
+                {busy === "reimport" ? "Remplacement…" : "Remplacer les données par ce fichier"}
+              </button>
+            )}
+            {canReimport && dashboardId && !merging && (
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => {
+                  setMerging(true);
+                  setMessage(null);
+                }}
+                className="rounded-lg border border-brand-800 bg-white px-3 py-1.5 font-semibold text-brand-900 hover:bg-brand-50 disabled:opacity-50"
+              >
+                Ajouter des données
               </button>
             )}
             {file && base.cleaning && (
@@ -174,8 +195,28 @@ export function DashboardWorkspace({
           <p className="text-xs text-slate-500">
             {file
               ? `Le fichier est lu pour chaque calcul puis oublié : il n'est jamais conservé. Les filtres n'appellent pas l'IA.${base.cleaning ? " Les corrections du contrôle qualité sont réappliquées à chaque calcul." : ""}`
-              : "Pour filtrer le dashboard ou le mettre à jour avec un fichier plus récent, chargez le fichier source. Il n'est jamais conservé."}
+              : "Pour filtrer le dashboard ou remplacer ses données, chargez le fichier source ; pour compléter la période, utilisez « Ajouter des données ». Les fichiers ne sont jamais conservés."}
           </p>
+          {merging && dashboardId && (
+            <MergePanel
+              dashboardId={dashboardId}
+              currentName={base.fileName}
+              refreshedAt={refreshedAt}
+              loadedFile={file}
+              onCancel={() => setMerging(false)}
+              onDone={(result, text) => {
+                setMerging(false);
+                if (reloadAfterReimport) {
+                  window.location.reload();
+                  return;
+                }
+                setBase(result);
+                setShown(result);
+                setFile(null);
+                setMessage({ tone: "success", text });
+              }}
+            />
+          )}
           {message && (
             <p role={message.tone === "error" ? "alert" : "status"} className={message.tone === "error" ? "text-red-800" : "text-emerald-800"}>
               {message.text}

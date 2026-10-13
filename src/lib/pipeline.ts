@@ -57,9 +57,11 @@ export async function generateDashboard(input: {
   organizationId: string;
   /** Corrections validées au contrôle qualité, appliquées avant tout calcul. */
   cleaning?: CleaningPlan;
+  /** Reçoit le fichier lu, avant corrections (empreinte de la version, US-12). */
+  onSource?: (raw: RawDataset) => void;
 }): Promise<DashboardResult> {
   const started = Date.now();
-  const { raw, cleaning } = await loadDataset(input.fileName, input.data, input.cleaning);
+  const { raw, cleaning } = await loadDataset({ fileName: input.fileName, data: input.data }, input.cleaning, input.onSource);
   const { profile, rows } = profileDataset(raw);
 
   // Aller : pseudonymisation. La table de correspondance reste dans cette instance, côté serveur.
@@ -119,8 +121,9 @@ export class IncompatibleFileError extends Error {}
  */
 export async function recomputeDashboard(input: {
   previous: DashboardResult;
-  fileName: string;
-  data: ArrayBuffer;
+  /** Fichier à lire, ou données déjà lues (fusion de deux fichiers, US-12). */
+  source: { fileName: string; data: ArrayBuffer } | RawDataset;
+  onSource?: (raw: RawDataset) => void;
   filters: Filters;
   mode: AiMode;
   organizationId: string;
@@ -132,7 +135,7 @@ export async function recomputeDashboard(input: {
   if (!previous.spec) throw new IncompatibleFileError("Ce dashboard a été créé avant les filtres : générez-le à nouveau pour pouvoir le filtrer ou le mettre à jour.");
   const spec = previous.spec;
 
-  const { raw, cleaning } = await loadDataset(input.fileName, input.data, previous.cleaning?.plan);
+  const { raw, cleaning } = await loadDataset(input.source, previous.cleaning?.plan, input.onSource);
   const { profile, rows: allRows } = profileDataset(raw);
   const problems = compatibilityProblems(spec, previous.profile, profile);
   if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
@@ -178,7 +181,7 @@ export async function askDashboardQuestion(input: {
   organizationId: string;
 }): Promise<QuestionAnswer> {
   if (!input.previous.spec) throw new IncompatibleFileError("Ce dashboard a été créé avant les questions : générez-le à nouveau.");
-  const { raw } = await loadDataset(input.fileName, input.data, input.previous.cleaning?.plan);
+  const { raw } = await loadDataset({ fileName: input.fileName, data: input.data }, input.previous.cleaning?.plan);
   const { profile, rows } = profileDataset(raw);
   const problems = compatibilityProblems(input.previous.spec, input.previous.profile, profile);
   if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
@@ -187,8 +190,13 @@ export async function askDashboardQuestion(input: {
 }
 
 /** Lit le fichier puis applique les corrections validées (copie en mémoire : le fichier n'est ni modifié ni conservé). */
-async function loadDataset(fileName: string, data: ArrayBuffer, plan: CleaningPlan | undefined): Promise<{ raw: RawDataset; cleaning?: DashboardResult["cleaning"] }> {
-  const raw = await parseFile(fileName, data);
+async function loadDataset(
+  source: { fileName: string; data: ArrayBuffer } | RawDataset,
+  plan: CleaningPlan | undefined,
+  onSource?: (raw: RawDataset) => void,
+): Promise<{ raw: RawDataset; cleaning?: DashboardResult["cleaning"] }> {
+  const raw = "data" in source ? await parseFile(source.fileName, source.data) : source;
+  onSource?.(raw);
   if (!plan || isEmptyPlan(plan)) return { raw };
   const { dataset, log } = applyCleaning(raw, plan);
   if (dataset.rows.length === 0) throw new ImportError("Les corrections choisies excluent toutes les lignes du fichier : assouplissez-les.");
@@ -223,7 +231,7 @@ export function periodOf(profile: DatasetProfile, rows: TypedRow[]): { from: str
   return months.length > 0 ? { from: months[0], to: months.at(-1)! } : null;
 }
 
-function pseudonymizationKey(): string {
+export function pseudonymizationKey(): string {
   const key = process.env.PSEUDONYMIZATION_KEY;
   if (key) return key;
   if (process.env.NODE_ENV === "production") throw new Error("PSEUDONYMIZATION_KEY doit être définie en production.");

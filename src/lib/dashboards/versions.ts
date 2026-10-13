@@ -6,7 +6,13 @@ import type { Json } from "@/lib/supabase/database.types";
  * Enregistre une version du dashboard (US-09) : une par création et par actualisation réussie.
  * L'historique est en ajout seul (RLS) et permet de consulter et comparer les périodes précédentes.
  */
-export async function saveVersion(workspace: Workspace, dashboardId: string, result: DashboardResult, createdAt?: string): Promise<void> {
+export async function saveVersion(
+  workspace: Workspace,
+  dashboardId: string,
+  result: DashboardResult,
+  options: { createdAt?: string; fingerprint?: string | null; label?: string } = {},
+): Promise<void> {
+  const { createdAt, fingerprint, label } = options;
   const { error } = await workspace.supabase.from("dashboard_versions").insert({
     dashboard_id: dashboardId,
     organization_id: workspace.organization.id,
@@ -16,6 +22,8 @@ export async function saveVersion(workspace: Workspace, dashboardId: string, res
     period_start: result.period?.from ?? null,
     period_end: result.period?.to ?? null,
     result: result as unknown as Json,
+    source_fingerprint: fingerprint ?? null,
+    label: label ?? null,
     ...(createdAt ? { created_at: createdAt } : {}),
   });
   if (error) console.error("Enregistrement de la version en échec", error.code);

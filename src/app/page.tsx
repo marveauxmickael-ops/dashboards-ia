@@ -2,6 +2,7 @@ import { AppHeader } from "@/components/app-header";
 import { activeProvider } from "@/lib/ai/gateway";
 import { Studio } from "@/components/studio";
 import { requireWorkspace } from "@/lib/auth/session";
+import { saveDashboardView } from "./dashboards/actions";
 
 export default async function Home() {
   const workspace = await requireWorkspace();
@@ -21,7 +22,7 @@ export default async function Home() {
             Prototype : utilisez uniquement des données fictives. Le traitement IA n&apos;est pas encore hébergé en Union européenne.
           </p>
         </header>
-        <Studio branding={organization.branding} aiAvailable={activeProvider() !== "demo"} />
+        <Studio branding={organization.branding} aiAvailable={activeProvider() !== "demo"} saveView={saveDashboardView} />
       </main>
     </>
   );

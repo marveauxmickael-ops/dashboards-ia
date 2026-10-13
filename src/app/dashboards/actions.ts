@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { logEvent } from "@/lib/audit";
 import { canEdit, getWorkspace, requireWorkspace } from "@/lib/auth/session";
 import { DASHBOARD_TITLE_MAX, normalizeTitle } from "@/lib/dashboards/title";
+import { PreferencesSchema } from "@/lib/preferences";
 import { ViewSchema } from "@/lib/view";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -40,16 +41,25 @@ export type SaveViewOutcome = { ok: true } | { ok: false; message: string };
  * Enregistre la personnalisation de l'affichage avec le dashboard : les lecteurs de l'organisation et le lien
  * de partage la voient telle quelle. Ni les chiffres ni la date d'actualisation ne changent.
  */
-export async function saveDashboardView(id: string, rawView: unknown): Promise<SaveViewOutcome> {
+export async function saveDashboardView(id: string, rawView: unknown, rawPreferences: unknown = null): Promise<SaveViewOutcome> {
   const workspace = await getWorkspace();
   if (!workspace) return { ok: false, message: "Votre session a expiré. Reconnectez-vous." };
   if (!canEdit(workspace.role)) return { ok: false, message: "Votre rôle (lecteur) ne permet pas de modifier l'affichage." };
   if (!UUID.test(id)) return { ok: false, message: "Dashboard introuvable." };
   const view = ViewSchema.safeParse(rawView);
   if (!view.success) return { ok: false, message: "Affichage invalide." };
+  const preferences = rawPreferences === null ? null : PreferencesSchema.safeParse(rawPreferences);
+  if (preferences && !preferences.success) return { ok: false, message: "Affichage invalide." };
   // La RLS limite la modification aux éditeurs de l'organisation du dashboard.
   const { data, error } = await workspace.supabase.from("dashboards").update({ display: view.data }).eq("id", id).select("id");
   if (error || !data || data.length === 0) return { ok: false, message: "L'affichage n'a pas pu être enregistré. Réessayez." };
+  // « Utiliser cet affichage pour mes prochains dashboards » (US-13) : réglages de l'utilisateur, sans valeur du fichier.
+  if (preferences?.success) {
+    const { error: prefError } = await workspace.supabase
+      .from("display_preferences")
+      .upsert({ user_id: workspace.user.id, preferences: preferences.data, updated_at: new Date().toISOString() });
+    if (prefError) return { ok: false, message: "L'affichage du dashboard est enregistré, mais pas vos réglages habituels. Réessayez." };
+  }
   return { ok: true };
 }
 

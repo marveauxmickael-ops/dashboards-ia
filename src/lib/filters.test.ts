@@ -25,8 +25,7 @@ describe("filtres et recalcul", () => {
     const kept = dim.values[0];
     const filtered = await recomputeDashboard({
       previous: full,
-      fileName: "ventes-demo.csv",
-      data: bytes(demo),
+      source: { fileName: "ventes-demo.csv", data: bytes(demo) },
       filters: { from: null, to: null, dimensions: { [dim.column]: [kept] } },
       mode: "standard",
       organizationId: "org-1",
@@ -49,7 +48,7 @@ describe("filtres et recalcul", () => {
   it("filtre une période", async () => {
     const full = await demoResult();
     const periods = full.filterOptions!.periods;
-    const filtered = await recomputeDashboard({ previous: full, fileName: "f.csv", data: bytes(demo), filters: { from: periods[1], to: periods[2], dimensions: {} }, mode: "standard", organizationId: "org-1", allowAi: false });
+    const filtered = await recomputeDashboard({ previous: full, source: { fileName: "f.csv", data: bytes(demo) }, filters: { from: periods[1], to: periods[2], dimensions: {} }, mode: "standard", organizationId: "org-1", allowAi: false });
     const trend = filtered.charts.find((c) => c.chronological)!;
     expect(trend.data.map((d) => d.category)).toEqual([periods[1], periods[2]]);
   });
@@ -58,7 +57,7 @@ describe("filtres et recalcul", () => {
     const full = await demoResult();
     const other = "Date;Autre\n2026-01-01;1\n2026-02-01;2\n";
     await expect(
-      recomputeDashboard({ previous: full, fileName: "autre.csv", data: bytes(other), filters: NO_FILTERS, mode: "standard", organizationId: "org-1", allowAi: true }),
+      recomputeDashboard({ previous: full, source: { fileName: "autre.csv", data: bytes(other) }, filters: NO_FILTERS, mode: "standard", organizationId: "org-1", allowAi: true }),
     ).rejects.toBeInstanceOf(IncompatibleFileError);
   });
 });

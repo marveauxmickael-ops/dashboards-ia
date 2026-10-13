@@ -131,7 +131,7 @@ describe("corrections dans le pipeline", () => {
 
   it("rejoue les corrections à l'actualisation avec le même fichier", async () => {
     const previous = await generateDashboard({ fileName: "ventes.csv", data, mode: "standard", organizationId: "org-1", cleaning: plan });
-    const refreshed = await recomputeDashboard({ previous, fileName: "ventes.csv", data, filters: NO_FILTERS, mode: "standard", organizationId: "org-1", allowAi: false });
+    const refreshed = await recomputeDashboard({ previous, source: { fileName: "ventes.csv", data }, filters: NO_FILTERS, mode: "standard", organizationId: "org-1", allowAi: false });
     expect(refreshed.profile.rowCount).toBe(10);
     expect(refreshed.cleaning?.plan).toEqual(plan);
     expect(refreshed.kpis.map((k) => k.value)).toEqual(previous.kpis.map((k) => k.value));
