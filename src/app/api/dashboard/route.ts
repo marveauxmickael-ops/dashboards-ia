@@ -29,6 +29,9 @@ export async function POST(request: Request) {
 
   const file = form.get("file");
   const mode = form.get("mode") === "strict" ? "strict" : "standard";
+  // Colonne qui distingue des fichiers regroupés (US-16) : un simple nom de colonne, vérifié contre le fichier.
+  const compareField = form.get("compareBy");
+  const compareBy = typeof compareField === "string" && compareField.length > 0 && compareField.length <= 200 ? compareField : null;
   if (!(file instanceof File)) return Response.json({ error: "Aucun fichier reçu." }, { status: 400 });
   if (file.size > MAX_FILE_BYTES) return Response.json({ error: "Le fichier dépasse 20 Mo." }, { status: 413 });
 
@@ -49,7 +52,7 @@ export async function POST(request: Request) {
   let fingerprint: string | null = null;
   try {
     // La clé de pseudonymisation est dérivée par organisation : jetons propres à chaque client.
-    result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: workspace.organization.id, cleaning, onSource: (raw) => (fingerprint = sourceFingerprint(raw, workspace.organization.id)) });
+    result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: workspace.organization.id, cleaning, compareBy, onSource: (raw) => (fingerprint = sourceFingerprint(raw, workspace.organization.id)) });
   } catch (error) {
     if (error instanceof ImportError) return Response.json({ error: error.message }, { status: 400 });
     if (error instanceof AiError) return Response.json({ error: error.message }, { status: 502 });

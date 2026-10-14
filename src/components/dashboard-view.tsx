@@ -22,6 +22,7 @@ import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
 import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
+import { ComparisonPanel } from "./comparison-panel";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
 import { CleaningNotice } from "./quality-panel";
@@ -91,7 +92,7 @@ export function DashboardView({
   const hasAnalysis = !!result.analysis && (result.analysis.variations.length > 0 || result.analysis.notes.length > 0);
   const maskedCount =
     view.hiddenKpis.length + view.hiddenCharts.length +
-    [view.hideInsights, view.hideAnalysis, view.hideExplanations, view.hideSuggestions].filter(Boolean).length +
+    [view.hideInsights, view.hideAnalysis, view.hideExplanations, view.hideSuggestions, view.hideComparison && !!result.comparison].filter(Boolean).length +
     Object.values(view.hiddenCategories).reduce((n, l) => n + l.length, 0);
   const periodLabel = result.period ? (result.period.from === result.period.to ? formatPeriod(result.period.from) : `${formatPeriod(result.period.from)} → ${formatPeriod(result.period.to)}`) : "Pas de colonne de date";
   const filtersLabel = result.filters && isFiltered(result.filters) ? describeFilters(result.filters, formatPeriod).join(" · ") : "Aucun (toutes les lignes)";
@@ -228,6 +229,7 @@ export function DashboardView({
             <CheckGroup
               legend="Sections"
               items={[
+                ...(result.comparison ? [{ id: "comparison", label: "Comparaison", checked: !view.hideComparison }] : []),
                 ...(result.insights.length > 0 ? [{ id: "insights", label: "Constats", checked: !view.hideInsights }] : []),
                 ...(hasAnalysis
                   ? [
@@ -238,7 +240,7 @@ export function DashboardView({
                   : []),
               ]}
               onToggle={(id) => setView({ ...view, [SECTION_FLAG[id]]: !view[SECTION_FLAG[id]] })}
-              onAll={(on) => setView({ ...view, hideInsights: !on, hideAnalysis: !on, hideExplanations: !on, hideSuggestions: !on })}
+              onAll={(on) => setView({ ...view, hideInsights: !on, hideAnalysis: !on, hideExplanations: !on, hideSuggestions: !on, hideComparison: !on })}
             />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -313,6 +315,10 @@ export function DashboardView({
             </article>
           ))}
         </section>
+      )}
+
+      {!view.hideComparison && result.comparison && (
+        <ComparisonPanel comparison={result.comparison} hiddenKpis={hiddenKpis} accent={accent} compact={compactLayout} />
       )}
 
       {!view.hideInsights && result.insights.length > 0 && (
@@ -854,7 +860,8 @@ function HideButton({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-const SECTION_FLAG: Record<string, "hideInsights" | "hideAnalysis" | "hideExplanations" | "hideSuggestions"> = {
+const SECTION_FLAG: Record<string, "hideInsights" | "hideAnalysis" | "hideExplanations" | "hideSuggestions" | "hideComparison"> = {
+  comparison: "hideComparison",
   insights: "hideInsights",
   analysis: "hideAnalysis",
   explanations: "hideExplanations",

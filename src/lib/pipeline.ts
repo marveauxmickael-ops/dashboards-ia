@@ -1,6 +1,7 @@
 import { designDashboard, type DesignResult } from "@/lib/ai/gateway";
 import { explainVariations, type AnalysisResult } from "@/lib/analysis";
 import { completeSpec } from "@/lib/engine/complete";
+import { comparisonColumn, computeComparison, type Comparison } from "@/lib/engine/comparison";
 import { checkInsights, computeDashboard, validateSpec, type CheckedInsight, type ComputedChart, type ComputedKpi } from "@/lib/engine/compute";
 import { ImportError, parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
@@ -25,6 +26,11 @@ export interface DashboardResult {
   kpis: ComputedKpi[];
   charts: ComputedChart[];
   insights: CheckedInsight[];
+  /**
+   * Comparaison des indicateurs par magasin, rayon, produit… (US-17), calculée par le moteur.
+   * Absente : aucune colonne de comparaison (ou dashboard antérieur).
+   */
+  comparison?: Comparison | null;
   /** Analyse des variations (US-10) ; absente des dashboards créés avant le sprint 3. */
   analysis?: AnalysisResult;
   /**
@@ -59,6 +65,8 @@ export async function generateDashboard(input: {
   cleaning?: CleaningPlan;
   /** Reçoit le fichier lu, avant corrections (empreinte de la version, US-12). */
   onSource?: (raw: RawDataset) => void;
+  /** Colonne qui distingue les fichiers regroupés (US-16), à comparer en priorité (US-17). */
+  compareBy?: string | null;
 }): Promise<DashboardResult> {
   const started = Date.now();
   const { raw, cleaning } = await loadDataset({ fileName: input.fileName, data: input.data }, input.cleaning, input.onSource);
@@ -91,15 +99,17 @@ export async function generateDashboard(input: {
   // Analyse des variations : décomposition par le moteur, explication par l'IA sur données pseudonymisées.
   const analysis = await explainVariations({ spec, rows, profile, mode: input.mode, pseudo });
 
+  const clearKpis = kpis.map((k) => ({ ...k, label: clear(k.label), description: clear(k.description) }));
   return {
     fileName: raw.fileName,
     profile,
     aiContext,
     ai: { provider: design.provider, model: design.model, inputTokens: design.inputTokens, outputTokens: design.outputTokens },
     title: clear(spec.title),
-    kpis: kpis.map((k) => ({ ...k, label: clear(k.label), description: clear(k.description) })),
+    kpis: clearKpis,
     charts: charts.map((c) => ({ ...c, title: clear(c.title) })),
     insights,
+    comparison: computeComparison(spec, rows, comparisonColumn(profile, input.compareBy), clearKpis),
     analysis,
     spec,
     filterOptions: filterOptions(profile, rows),
@@ -153,11 +163,14 @@ export async function recomputeDashboard(input: {
     analysis.notes.push("Vue filtrée : les explications sont rédigées automatiquement, sans appel à l'IA.");
   }
 
+  const clearKpis = kpis.map((k) => ({ ...k, label: kpiById.get(k.id)?.label ?? k.label, description: kpiById.get(k.id)?.description ?? k.description }));
   return {
     ...previous,
     fileName: raw.fileName,
     profile: { ...profile, rowCount: rows.length },
-    kpis: kpis.map((k) => ({ ...k, label: kpiById.get(k.id)?.label ?? k.label, description: kpiById.get(k.id)?.description ?? k.description })),
+    kpis: clearKpis,
+    // Même colonne qu'à la création ; un filtre qui ne garde qu'une valeur supprime la comparaison.
+    comparison: computeComparison(spec, rows, comparisonColumn(profile, previous.comparison?.column), clearKpis),
     charts: charts.map((c) => ({ ...c, title: chartById.get(c.id)?.title ?? c.title })),
     // Les constats rédigés à la création citent les chiffres d'origine : ils ne valent plus après recalcul.
     insights: [],

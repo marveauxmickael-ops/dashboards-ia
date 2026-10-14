@@ -13,10 +13,12 @@ import { askDashboardQuestion, generateDashboard, IncompatibleFileError, recompu
 import { QuestionError } from "@/lib/questions";
 import { analyzeQuality, applyCleaning, cleanedCsv, cleanedFileName, type CleaningPlan } from "@/lib/quality";
 import type { AiMode } from "@/lib/types";
+import { combineDatasets, CombineError } from "@/lib/combine";
+import type { CombineFiles } from "@/components/combine-summary";
 
-async function generateInBrowser(file: File, mode: AiMode, cleaning?: CleaningPlan) {
+async function generateInBrowser(file: File, mode: AiMode, cleaning?: CleaningPlan, compareBy?: string | null) {
   try {
-    const result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: "demo-navigateur", cleaning });
+    const result = await generateDashboard({ fileName: file.name, data: await file.arrayBuffer(), mode, organizationId: "demo-navigateur", cleaning, compareBy });
     return { ok: true as const, result };
   } catch (error) {
     return { ok: false as const, message: error instanceof ImportError ? error.message : "Le fichier n'a pas pu être analysé." };
@@ -39,6 +41,24 @@ const downloadInBrowser: DownloadCleaned = async (file, plan) => {
     return { ok: true };
   } catch (error) {
     return { ok: false, message: error instanceof ImportError ? error.message : "Le fichier corrigé n'a pas pu être produit." };
+  }
+};
+
+// Plusieurs fichiers regroupés dans le navigateur (US-16).
+const combineInBrowser: CombineFiles = async (files) => {
+  try {
+    const datasets = [];
+    for (const file of files) {
+      try {
+        datasets.push(await parseFile(file.name, await file.arrayBuffer()));
+      } catch (error) {
+        throw error instanceof ImportError ? new ImportError(`« ${file.name} » : ${error.message}`) : error;
+      }
+    }
+    const { dataset, summary } = combineDatasets(datasets);
+    return { ok: true, file: new File([cleanedCsv(dataset)], dataset.fileName, { type: "text/csv" }), summary };
+  } catch (error) {
+    return { ok: false, message: error instanceof ImportError || error instanceof CombineError ? error.message : "Les fichiers n'ont pas pu être regroupés." };
   }
 };
 
@@ -99,7 +119,7 @@ function App() {
           />
         </div>
       </details>
-      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} ask={askInBrowser} aiAvailable={false} analyzeQuality={analyzeInBrowser} downloadCleaned={downloadInBrowser} />
+      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} ask={askInBrowser} aiAvailable={false} analyzeQuality={analyzeInBrowser} downloadCleaned={downloadInBrowser} combineFiles={combineInBrowser} />
     </main>
   );
 }

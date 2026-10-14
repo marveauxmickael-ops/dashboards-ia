@@ -12,6 +12,8 @@ import { PrivacyPanel } from "./privacy-panel";
 import { AIProcessing } from "./animations/ai-processing";
 import { Button } from "./ui/button";
 import { FileUpload } from "./ui/file-upload";
+import { CombineSummaryPanel, combineOnServer, type CombineFiles } from "./combine-summary";
+import type { CombineSummary } from "@/lib/combine";
 import { analyzeOnServer, downloadCleanedOnServer, QualityPanel, type AnalyzeQuality, type DownloadCleaned } from "./quality-panel";
 
 type Quality = { status: "idle" } | { status: "loading" } | { status: "ready"; report: QualityReport } | { status: "error"; message: string };
@@ -25,10 +27,11 @@ export type GenerateOutcome =
   | { ok: false; message: string };
 
 /** Génération par défaut : envoi du fichier à l'API du serveur. */
-async function generateOnServer(file: File, mode: AiMode, cleaning?: CleaningPlan): Promise<GenerateOutcome> {
+async function generateOnServer(file: File, mode: AiMode, cleaning?: CleaningPlan, compareBy?: string | null): Promise<GenerateOutcome> {
   const body = new FormData();
   body.append("file", file);
   body.append("mode", mode);
+  if (compareBy) body.append("compareBy", compareBy);
   if (cleaning) body.append("cleaning", JSON.stringify(cleaning));
   try {
     const response = await fetch("/api/dashboard", { method: "POST", body });
@@ -50,8 +53,11 @@ export function Studio({
   analyzeQuality = analyzeOnServer,
   downloadCleaned = downloadCleanedOnServer,
   saveView,
+  combineFiles = combineOnServer,
 }: {
-  generateDashboard?: (file: File, mode: AiMode, cleaning?: CleaningPlan) => Promise<GenerateOutcome>;
+  generateDashboard?: (file: File, mode: AiMode, cleaning?: CleaningPlan, compareBy?: string | null) => Promise<GenerateOutcome>;
+  /** Regroupement de plusieurs fichiers (US-16) ; la démo navigateur le fait localement. */
+  combineFiles?: CombineFiles;
   demoFileUrl?: string;
   /** Affiche les boutons de téléchargement (désactivé dans la démo navigateur). */
   exportable?: boolean;
@@ -68,6 +74,9 @@ export function Studio({
   saveView?: (dashboardId: string, ...args: Parameters<SaveView>) => ReturnType<SaveView>;
 }) {
   const [file, setFile] = useState<File | null>(null);
+  const [selected, setSelected] = useState<File[]>([]);
+  // Plusieurs fichiers : regroupés en un seul (US-16), avec leur récapitulatif.
+  const [combined, setCombined] = useState<{ status: "idle" } | { status: "loading"; count: number } | { status: "ready"; summary: CombineSummary } | { status: "error"; message: string }>({ status: "idle" });
   const [mode, setMode] = useState<AiMode>("standard");
   const [state, setState] = useState<State>({ status: "idle" });
   const [quality, setQuality] = useState<Quality>({ status: "idle" });
@@ -77,7 +86,8 @@ export function Studio({
 
   async function generate(selected: File, corrections: CleaningPlan = plan) {
     setState({ status: "loading", fileName: selected.name });
-    const outcome = await generateDashboard(selected, mode, isEmptyPlan(corrections) ? undefined : corrections);
+    const compareBy = combined.status === "ready" ? combined.summary.column : null;
+    const outcome = await generateDashboard(selected, mode, isEmptyPlan(corrections) ? undefined : corrections, compareBy);
     setState(outcome.ok ? { status: "done", result: outcome.result, dashboardId: outcome.dashboardId, display: outcome.display, habitualApplied: outcome.habitualApplied } : { status: "error", message: outcome.message });
   }
 
@@ -96,7 +106,29 @@ export function Studio({
     return outcome.ok ? outcome.report : null;
   }
 
+  // Un fichier : contrôle qualité direct. Plusieurs : regroupement d'abord, puis contrôle qualité du fichier regroupé.
+  async function choose(files: File[]) {
+    setSelected(files);
+    setState({ status: "idle" });
+    if (files.length <= 1) {
+      setCombined({ status: "idle" });
+      await select(files[0] ?? null);
+      return;
+    }
+    setCombined({ status: "loading", count: files.length });
+    await select(null);
+    const outcome = await combineFiles(files);
+    if (!outcome.ok) {
+      setCombined({ status: "error", message: outcome.message });
+      return;
+    }
+    setCombined({ status: "ready", summary: outcome.summary });
+    await select(outcome.file);
+  }
+
   async function loadDemo() {
+    setSelected([]);
+    setCombined({ status: "idle" });
     const response = await fetch(demoFileUrl);
     const demo = new File([await response.blob()], "ventes-demo.csv", { type: "text/csv" });
     // Fichier sans anomalie (ou contrôle indisponible) : génération directe ; sinon, les propositions d'abord.
@@ -127,7 +159,7 @@ export function Studio({
       >
         <div className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold text-slate-900">1. Importez vos données</h2>
-          <FileUpload id="file" file={file} disabled={loading} onChange={(f) => void select(f)} />
+          <FileUpload id="file" files={selected.length > 0 ? selected : file ? [file] : []} disabled={loading || combined.status === "loading"} onChange={(f) => void choose(f)} />
           <p className="text-xs text-slate-500">PDF : export d&apos;un logiciel ou d&apos;un tableur, avec une ligne d&apos;en-têtes. Les documents scannés ne sont pas lus.</p>
         </div>
 
@@ -163,6 +195,16 @@ export function Studio({
             Essayer avec le fichier de démonstration
           </Button>
         </div>
+        {combined.status === "loading" && (
+          <p role="status" className="text-sm text-slate-600">
+            Regroupement de vos {combined.count} fichiers : lecture, structure, doublons…
+          </p>
+        )}
+        {combined.status === "error" && (
+          <p role="alert" className="text-sm text-red-800">
+            {combined.message}
+          </p>
+        )}
         {file && quality.status === "loading" && (
           <p role="status" className="text-sm text-slate-600">
             Contrôle qualité de {file.name} : doublons, cellules vides, valeurs incohérentes…
@@ -170,6 +212,8 @@ export function Studio({
         )}
         {quality.status === "error" && <p className="text-sm text-amber-900">Contrôle qualité indisponible : {quality.message} Vous pouvez tout de même générer le dashboard.</p>}
       </form>
+
+      {file && combined.status === "ready" && <CombineSummaryPanel summary={combined.summary} file={file} />}
 
       {file && quality.status === "ready" && (
         <div className="flex flex-col gap-2">

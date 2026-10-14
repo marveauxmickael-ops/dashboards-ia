@@ -5,6 +5,7 @@ import { formatPeriod, formatValue } from "@/lib/format";
 import type { KeepPolicy, MergePreview, MergeSnapshot } from "@/lib/merge";
 import { mergedFileName } from "@/lib/merge";
 import type { DashboardResult } from "@/lib/pipeline";
+import { combineOnServer } from "./combine-summary";
 import { saveBlob } from "./quality-panel";
 
 type Step = "preview" | "apply" | "download";
@@ -62,11 +63,35 @@ export function MergePanel({
 }) {
   const [previous, setPrevious] = useState<File | null>(loadedFile);
   const [file, setFile] = useState<File | null>(null);
+  // Plusieurs nouveaux fichiers (un par magasin, par rayon…) : regroupés d'abord en un seul (US-16).
+  const [combining, setCombining] = useState<string | null>(null);
   const [keep, setKeep] = useState<KeepPolicy>("new");
   const [preview, setPreview] = useState<MergePreview | null>(null);
   const [busy, setBusy] = useState<Step | null>(null);
   const [error, setError] = useState<string | null>(null);
   const when = refreshedAt ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Paris" }).format(new Date(refreshedAt)) : null;
+
+  async function chooseNew(files: File[]) {
+    setPreview(null);
+    setError(null);
+    setCombining(null);
+    if (files.length <= 1) {
+      setFile(files[0] ?? null);
+      return;
+    }
+    setFile(null);
+    setCombining(`Regroupement de ${files.length} fichiers…`);
+    const outcome = await combineOnServer(files);
+    if (!outcome.ok) {
+      setCombining(null);
+      setError(outcome.message);
+      return;
+    }
+    const kept = outcome.summary.files.filter((f) => f.status === "added").length;
+    const set = outcome.summary.files.length - kept;
+    setCombining(`${kept} fichier(s) regroupé(s)${set > 0 ? `, ${set} écarté(s) (doublon ou colonnes différentes)` : ""}.`);
+    setFile(outcome.file);
+  }
 
   async function analyze(policy: KeepPolicy = keep) {
     if (!previous || !file) return;
@@ -150,17 +175,18 @@ export function MergePanel({
           />
         </label>
         <label className="flex flex-col">
-          <span className="font-medium text-slate-800">2. Nouveau fichier</span>
-          <span className="text-xs text-slate-500">Mêmes colonnes ; il peut recouper la période déjà importée.{file && ` · chargé : ${file.name}`}</span>
+          <span className="font-medium text-slate-800">2. Nouveau(x) fichier(s)</span>
+          <span className="text-xs text-slate-500">
+            Mêmes colonnes ; il peut recouper la période déjà importée. Plusieurs fichiers (un par magasin, par rayon…) sont regroupés d&apos;abord.
+            {file && ` · chargé : ${file.name}`}
+            {combining && ` · ${combining}`}
+          </span>
           <input
             type="file"
             accept=".csv,.xlsx,.xls,.pdf"
             className={fileInput}
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null);
-              setPreview(null);
-              setError(null);
-            }}
+            multiple
+            onChange={(e) => void chooseNew(Array.from(e.target.files ?? []))}
           />
         </label>
       </div>
