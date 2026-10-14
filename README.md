@@ -189,3 +189,15 @@ Lisio ne conserve aucun fichier : il reconnaît le fichier de la version en cour
 - La détection des colonnes identifiantes repose sur le nom et le format des colonnes ; le texte libre est exclu en attendant une détection d'entités (Presidio).
 - Le seuil de petits groupes ne protège pas contre les déductions par différence (total − groupes affichés) ; à traiter avant les données RH.
 - Pas encore de filtres interactifs sur les données (recalcul par période ou segment) ni de réimport : sprint 4.
+
+## Interface v2 « Data in motion » (branche `interface-v2`)
+
+- **Design system** : tokens dans `src/styles/design-tokens.css` (bleu `#245BDB` pour les actions, violet `#7955E8` pour l'IA, vert pour les succès, fond `#F7F9FC`, texte `#182338`, bordures `#E4EAF3`), partagés par l'application et la démo navigateur ; police Geist ; composants `ui/button`, `ui/button-link`, `ui/card`, `ui/file-upload` ; `hooks/use-reduced-motion`.
+- **Landing page** : `/` affiche `components/landing/landing-page.tsx` aux visiteurs non connectés (le proxy laisse passer `/`), l'écran de création aux utilisateurs connectés. L'aperçu produit est calculé par le moteur, sans IA, sur `public/demo/ventes-demo.csv` (données fictives ; inclus dans le déploiement par `outputFileTracingIncludes`). Aucun chiffre de performance, témoignage ni logo client.
+- **Motion design** : animations CSS courtes, coupées si l'utilisateur réduit les animations. Rive : déclarer chaque fichier dans `src/lib/rive.ts` une fois produit dans l'éditeur Rive (`public/animations/`) :
+  - `hero-animation.riv`, machine « Hero » : fichier qui arrive, analyse, cartes qui se composent, boucle sur l'état final ;
+  - `ai-processing.riv`, machine « AIProcessing », entrée booléenne `isProcessing` (pilotée par l'état réel de la génération) ;
+  - `ui-interactions.riv`, machine « UI » : boutons, filtres, validations ;
+  - `dashboard-creation.riv`, machine « DashboardCreation », entrée numérique `step`.
+  Tant qu'un fichier n'est pas déclaré, l'équivalent CSS / SVG est affiché ; l'affichage n'attend jamais Rive.
+

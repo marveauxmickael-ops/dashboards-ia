@@ -31,7 +31,8 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname, search } = request.nextUrl;
-  if (!user && !pathname.startsWith("/api/") && !isPublicPath(pathname)) {
+  // « / » reste accessible sans session : la page affiche la landing page aux visiteurs.
+  if (!user && !pathname.startsWith("/api/") && !isPublicPath(pathname) && pathname !== "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/connexion";
     url.search = "";

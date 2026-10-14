@@ -1,11 +1,14 @@
 import { AppHeader } from "@/components/app-header";
 import { activeProvider } from "@/lib/ai/gateway";
 import { Studio } from "@/components/studio";
-import { requireWorkspace } from "@/lib/auth/session";
+import { getWorkspace } from "@/lib/auth/session";
+import { LandingPage } from "@/components/landing/landing-page";
 import { saveDashboardView } from "./dashboards/actions";
 
 export default async function Home() {
-  const workspace = await requireWorkspace();
+  // Visiteur non connecté : landing page ; utilisateur connecté : création d'un dashboard, comme avant.
+  const workspace = await getWorkspace();
+  if (!workspace) return <LandingPage />;
   const { organization } = workspace;
   return (
     <>

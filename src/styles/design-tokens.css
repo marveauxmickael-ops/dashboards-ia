@@ -45,6 +45,9 @@
   --animate-rise: rise 420ms var(--ease-out-soft) both;
   --animate-pulse-core: pulse-core 1.8s ease-in-out infinite;
   --animate-orbit: orbit 3.2s linear infinite;
+  --animate-draw: draw 900ms var(--ease-out-soft) both;
+  --animate-grow: grow 600ms var(--ease-out-soft) both;
+  --animate-float: float 6s ease-in-out infinite;
 
   @keyframes rise {
     from {
@@ -65,6 +68,31 @@
     50% {
       transform: scale(1.08);
       opacity: 0.85;
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes grow {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
     }
   }
   @keyframes orbit {
