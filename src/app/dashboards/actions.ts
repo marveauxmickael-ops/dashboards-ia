@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { logEvent } from "@/lib/audit";
 import { canEdit, getWorkspace, requireWorkspace } from "@/lib/auth/session";
 import { DASHBOARD_TITLE_MAX, normalizeTitle } from "@/lib/dashboards/title";
-import { PreferencesSchema } from "@/lib/preferences";
+import { mergePreferences, PreferencesUpdateSchema } from "@/lib/preferences";
 import { ViewSchema } from "@/lib/view";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,16 +48,18 @@ export async function saveDashboardView(id: string, rawView: unknown, rawPrefere
   if (!UUID.test(id)) return { ok: false, message: "Dashboard introuvable." };
   const view = ViewSchema.safeParse(rawView);
   if (!view.success) return { ok: false, message: "Affichage invalide." };
-  const preferences = rawPreferences === null ? null : PreferencesSchema.safeParse(rawPreferences);
+  const preferences = rawPreferences === null ? null : PreferencesUpdateSchema.safeParse(rawPreferences);
   if (preferences && !preferences.success) return { ok: false, message: "Affichage invalide." };
   // La RLS limite la modification aux éditeurs de l'organisation du dashboard.
   const { data, error } = await workspace.supabase.from("dashboards").update({ display: view.data }).eq("id", id).select("id");
   if (error || !data || data.length === 0) return { ok: false, message: "L'affichage n'a pas pu être enregistré. Réessayez." };
   // « Utiliser cet affichage pour mes prochains dashboards » (US-13) : réglages de l'utilisateur, sans valeur du fichier.
   if (preferences?.success) {
+    // Les calculs masqués sur d'autres dashboards restent retenus : seuls ceux de ce dashboard sont mis à jour.
+    const { data: before } = await workspace.supabase.from("display_preferences").select("preferences").eq("user_id", workspace.user.id).maybeSingle();
     const { error: prefError } = await workspace.supabase
       .from("display_preferences")
-      .upsert({ user_id: workspace.user.id, preferences: preferences.data, updated_at: new Date().toISOString() });
+      .upsert({ user_id: workspace.user.id, preferences: mergePreferences(before?.preferences, preferences.data), updated_at: new Date().toISOString() });
     if (prefError) return { ok: false, message: "L'affichage du dashboard est enregistré, mais pas vos réglages habituels. Réessayez." };
   }
   return { ok: true };

@@ -64,8 +64,9 @@ export async function POST(request: Request) {
   const { supabase, user, organization } = workspace;
   // Affichage habituel de l'utilisateur (US-13), appliqué d'office au nouveau dashboard.
   const { data: habit } = await supabase.from("display_preferences").select("preferences").eq("user_id", user.id).maybeSingle();
-  const display = viewFromPreferences(habit?.preferences, result.charts);
-  const habitualApplied = !!habit && !isDefaultView(display);
+  // Sans réglage enregistré : vue essentielle (les principaux indicateurs et graphiques, le reste masqué).
+  const display = viewFromPreferences(habit?.preferences, result.charts, result.kpis);
+  const habitualApplied = !isDefaultView(display);
   const { data: saved, error: saveError } = await supabase
     .from("dashboards")
     .insert({

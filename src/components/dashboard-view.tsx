@@ -28,7 +28,7 @@ import { ActiveFilters } from "./filters-bar";
 import { CleaningNotice } from "./quality-panel";
 import { chartPalette, readableOnWhite, type Branding } from "@/lib/branding";
 import { describeFilters, isFiltered } from "@/lib/filters";
-import { preferencesFromView, type Preferences } from "@/lib/preferences";
+import { preferencesFromView, viewFromPreferences, type PreferencesUpdate as Preferences } from "@/lib/preferences";
 
 
 /** Enregistrement de l'affichage avec le dashboard (éditeurs) : il s'applique aux lecteurs et au lien de partage. */
@@ -75,8 +75,10 @@ export function DashboardView({
   // « Utiliser cet affichage pour mes prochains dashboards » (US-13), coché par défaut.
   const [remember, setRemember] = useState(true);
   const [habitualNotice, setHabitualNotice] = useState(habitualApplied);
-  const persisted = savedView && saveView ? { initial: savedView, save: saveView, preferences: (v: ViewState) => preferencesFromView(v, result.charts) } : undefined;
-  const [editableView, setEditableViewWith, saveStatus] = useDashboardView(dashboardId, persisted);
+  const persisted = savedView && saveView ? { initial: savedView, save: saveView, preferences: (v: ViewState) => preferencesFromView(v, result.charts, result.kpis) } : undefined;
+  // Sans affichage enregistré (création non enregistrée, démo) : vue essentielle d'office.
+  const [essentialView] = useState(() => viewFromPreferences(null, result.charts, result.kpis));
+  const [editableView, setEditableViewWith, saveStatus] = useDashboardView(dashboardId, persisted, essentialView);
   const setEditableView = (v: ViewState) => setEditableViewWith(v, remember);
   const locked = !!fixedView;
   const view = fixedView ?? editableView;
@@ -120,7 +122,8 @@ export function DashboardView({
       {children}
       {habitualNotice && !locked && (
         <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-900 print:hidden">
-          Votre affichage habituel a été appliqué.
+          Votre affichage habituel a été appliqué : {view.hiddenKpis.length + view.hiddenCharts.length} élément(s) masqué(s), à retrouver dans « Personnaliser
+          l&apos;affichage ».
           <button
             type="button"
             className="font-medium underline"
@@ -130,7 +133,7 @@ export function DashboardView({
               setHabitualNotice(false);
             }}
           >
-            Revenir à l&apos;affichage standard
+            Tout afficher
           </button>
           <button type="button" className="ml-auto text-xs text-slate-600 underline" onClick={() => setHabitualNotice(false)}>
             Fermer
@@ -256,8 +259,9 @@ export function DashboardView({
           </div>
           {persisted && (
             <p className="text-xs text-slate-500">
-              Seuls la mise en page, la disposition, la taille et le type des graphiques et les sections affichées sont repris, jamais les catégories ni les
-              indicateurs masqués.
+              Sont repris sur vos prochains dashboards : la mise en page, la disposition, la taille et le type des graphiques, les sections affichées, et
+              les indicateurs ou graphiques masqués (ou réaffichés), reconnus par leur calcul (ex. « Somme(Montant achat) »). Jamais les catégories ni
+              aucune valeur de vos données.
             </p>
           )}
         </section>
@@ -673,6 +677,7 @@ function parseStored(raw: string | null): ViewState | null {
 function useDashboardView(
   dashboardId?: string | null,
   persisted?: { initial: ViewState; save: SaveView; preferences: (v: ViewState) => Preferences },
+  fallback: ViewState = EMPTY_VIEW,
 ): [ViewState, (v: ViewState, remember?: boolean) => void, SaveStatus] {
   const key = dashboardId ? `dashboards-ia:vue:${dashboardId}` : null;
   const [local, setLocal] = useState<ViewState | null>(null);
@@ -756,7 +761,7 @@ function useDashboardView(
       // Sans stockage, la sélection vaut pour la page en cours uniquement.
     }
   };
-  return [stored ?? local ?? EMPTY_VIEW, setView, null];
+  return [stored ?? local ?? fallback, setView, null];
 }
 
 type CheckItem = { id: string; label: string; checked: boolean; disabled?: boolean; indent?: boolean };
