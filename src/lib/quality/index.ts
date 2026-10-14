@@ -381,5 +381,5 @@ export function cleanedCsv(dataset: RawDataset): string {
 
 /** Nom du fichier corrigé : « ventes-corrige.csv ». */
 export function cleanedFileName(fileName: string): string {
-  return `${fileName.replace(/\.(csv|xlsx|pdf)$/i, "") || "fichier"}-corrige.csv`;
+  return `${fileName.replace(/\.(csv|xlsx|xls|pdf)$/i, "") || "fichier"}-corrige.csv`;
 }

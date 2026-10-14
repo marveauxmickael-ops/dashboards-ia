@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-const ACCEPT = ".csv,.xlsx,.pdf";
-const EXTENSIONS = ["csv", "xlsx", "pdf"];
+const ACCEPT = ".csv,.xlsx,.xls,.pdf";
+const EXTENSIONS = ["csv", "xlsx", "xls", "pdf"];
 
 /**
  * Zone de dépôt de fichier : glisser-déposer ou clic (le champ natif reste accessible au clavier et aux lecteurs d'écran).
@@ -15,7 +15,7 @@ export function FileUpload({ id, file, onChange, disabled = false }: { id: strin
 
   function pick(candidate: File | null) {
     if (candidate && !EXTENSIONS.includes(candidate.name.split(".").pop()?.toLowerCase() ?? "")) {
-      setRefused(`« ${candidate.name} » n'est pas un fichier .csv, .xlsx ou .pdf.`);
+      setRefused(`« ${candidate.name} » n'est pas un fichier .csv, .xlsx, .xls ou .pdf.`);
       return;
     }
     setRefused(null);

@@ -116,6 +116,6 @@ export function mergeDatasets(previous: RawDataset, next: RawDataset, keep: Keep
 
 /** Nom du fichier fusionné : « ventes-fusionne.csv » (sans répéter le suffixe à chaque ajout). */
 export function mergedFileName(fileName: string): string {
-  const base = fileName.replace(/\.(csv|xlsx|pdf)$/i, "").replace(/-fusionne$/i, "") || "fichier";
+  const base = fileName.replace(/\.(csv|xlsx|xls|pdf)$/i, "").replace(/-fusionne$/i, "") || "fichier";
   return `${base}-fusionne.csv`;
 }

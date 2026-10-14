@@ -140,7 +140,7 @@ export function MergePanel({
           </span>
           <input
             type="file"
-            accept=".csv,.xlsx,.pdf"
+            accept=".csv,.xlsx,.xls,.pdf"
             className={fileInput}
             onChange={(e) => {
               setPrevious(e.target.files?.[0] ?? null);
@@ -154,7 +154,7 @@ export function MergePanel({
           <span className="text-xs text-slate-500">Mêmes colonnes ; il peut recouper la période déjà importée.{file && ` · chargé : ${file.name}`}</span>
           <input
             type="file"
-            accept=".csv,.xlsx,.pdf"
+            accept=".csv,.xlsx,.xls,.pdf"
             className={fileInput}
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null);

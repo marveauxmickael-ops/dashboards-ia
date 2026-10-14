@@ -8,7 +8,7 @@ export const MAX_ROWS = 200_000;
 
 export class ImportError extends Error {}
 
-/** Lit un fichier CSV ou XLSX et renvoie les lignes brutes (valeurs en clair). */
+/** Lit un fichier CSV, XLSX, XLS ou PDF et renvoie les lignes brutes (valeurs en clair). */
 export async function parseFile(fileName: string, data: ArrayBuffer): Promise<RawDataset> {
   if (data.byteLength > MAX_FILE_BYTES) {
     throw new ImportError("Le fichier dépasse 20 Mo. Réduisez la période ou le nombre de colonnes.");
@@ -16,8 +16,9 @@ export async function parseFile(fileName: string, data: ArrayBuffer): Promise<Ra
   const lower = fileName.toLowerCase();
   if (lower.endsWith(".csv")) return parseCsv(fileName, new TextDecoder("utf-8").decode(data));
   if (lower.endsWith(".xlsx")) return parseXlsx(fileName, data);
+  if (lower.endsWith(".xls")) return parseXls(fileName, data);
   if (lower.endsWith(".pdf")) return parsePdf(fileName, data);
-  throw new ImportError("Format non pris en charge. Importez un fichier .csv, .xlsx ou .pdf.");
+  throw new ImportError("Format non pris en charge. Importez un fichier .csv, .xlsx, .xls ou .pdf.");
 }
 
 export function parseCsv(fileName: string, text: string): RawDataset {
@@ -66,6 +67,60 @@ export async function parseXlsx(fileName: string, data: ArrayBuffer): Promise<Ra
     });
     if (!empty) rows.push(row);
   });
+  return checkRows({ fileName, columns: uniqueColumns(named), rows });
+}
+
+/**
+ * Ancien format Excel 97-2003 (.xls), lu par SheetJS (version officielle corrigée, cdn.sheetjs.com). Couvre aussi
+ * les « .xls » produits par certains logiciels, qui sont en réalité des pages HTML ou du texte tabulé.
+ * Première feuille, première ligne = en-têtes ; les formules ne sont jamais exécutées (seule la valeur enregistrée est lue).
+ */
+export async function parseXls(fileName: string, data: ArrayBuffer): Promise<RawDataset> {
+  const XLSX = await import("xlsx");
+  let workbook;
+  try {
+    // Dates lues comme numéros de série Excel puis converties sans fuseau horaire (cellDates créerait des dates
+    // à minuit heure locale, décalées d'un jour selon le fuseau du serveur).
+    workbook = XLSX.read(new Uint8Array(data), { type: "array", cellDates: false, cellNF: true, cellFormula: false, cellHTML: false, sheetRows: MAX_ROWS + 2 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (/password|encrypt/i.test(message)) throw new ImportError("Le fichier Excel est protégé par un mot de passe. Retirez la protection puis importez-le à nouveau.");
+    throw new ImportError("Le fichier .xls est illisible ou endommagé. Enregistrez-le au format .xlsx ou .csv puis importez-le à nouveau.");
+  }
+  const sheet = workbook.SheetNames[0] ? workbook.Sheets[workbook.SheetNames[0]] : undefined;
+  if (!sheet) throw new ImportError("Le classeur ne contient aucune feuille.");
+  // Lecture cellule par cellule. Cellules au format date : numéro de série → AAAA-MM-JJ, selon le calendrier
+  // Excel, sans heure ni fuseau horaire.
+  const range = XLSX.utils.decode_range(sheet["!ref"] ?? "A1:A1");
+  const table: unknown[][] = [];
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    const line: unknown[] = [];
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r, c })] as { t?: string; v?: unknown; z?: string } | undefined;
+      let value: unknown = cell?.v ?? null;
+      if (cell?.t === "n" && typeof cell.v === "number" && cell.z && XLSX.SSF.is_date(cell.z)) {
+        const d = XLSX.SSF.parse_date_code(cell.v);
+        if (d) value = `${String(d.y).padStart(4, "0")}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
+      } else if (cell?.t === "e") value = null;
+      line.push(value);
+    }
+    if (line.some((v) => v !== null && v !== "")) table.push(line);
+  }
+  const [header = [], ...body] = table;
+  const width = Math.max(header.length, ...body.map((r) => r.length));
+  const named = Array.from({ length: width }, (_, i) => String(header[i] ?? "").trim() || `Colonne ${i + 1}`);
+  if (header.length === 0) throw new ImportError("Aucune colonne détectée : la première ligne doit contenir les en-têtes.");
+  const rows: Row[] = [];
+  for (const r of body) {
+    const row: Row = {};
+    let empty = true;
+    named.forEach((c, i) => {
+      const v = normalizeCell(r[i]);
+      if (v !== null) empty = false;
+      row[c] = v;
+    });
+    if (!empty) rows.push(row);
+  }
   return checkRows({ fileName, columns: uniqueColumns(named), rows });
 }
 

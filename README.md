@@ -202,3 +202,7 @@ Lisio ne conserve aucun fichier : il reconnaît le fichier de la version en cour
   - `dashboard-creation.riv`, machine « DashboardCreation », entrée numérique `step`.
   Tant qu'un fichier n'est pas déclaré, l'équivalent CSS / SVG est affiché ; l'affichage n'attend jamais Rive.
 
+## Formats acceptés
+
+`.csv`, `.xlsx`, `.xls` (Excel 97-2003, y compris les « .xls » HTML ou texte produits par certains logiciels) et `.pdf` (tableau d'un PDF produit par un logiciel). Le `.xls` est lu par SheetJS 0.20.3, installé depuis la source officielle (`cdn.sheetjs.com`, les versions publiées sur npm ont des failles connues) ; les formules ne sont jamais exécutées et les dates sont converties depuis le numéro de série Excel, sans dépendre du fuseau horaire du serveur.
+
