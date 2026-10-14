@@ -114,6 +114,7 @@ Chaque indicateur affiche sa définition, sa formule, la période couverte, les 
 - **Navigation** : trois onglets (Nouveau dashboard · Mes dashboards · Paramètres), menu « Compte » (sécurité, déconnexion). Paramètres regroupe Membres et invitations, Charte graphique, Journal d'audit et Sécurité (`SettingsShell`).
 - **Page d'un dashboard** : onglets Dashboard · Partage · Historique · Données et confidentialité (`?onglet=`). Une version consultée (`?version=`) s'ouvre sur l'onglet Dashboard avec la comparaison.
 - **Site web** (`site/`) : page statique responsive, polices auto-hébergées, démo navigateur intégrée dans `site/demo` (régénérer avec `npm run build:site`). Hébergé sur **Netlify** (projet `lisio`, configuration `site/netlify.toml`, aucune commande de build) : dans Netlify, *Project configuration* → *Build & deploy* → lier le dépôt GitHub `dashboards-ia`, *Base directory* `site`, *Publish directory* `.` ; chaque push sur `main` redéploie le site. Les liens « Se connecter » et « Créer un compte » pointent vers `https://dashboards-ia-creetacrea.vercel.app` : à remplacer dans `site/index.html` le jour où l'outil a son domaine.
+  - Depuis la v2, la landing page est dans l'application : Netlify ne sert plus que la démo (`/demo/`) et ses polices, et redirige toute autre adresse vers l'application (302, `site/netlify.toml`). À mettre à jour le jour où l'application a son propre domaine.
 
 ## Renommer un dashboard
 
