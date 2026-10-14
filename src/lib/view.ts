@@ -30,13 +30,15 @@ export const ViewSchema = z.object({
   collapsedCharts: z.array(z.string().max(64)).max(100).default([]),
   /** Ordre choisi des graphiques (identifiants) ; les autres suivent dans l'ordre d'origine. */
   chartOrder: z.array(z.string().max(64)).max(100).default([]),
+  /** Graphiques déposés dans une autre section que la leur (identifiant → titre de la section), pour combler un espace libre. */
+  chartSections: z.record(z.string().max(64), z.string().max(200)).default({}),
   /** Disposition : par sections (évolutions, puis une section par dimension) ou libre (une seule grille, tout se déplace). */
   grouping: z.enum(["sections", "free"]).default("sections"),
 });
 
 export type ViewState = z.infer<typeof ViewSchema>;
 
-export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], grouping: "sections" };
+export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
 
 /** Affichage enregistré avec le dashboard (colonne `display`) : vue par défaut si absent ou invalide. */
 export function parseView(raw: unknown): ViewState {
@@ -86,6 +88,34 @@ export function placeChart(allIds: string[], id: string, targetId: string): stri
   return order;
 }
 
+/**
+ * Dépose un graphique dans une section (la sienne ou une autre) : sur un graphique cible, il prend sa place ;
+ * sur l'emplacement libre de la section, il se place après le dernier graphique de celle-ci. Revenu dans sa
+ * section d'origine, il n'est plus noté comme déplacé.
+ */
+export function dropInSection(
+  view: ViewState,
+  allIds: string[],
+  id: string,
+  section: { title: string; ids: string[] },
+  natural: string,
+  targetId?: string,
+): ViewState {
+  const { [id]: _previous, ...others } = view.chartSections;
+  void _previous;
+  const chartSections = section.title === natural ? others : { ...others, [id]: section.title };
+  let chartOrder = allIds;
+  if (targetId && targetId !== id) chartOrder = placeChart(allIds, id, targetId);
+  else if (!targetId) {
+    const last = [...section.ids].reverse().find((x) => x !== id);
+    if (last) {
+      chartOrder = allIds.filter((x) => x !== id);
+      chartOrder.splice(chartOrder.indexOf(last) + 1, 0, id);
+    }
+  }
+  return { ...view, chartSections, chartOrder };
+}
+
 export function isDefaultView(v: ViewState): boolean {
   return (
     v.hiddenKpis.length === 0 &&
@@ -96,6 +126,7 @@ export function isDefaultView(v: ViewState): boolean {
     Object.keys(v.chartSizes).length === 0 &&
     v.collapsedCharts.length === 0 &&
     v.chartOrder.length === 0 &&
+    Object.keys(v.chartSections).length === 0 &&
     v.grouping === "sections" &&
     !v.hideInsights &&
     !v.hideAnalysis &&

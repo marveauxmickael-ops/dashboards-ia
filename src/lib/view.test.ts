@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { generateDashboard } from "@/lib/pipeline";
-import { applyView, decodeView, EMPTY_VIEW, encodeView, isDefaultView, placeChart, type ViewState } from "./view";
+import { applyView, decodeView, dropInSection, EMPTY_VIEW, encodeView, isDefaultView, placeChart, type ViewState } from "./view";
 
 const demo = readFileSync(path.resolve(import.meta.dirname, "../../public/demo/ventes-demo.csv"), "utf-8");
 
@@ -53,5 +53,24 @@ describe("personnalisation de l'affichage", () => {
     expect(placeChart(ids, "d", "b")).toEqual(["a", "d", "b", "c"]);
     expect(placeChart(ids, "b", "b")).toEqual(ids);
     expect(placeChart(ids, "x", "b")).toEqual(ids);
+  });
+});
+
+describe("déposer un graphique dans un espace libre", () => {
+  const ids = ["evo", "rayon-ca", "famille-ca", "fichier-ca"];
+  it("le place en fin d'une autre section et le retient", () => {
+    const v = dropInSection(EMPTY_VIEW, ids, "fichier-ca", { title: "Par Libellé rayon", ids: ["rayon-ca"] }, "Par Fichier");
+    expect(v.chartSections).toEqual({ "fichier-ca": "Par Libellé rayon" });
+    expect(v.chartOrder).toEqual(["evo", "rayon-ca", "fichier-ca", "famille-ca"]);
+    expect(isDefaultView(v)).toBe(false);
+  });
+  it("prend la place du graphique sur lequel il est déposé", () => {
+    const v = dropInSection(EMPTY_VIEW, ids, "fichier-ca", { title: "Par Libellé rayon", ids: ["rayon-ca"] }, "Par Fichier", "rayon-ca");
+    expect(v.chartOrder).toEqual(["evo", "fichier-ca", "rayon-ca", "famille-ca"]);
+  });
+  it("revenu dans sa section, il n'est plus noté comme déplacé", () => {
+    const moved = dropInSection(EMPTY_VIEW, ids, "fichier-ca", { title: "Par Libellé rayon", ids: ["rayon-ca"] }, "Par Fichier");
+    const back = dropInSection(moved, moved.chartOrder, "fichier-ca", { title: "Par Fichier", ids: ["fichier-ca"] }, "Par Fichier");
+    expect(back.chartSections).toEqual({});
   });
 });

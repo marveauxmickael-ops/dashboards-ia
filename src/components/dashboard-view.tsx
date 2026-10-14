@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactN
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
-import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
+import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, dropInSection, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ComparisonPanel } from "./comparison-panel";
 import { ExportActions } from "./export-actions";
@@ -350,8 +350,15 @@ export function DashboardView({
         </Collapsible>
       )}
 
-      {(view.grouping === "free" ? [{ title: "Graphiques", charts: orderCharts(charts, view) }] : groupCharts(orderCharts(charts, view))).map((group) => {
+      {(view.grouping === "free" ? [{ title: "Graphiques", charts: orderCharts(charts, view) }] : groupCharts(orderCharts(charts, view), view.chartSections)).map((group) => {
         const siblings = group.charts.map((c) => c.id);
+        const draggedChart = dragging ? charts.find((c) => c.id === dragging) : undefined;
+        // Dépôt dans cette section (sur un graphique ou sur l'emplacement libre), y compris depuis une autre section.
+        const dropHere = (targetId?: string) => {
+          if (!draggedChart) return;
+          const natural = view.grouping === "free" ? group.title : naturalSection(draggedChart);
+          setView(dropInSection(view, orderedIds, draggedChart.id, { title: group.title, ids: siblings }, natural, targetId));
+        };
         return (
           <section key={group.title} aria-label={group.title} className={`flex flex-col ${compactLayout ? "gap-2" : "gap-3"}`}>
             <h3 className={`font-semibold uppercase tracking-wide ${compactLayout ? "text-xs" : "text-sm"}`} style={{ color: accent }}>
@@ -379,23 +386,46 @@ export function DashboardView({
                   readOnly={locked}
                   drag={locked ? undefined : {
                     active: dragging === c.id,
-                    target: dropTarget === c.id && dragging !== null && dragging !== c.id && siblings.includes(dragging),
+                    target: dropTarget === c.id && dragging !== null && dragging !== c.id,
                     onStart: () => setDragging(c.id),
                     onEnd: () => {
                       setDragging(null);
                       setDropTarget(null);
                     },
                     onEnter: () => {
-                      if (dragging && siblings.includes(dragging)) setDropTarget(c.id);
+                      if (dragging) setDropTarget(c.id);
                     },
                     onDrop: () => {
-                      if (dragging && dragging !== c.id && siblings.includes(dragging)) setView({ ...view, chartOrder: placeChart(orderedIds, dragging, c.id) });
+                      if (dragging && dragging !== c.id) dropHere(c.id);
                       setDragging(null);
                       setDropTarget(null);
                     },
                   }}
                 />
               ))}
+              {/* Pendant un glisser : emplacement libre en fin de section ; la grille « dense » le place dans le premier trou. */}
+              {draggedChart && !locked && !(siblings.length === 1 && siblings[0] === draggedChart.id) && (
+                <div
+                  aria-hidden="true"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    setDropTarget(`zone:${group.title}`);
+                  }}
+                  onDragLeave={() => setDropTarget((t) => (t === `zone:${group.title}` ? null : t))}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    dropHere();
+                    setDragging(null);
+                    setDropTarget(null);
+                  }}
+                  className={`flex min-h-32 items-center justify-center rounded-[var(--radius-card)] border-2 border-dashed text-sm font-medium transition-colors print:hidden ${SPAN[chartSizeOf(draggedChart.id, view)]} ${
+                    dropTarget === `zone:${group.title}` ? "border-brand-600 bg-brand-50 text-brand-900" : "border-slate-300 bg-slate-50/60 text-slate-500"
+                  }`}
+                >
+                  Déposer ici
+                </div>
+              )}
             </div>
           </section>
         );
@@ -840,10 +870,17 @@ function CheckList({ items, onToggle }: { items: CheckItem[]; onToggle: (id: str
 }
 
 /** Sections de graphiques : évolutions dans le temps d'abord, puis une section par dimension. */
-function groupCharts(charts: ComputedChart[]): { title: string; charts: ComputedChart[] }[] {
+/** Section d'origine d'un graphique : les évolutions, puis une section par dimension. */
+function naturalSection(c: ComputedChart): string {
+  return c.chronological ? "Évolutions dans le temps" : c.dimension ? `Par ${c.dimension}` : "Graphiques";
+}
+
+/** Graphiques par section ; `moved` : graphiques déposés par l'utilisateur dans une autre section (si elle existe encore). */
+function groupCharts(charts: ComputedChart[], moved: Record<string, string> = {}): { title: string; charts: ComputedChart[] }[] {
+  const naturals = new Set(charts.map(naturalSection));
   const groups = new Map<string, ComputedChart[]>();
   for (const c of charts) {
-    const title = c.chronological ? "Évolutions dans le temps" : c.dimension ? `Par ${c.dimension}` : "Graphiques";
+    const title = moved[c.id] && naturals.has(moved[c.id]) ? moved[c.id] : naturalSection(c);
     groups.set(title, [...(groups.get(title) ?? []), c]);
   }
   return [...groups].map(([title, list]) => ({ title, charts: list })).sort((a, b) => Number(b.title.startsWith("Évolutions")) - Number(a.title.startsWith("Évolutions")));
@@ -981,7 +1018,7 @@ function ChartCard({
               role="button"
               tabIndex={-1}
               aria-label="Glisser pour déplacer"
-              title="Glisser-déposer sur un autre graphique"
+              title="Glisser-déposer sur un autre graphique ou dans un espace libre"
               className={`${iconButton} cursor-grab active:cursor-grabbing`}
               onDragStart={(e) => {
                 e.dataTransfer.setData("text/plain", chart.id);
