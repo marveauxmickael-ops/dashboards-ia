@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { DatasetProfile, TypedRow } from "@/lib/types";
+import { inScope, type ColumnScopes } from "@/lib/ingest/scopes";
 
 // Filtres interactifs : période (mois de début et de fin) et valeurs retenues par dimension.
 // Ils s'appliquent aux lignes du fichier avant tout calcul : chaque chiffre est recalculé, rien n'est estimé.
@@ -20,6 +21,8 @@ export const NO_FILTERS: Filters = { from: null, to: null, dimensions: {} };
 
 export interface FilterOptions {
   dateColumn: string | null;
+  /** Fichiers reliés (US-15) : un filtre sur une colonne propre à un fichier ne s'applique qu'aux lignes de ce fichier. */
+  scopes?: ColumnScopes | null;
   /** Mois disponibles (AAAA-MM), du plus ancien au plus récent. */
   periods: string[];
   dimensions: { column: string; values: string[] }[];
@@ -40,14 +43,14 @@ export function filterOptions(profile: DatasetProfile, rows: TypedRow[]): Filter
       column: c.name,
       values: [...new Set(rows.map((r) => r[c.name]).filter((v) => v !== null).map(String))].sort((a, b) => a.localeCompare(b, "fr")),
     }));
-  return { dateColumn, periods, dimensions };
+  return { dateColumn, periods, dimensions, ...(profile.scopes ? { scopes: profile.scopes } : {}) };
 }
 
-export function applyFilters(rows: TypedRow[], filters: Filters, options: Pick<FilterOptions, "dateColumn">): TypedRow[] {
+export function applyFilters(rows: TypedRow[], filters: Filters, options: Pick<FilterOptions, "dateColumn" | "scopes">): TypedRow[] {
   const dims = Object.entries(filters.dimensions).map(([column, values]) => [column, new Set(values)] as const);
   const date = options.dateColumn;
   return rows.filter((r) => {
-    if (date && (filters.from || filters.to)) {
+    if (date && (filters.from || filters.to) && inScope(options.scopes, r, date)) {
       const value = r[date];
       if (typeof value !== "string") return false;
       const month = value.slice(0, 7);
@@ -55,6 +58,7 @@ export function applyFilters(rows: TypedRow[], filters: Filters, options: Pick<F
       if (filters.to && month > filters.to) return false;
     }
     for (const [column, allowed] of dims) {
+      if (!inScope(options.scopes, r, column)) continue;
       const value = r[column];
       if (value === null || !allowed.has(String(value))) return false;
     }

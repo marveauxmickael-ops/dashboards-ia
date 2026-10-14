@@ -1,5 +1,6 @@
 import type { ColumnProfile, ColumnType, DatasetProfile, RawDataset, TypedRow } from "@/lib/types";
 import { EMAIL_RE, IBAN_RE, PHONE_RE, parseDate, parseNumber } from "./values";
+import { columnScopes, inScope } from "./scopes";
 
 // Part minimale de valeurs conformes pour retenir un type.
 const TYPE_THRESHOLD = 0.9;
@@ -38,13 +39,13 @@ const pairKey = (name: string) =>
 const QUANTITY_HEADER = /^(qt[ée]s?|quantit[ée]s?)(\s|$|\.|\()/i;
 const UNIT_PRICE_HEADER = /^(prix|p\.?\s?u\.?)(\s|$|\.|\()/i;
 // Valeurs par unité ou par colis : jamais additionnées.
-const PER_UNIT_HEADER = /^(pcb|colisage)(\s|$)/i;
+export const PER_UNIT_HEADER = /^(pcb|colisage)(\s|$)/i;
 
 /**
  * Fichier avec une quantité et des prix unitaires (ex. régularisations de stock) : ajoute, ligne par ligne,
  * « Valeur <prix> » = quantité × prix. Calcul du moteur, sans IA ; le fichier d'origine n'est pas modifié.
  */
-function withUnitValues(ds: RawDataset): { ds: RawDataset; derived: Map<string, string> } {
+export function withUnitValues(ds: RawDataset): { ds: RawDataset; derived: Map<string, string> } {
   const derived = new Map<string, string>();
   const quantity = ds.columns.find((c) => QUANTITY_HEADER.test(c));
   if (!quantity) return { ds, derived };
@@ -91,7 +92,10 @@ function reclassifyCodes(columns: ColumnProfile[]): ColumnProfile[] {
 export function profileDataset(input: RawDataset): { profile: DatasetProfile; rows: TypedRow[] } {
   const { ds, derived } = withUnitValues(input);
   const unitPrices = new Map([...derived].map(([name, price]) => [price, name]));
-  const columns = reclassifyCodes(ds.columns.map((name) => profileColumn(name, ds.rows.map((r) => r[name])))).map((c) => {
+  // Fichiers reliés : chaque colonne est profilée sur les lignes du fichier dont elle provient.
+  const scopes = columnScopes(ds.columns, ds.rows);
+  const valuesOf = (name: string) => ds.rows.filter((r) => inScope(scopes, r, name)).map((r) => r[name]);
+  const columns = reclassifyCodes(ds.columns.map((name) => profileColumn(name, valuesOf(name)))).map((c) => {
     if (c.role !== "measure") return c;
     const value = unitPrices.get(c.name);
     if (value) return { ...c, role: "ignored" as const, reason: `Prix unitaire : jamais additionné ; utilisé pour calculer « ${value} ».` };
@@ -122,7 +126,7 @@ export function profileDataset(input: RawDataset): { profile: DatasetProfile; ro
   }
   if (!columns.some((c) => c.role === "measure")) warnings.push("Aucune colonne numérique détectée : seuls des comptages seront possibles.");
 
-  return { profile: { rowCount: ds.rows.length, duplicateRows, columns, warnings }, rows };
+  return { profile: { rowCount: ds.rows.length, duplicateRows, columns, warnings, ...(scopes ? { scopes } : {}) }, rows };
 }
 
 function profileColumn(name: string, values: (string | number | null)[]): ColumnProfile {

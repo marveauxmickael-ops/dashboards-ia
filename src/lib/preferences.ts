@@ -72,7 +72,9 @@ export function essentialHidden(kpis: KpiLike[], charts: ChartLike[]): { kpis: s
   const breakdowns = charts
     .filter((c) => !c.chronological && !counted(c) && c.measureLabel === lead && !CODE_DIMENSION.test(c.dimension ?? ""))
     .slice(0, ESSENTIAL_BREAKDOWNS);
-  const keptCharts = new Set([...trends, ...breakdowns].map((c) => c.id));
+  // Taux entre fichiers reliés (US-15) : la raison d'être du rapprochement, toujours affichés.
+  const linked = charts.filter((c) => c.id.startsWith("link_c")).slice(0, 4);
+  const keptCharts = new Set([...trends, ...linked, ...breakdowns].map((c) => c.id));
   // Au moins un graphique : un fichier sans mesure ne garde que ses comptages.
   if (keptCharts.size === 0 && charts[0]) keptCharts.add(charts[0].id);
   return { kpis: kpis.filter((k) => !keptKpis.includes(k.id)).map((k) => k.id), charts: charts.filter((c) => !keptCharts.has(c.id)).map((c) => c.id) };

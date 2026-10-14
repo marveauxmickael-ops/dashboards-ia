@@ -13,7 +13,7 @@ import { AIProcessing } from "./animations/ai-processing";
 import { Button } from "./ui/button";
 import { FileUpload } from "./ui/file-upload";
 import { CombineSummaryPanel, combineOnServer, type CombineFiles } from "./combine-summary";
-import type { CombineSummary } from "@/lib/combine";
+import type { CombineSummary, LinkChoice } from "@/lib/combine";
 import { analyzeOnServer, downloadCleanedOnServer, QualityPanel, type AnalyzeQuality, type DownloadCleaned } from "./quality-panel";
 
 type Quality = { status: "idle" } | { status: "loading" } | { status: "ready"; report: QualityReport } | { status: "error"; message: string };
@@ -107,7 +107,7 @@ export function Studio({
   }
 
   // Un fichier : contrôle qualité direct. Plusieurs : regroupement d'abord, puis contrôle qualité du fichier regroupé.
-  async function choose(files: File[]) {
+  async function choose(files: File[], link: LinkChoice | null = null) {
     setSelected(files);
     setState({ status: "idle" });
     if (files.length <= 1) {
@@ -117,7 +117,7 @@ export function Studio({
     }
     setCombined({ status: "loading", count: files.length });
     await select(null);
-    const outcome = await combineFiles(files);
+    const outcome = await combineFiles(files, { link });
     if (!outcome.ok) {
       setCombined({ status: "error", message: outcome.message });
       return;
@@ -213,7 +213,7 @@ export function Studio({
         {quality.status === "error" && <p className="text-sm text-amber-900">Contrôle qualité indisponible : {quality.message} Vous pouvez tout de même générer le dashboard.</p>}
       </form>
 
-      {file && combined.status === "ready" && <CombineSummaryPanel summary={combined.summary} file={file} />}
+      {file && combined.status === "ready" && <CombineSummaryPanel summary={combined.summary} file={file} busy={loading} onLink={(choice) => void choose(selected, choice)} />}
 
       {file && quality.status === "ready" && (
         <div className="flex flex-col gap-2">

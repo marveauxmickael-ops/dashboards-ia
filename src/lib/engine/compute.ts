@@ -1,6 +1,7 @@
 import type { Aggregation, Chart, DashboardSpec, Insight, Kpi, Measure } from "@/lib/ai/spec";
 import type { DatasetProfile, TypedRow } from "@/lib/types";
 import { aggregate, groupRows } from "./aggregate";
+import { inScope } from "@/lib/ingest/scopes";
 
 // Validation de la spécification produite par l'IA, puis calcul de chaque valeur sur les vraies données.
 
@@ -163,7 +164,8 @@ export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile:
   // Une valeur absente ou illisible n'est jamais remplacée par zéro : elle est ignorée et signalée.
   const qualityOf = (measureId: string) =>
     columnsOf(measureId)
-      .map((column) => ({ column, missing: rows.filter((r) => r[column] === null).length, invalid: invalidByColumn.get(column) ?? 0 }))
+      // Fichiers reliés : une ligne de l'autre fichier n'a pas cette colonne, ce n'est pas une valeur manquante.
+      .map((column) => ({ column, missing: rows.filter((r) => r[column] === null && inScope(profile.scopes, r, column)).length, invalid: invalidByColumn.get(column) ?? 0 }))
       .filter((q) => q.missing > 0 || q.invalid > 0);
 
   const kpis: ComputedKpi[] = spec.kpis.map((k: Kpi) => {

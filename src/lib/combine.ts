@@ -1,5 +1,6 @@
 import { canonicalDataset } from "@/lib/merge";
 import { parseDate, parseNumber } from "@/lib/ingest/values";
+import { linkCandidates, linkDatasets, type LinkSummary } from "@/lib/link";
 import type { RawDataset, Row } from "@/lib/types";
 
 // Dépôt de plusieurs fichiers (US-16) : les fichiers de même structure (un export par magasin, par rayon, par produit…)
@@ -16,7 +17,7 @@ const LABEL_HEADER = /libell|nom|name|d[ée]signation/i;
 /** Colonne ajoutée quand aucune colonne ne distingue les fichiers : chaque ligne porte le nom de son fichier. */
 export const FILE_COLUMN = "Fichier";
 
-export type CombinedFileStatus = "added" | "duplicate" | "incompatible";
+export type CombinedFileStatus = "added" | "linked" | "duplicate" | "incompatible";
 
 export interface CombinedFile {
   name: string;
@@ -35,6 +36,8 @@ export interface CombineSummary {
   columnAdded: boolean;
   values: string[];
   rows: number;
+  /** Second type de fichier relié par une clé (US-15). */
+  link?: LinkSummary | null;
 }
 
 /** Colonne magasin d'un fichier : le libellé est préféré au code (« Libellé site » plutôt que « Code site »). */
@@ -55,36 +58,28 @@ export function combinedFileName(count: number): string {
   return `regroupement-${count}-fichiers.csv`;
 }
 
-export function combineDatasets(datasets: RawDataset[]): { dataset: RawDataset; summary: CombineSummary } {
-  if (datasets.length === 0) throw new CombineError("Aucun fichier reçu.");
-  if (datasets.length > MAX_FILES) throw new CombineError(`Déposez au plus ${MAX_FILES} fichiers à la fois.`);
+/** Choix de l'utilisateur pour relier un second type de fichier (US-15) : la clé de chaque côté. */
+export interface LinkChoice {
+  main: string;
+  other: string;
+  /** Ne garder que les lignes de l'autre fichier rattachées au fichier principal. */
+  onlyMatched?: boolean;
+}
 
-  // Structure de référence : celle du plus grand nombre de fichiers (la première déposée en cas d'égalité).
-  const counts = new Map<string, number>();
-  for (const ds of datasets) counts.set(structureKey(ds.columns), (counts.get(structureKey(ds.columns)) ?? 0) + 1);
-  let reference = structureKey(datasets[0].columns);
-  for (const ds of datasets) if ((counts.get(structureKey(ds.columns)) ?? 0) > (counts.get(reference) ?? 0)) reference = structureKey(ds.columns);
-  const base = datasets.find((ds) => structureKey(ds.columns) === reference)!;
-
-  const kept = uniqueDatasets(datasets.filter((ds) => structureKey(ds.columns) === reference));
+/** Empile des fichiers de même structure (doublons exacts ignorés) et repère la colonne qui les distingue. */
+function stackGroup(group: RawDataset[]) {
+  const base = group[0];
+  const kept = uniqueDatasets(group);
   const found = distinguishingColumn(base.columns, kept);
   // Sans colonne qui les distingue, chaque ligne est repérée par le nom de son fichier (dès qu'il y a plusieurs fichiers).
   const addFileColumn = !found && kept.length > 1;
   const column = found ?? (addFileColumn ? uniqueName(FILE_COLUMN, base.columns) : null);
   const columns = addFileColumn ? [...base.columns, column!] : base.columns;
-
   const seen = new Map<string, string>();
   const files: CombinedFile[] = [];
   const rows: Row[] = [];
-  for (const ds of datasets) {
+  for (const ds of group) {
     const entry = { name: ds.fileName, rows: ds.rows.length };
-    if (structureKey(ds.columns) !== reference) {
-      const missing = base.columns.filter((c) => !ds.columns.includes(c));
-      const extra = ds.columns.filter((c) => !base.columns.includes(c));
-      const detail = [missing.length > 0 && `il manque ${quoteList(missing)}`, extra.length > 0 && `en plus : ${quoteList(extra)}`].filter(Boolean).join(" ; ");
-      files.push({ ...entry, status: "incompatible", values: [], reason: `Colonnes différentes des autres fichiers (${detail}).` });
-      continue;
-    }
     const fingerprint = canonicalDataset(ds);
     const twin = seen.get(fingerprint);
     if (twin !== undefined) {
@@ -102,21 +97,76 @@ export function combineDatasets(datasets: RawDataset[]): { dataset: RawDataset; 
     const values = found ? distinctValues(ds.rows, found) : addFileColumn ? [label] : [];
     files.push({ ...entry, status: "added", values });
   }
-
-  if (rows.length === 0) throw new CombineError("Aucune ligne à regrouper : les fichiers retenus sont vides.");
-  const added = files.filter((f) => f.status === "added").length;
+  const added = files.filter((f) => f.status === "added");
   const notes = [...new Set(kept.flatMap((ds) => ds.notes ?? []))];
-  if (added > 1) notes.push(`${added} fichiers regroupés : ${files.filter((f) => f.status === "added").map((f) => f.name).join(", ")}.`);
+  if (added.length > 1) notes.push(`${added.length} fichiers regroupés : ${added.map((f) => f.name).join(", ")}.`);
+  // Nom du groupe dans « Fichier source » : le fichier, ou le premier suivi du nombre de fichiers.
+  const label = added.length <= 1 ? fileLabel(added[0]?.name ?? base.fileName) : `${fileLabel(added[0].name)} et ${added.length - 1} autre(s)`;
+  return { dataset: { fileName: base.fileName, columns, rows, ...(notes.length > 0 ? { notes } : {}) } as RawDataset, files, column, addFileColumn, label };
+}
+
+export function combineDatasets(datasets: RawDataset[], options: { link?: LinkChoice | null } = {}): { dataset: RawDataset; summary: CombineSummary } {
+  if (datasets.length === 0) throw new CombineError("Aucun fichier reçu.");
+  if (datasets.length > MAX_FILES) throw new CombineError(`Déposez au plus ${MAX_FILES} fichiers à la fois.`);
+
+  // Fichiers groupés par structure ; le fichier principal est celui du plus grand groupe (le premier déposé en cas d'égalité).
+  const groups = new Map<string, RawDataset[]>();
+  for (const ds of datasets) groups.set(structureKey(ds.columns), [...(groups.get(structureKey(ds.columns)) ?? []), ds]);
+  const ordered = [...groups.values()].sort((a, b) => b.length - a.length);
+  const main = stackGroup(ordered[0]);
+  const base = ordered[0][0];
+
+  const incompatible = (ds: RawDataset, reason?: string): CombinedFile => {
+    const missing = base.columns.filter((c) => !ds.columns.includes(c));
+    const extra = ds.columns.filter((c) => !base.columns.includes(c));
+    const detail = [missing.length > 0 && `il manque ${quoteList(missing)}`, extra.length > 0 && `en plus : ${quoteList(extra)}`].filter(Boolean).join(" ; ");
+    return { name: ds.fileName, rows: ds.rows.length, status: "incompatible", values: [], reason: reason ?? `Colonnes différentes des autres fichiers (${detail}).` };
+  };
+
+  // Un second type de fichier (ex. la démarque à côté des ventes) est relié par une clé commune (US-15).
+  let dataset = main.dataset;
+  let link: LinkSummary | null = null;
+  const others = new Map<RawDataset, CombinedFile>();
+  if (ordered[1]) {
+    const second = stackGroup(ordered[1]);
+    const candidates = linkCandidates(main.dataset, second.dataset);
+    const chosen = (options.link && candidates.find((c) => c.main === options.link!.main && c.other === options.link!.other)) || candidates[0];
+    if (chosen && main.dataset.rows.length > 0 && second.dataset.rows.length > 0) {
+      const linked = linkDatasets(main.dataset, second.dataset, chosen, { main: main.label, other: second.label }, candidates, { onlyMatched: !!options.link?.onlyMatched });
+      dataset = linked.dataset;
+      link = linked.summary;
+      for (const [i, ds] of ordered[1].entries()) {
+        const f = second.files[i];
+        others.set(ds, f.status === "added" ? { ...f, status: "linked", values: [] } : f);
+      }
+    } else {
+      for (const ds of ordered[1]) others.set(ds, incompatible(ds, "Colonnes différentes et aucune clé commune (code article, EAN, référence…) pour relier ce fichier aux autres."));
+    }
+  }
+  for (const group of ordered.slice(2)) for (const ds of group) others.set(ds, incompatible(ds, "Un seul autre type de fichier peut être relié à la fois : déposez-le séparément."));
+
+  // Récapitulatif dans l'ordre de dépôt.
+  const mainFiles = new Map(ordered[0].map((ds, i) => [ds, main.files[i]]));
+  const files = datasets.map((ds) => mainFiles.get(ds) ?? others.get(ds)!);
+
+  if (dataset.rows.length === 0) throw new CombineError("Aucune ligne à regrouper : les fichiers retenus sont vides.");
+  const used = files.filter((f) => f.status === "added" || f.status === "linked").length;
   return {
-    dataset: { fileName: combinedFileName(added), columns, rows, ...(notes.length > 0 ? { notes } : {}) },
+    dataset: { ...dataset, fileName: link ? linkedFileName(used) : combinedFileName(used) },
     summary: {
       files,
-      column,
-      columnAdded: addFileColumn,
-      values: column ? distinctValues(rows, column) : [],
-      rows: rows.length,
+      column: main.column,
+      columnAdded: main.addFileColumn,
+      values: main.column ? distinctValues(main.dataset.rows, main.column) : [],
+      rows: dataset.rows.length,
+      link,
     },
   };
+}
+
+/** Fichier relié : « rapprochement-2-fichiers.csv ». */
+export function linkedFileName(count: number): string {
+  return `rapprochement-${count}-fichiers.csv`;
 }
 
 export class CombineError extends Error {}

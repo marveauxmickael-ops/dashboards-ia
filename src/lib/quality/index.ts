@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { profileDataset } from "@/lib/ingest/profile";
 import { parseDate, parseNumber } from "@/lib/ingest/values";
+import { columnScopes, inScope } from "@/lib/ingest/scopes";
 import type { CellValue, ColumnProfile, RawDataset, Row } from "@/lib/types";
 
 // Contrôle qualité du fichier (US-11) : le moteur repère doublons, cellules vides et valeurs incohérentes,
@@ -176,9 +177,11 @@ export function analyzeQuality(raw: RawDataset): QualityReport {
   const empties: QualityReport["empties"] = [];
   const invalid: QualityReport["invalid"] = [];
   const variants: QualityReport["variants"] = [];
+  // Fichiers reliés (US-15) : une colonne propre à un fichier est vide, par construction, sur les lignes de l'autre.
+  const scopes = columnScopes(raw.columns, raw.rows);
   for (const c of columns) {
     const kind = kindOf(c);
-    const emptyRows = raw.rows.flatMap((r, i) => (r[c.name] === null ? [i] : []));
+    const emptyRows = raw.rows.flatMap((r, i) => (r[c.name] === null && inScope(scopes, r, c.name) ? [i] : []));
     if (emptyRows.length > 0) empties.push({ column: c.name, kind, count: emptyRows.length, rows: emptyRows.slice(0, MAX_ROWS_LISTED).map(lineNumber) });
 
     if (kind !== "category") {
@@ -326,12 +329,14 @@ export function applyCleaning(raw: RawDataset, plan: CleaningPlan): { dataset: R
     if (changed > 0) lines.push(`Colonne « ${merge.column} » : ${[...from].map((v) => `« ${v} »`).join(", ")} fusionné${from.size > 1 ? "s" : ""} en « ${merge.to} » (${plural(changed, "cellule")}).`);
   }
 
+  // Fichiers reliés : seules les cellules vides attendues sont traitées, jamais celles d'une colonne propre à l'autre fichier.
+  const scopes = columnScopes(raw.columns, raw.rows);
   for (const [c, policy] of Object.entries(plan.empty)) {
     if (policy === "ignore" || missing(c)) continue;
     const kind = kinds.get(c) ?? "category";
     if (policy === "exclude_rows") {
       const before = rows.length;
-      rows = rows.filter((r) => r[c] !== null);
+      rows = rows.filter((r) => r[c] !== null || !inScope(scopes, r, c));
       if (before > rows.length) lines.push(`Colonne « ${c} » : ${plural(before - rows.length, "ligne")} sans valeur exclue${before - rows.length > 1 ? "s" : ""}.`);
       continue;
     }
@@ -343,7 +348,7 @@ export function applyCleaning(raw: RawDataset, plan: CleaningPlan): { dataset: R
     }
     let filled = 0;
     for (const r of rows) {
-      if (r[c] === null) {
+      if (r[c] === null && inScope(scopes, r, c)) {
         r[c] = value;
         filled++;
       }

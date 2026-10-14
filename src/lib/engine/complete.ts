@@ -77,6 +77,23 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
   // 2. Indicateurs : un par mesure, le nombre de lignes, et un comptage distinct par dimension.
   const kpis: Kpi[] = [...spec.kpis];
   const kpiIds = new Set(kpis.map((k) => k.id));
+
+  // Fichiers reliés (US-15) : le montant principal de l'autre fichier rapporté à celui du fichier principal
+  // (ex. démarque / CA HT), juste après le premier indicateur. Un taux que seul le rapprochement rend calculable.
+  const link = linkedRatio(profile, measures);
+  let linkMeasure: Measure | null = null;
+  if (link && !measures.some((m) => m.operation === "ratio" && m.left === link.other.id && m.right === link.main.id)) {
+    const id = nextId("link_m", measureIds);
+    linkMeasure = { id, label: `${link.other.label} / ${link.main.label}`, column: null, operation: "ratio", left: link.other.id, right: link.main.id, format: "percent" };
+    measures.push(linkMeasure);
+    kpis.splice(Math.min(1, kpis.length), 0, {
+      id: nextId("link_k", kpiIds),
+      label: `${link.other.label} / ${link.main.label}`,
+      description: `Somme de ${link.other.label} (${link.otherSource}) rapportée à la somme de ${link.main.label} (${link.mainSource}), sur les mêmes filtres.`,
+      measure: id,
+      aggregation: "sum",
+    });
+  }
   const hasKpi = (measure: string, aggregation: Aggregation) => kpis.some((k) => k.measure === measure && k.aggregation === aggregation);
   for (const m of ranked) {
     const aggregation = aggregationOf(m);
@@ -121,6 +138,12 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
     charts.push({ id: nextId("auto_c", chartIds), ...chart });
   };
   const chartMeasures = ranked.filter((m) => m.column === null || measureColumn(usable, m)?.role === "measure");
+  // Fichiers reliés : une mesure n'est ventilée que par une colonne présente sur les lignes du même fichier.
+  const sourcesOf = (column: string): string[] => profile.scopes?.applies[column] ?? profile.scopes?.sources ?? [];
+  const byId = new Map(measures.map((m) => [m.id, m]));
+  const measureSources = (m: Measure): string[] =>
+    m.column !== null ? sourcesOf(m.column) : [...new Set([...measureSources(byId.get(m.left!)!), ...measureSources(byId.get(m.right!)!)])];
+  const compatible = (m: Measure, d: ColumnProfile) => !profile.scopes || measureSources(m).every((s) => sourcesOf(d.name).includes(s));
 
   for (const date of dates) {
     for (const m of chartMeasures.slice(0, MAX_TREND_MEASURES)) {
@@ -130,8 +153,19 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
     add({ type: "bar", title: "Nombre de lignes par mois", dimension: date.name, granularity: "month", measure: "rows", aggregation: "count", limit: null });
   }
 
+  // Taux entre fichiers reliés, par dimension courte (rayon, famille…) : identifiants « link_c », gardés dans la vue essentielle.
+  if (linkMeasure) {
+    for (const d of dims.filter((x) => x.distinct <= SHORT_DIMENSION && compatible(linkMeasure!, x)).slice(0, 4)) {
+      const key = `${d.name}|${linkMeasure.id}|sum`;
+      if (seen.has(key) || charts.length >= MAX_CHARTS) continue;
+      seen.add(key);
+      charts.push({ id: nextId("link_c", chartIds), type: "bar", title: `${linkMeasure.label} par ${d.name}`, dimension: d.name, granularity: null, measure: linkMeasure.id, aggregation: "sum", limit: 12 });
+    }
+  }
+
   // Ventilations : les mesures principales sur toutes les dimensions, les autres sur les dimensions courtes.
   const breakdown = (m: Measure, d: ColumnProfile) => {
+    if (!compatible(m, d)) return;
     const aggregation = aggregationOf(m);
     const pie = m === chartMeasures[0] && d.distinct <= 6 && aggregation === "sum" && m.format !== "percent" && m.column !== null;
     add({
@@ -149,6 +183,23 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
   for (const d of dims) add({ type: "bar", title: `Nombre de lignes par ${d.name}`, dimension: d.name, granularity: null, measure: "rows", aggregation: "count", limit: 12 });
 
   return { ...spec, measures, kpis, charts };
+}
+
+/** Montant principal propre à chaque fichier relié : celui des ventes (HT de préférence), sinon le premier montant. */
+function linkedRatio(profile: DatasetProfile, measures: Measure[]) {
+  const scopes = profile.scopes;
+  if (!scopes || scopes.sources.length < 2) return null;
+  const roles = new Map(profile.columns.map((c) => [c.name, c.role]));
+  const leadOf = (source: string) => {
+    const own = measures.filter(
+      (m) => m.column !== null && roles.get(m.column) === "measure" && scopes.applies[m.column]?.length === 1 && scopes.applies[m.column][0] === source && MONEY.test(m.column) && isAdditiveColumn(m.column),
+    );
+    const sales = own.filter((m) => /vente|chiffre|\bca\b|revenu/i.test(m.column!));
+    return sales.find((m) => /\bht\b/i.test(m.column!)) ?? sales[0] ?? own[0] ?? null;
+  };
+  const main = leadOf(scopes.sources[0]);
+  const other = leadOf(scopes.sources[1]);
+  return main && other ? { main, other, mainSource: scopes.sources[0], otherSource: scopes.sources[1] } : null;
 }
 
 function dimensionRank(c: ColumnProfile): number {

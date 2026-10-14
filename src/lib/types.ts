@@ -43,6 +43,11 @@ export interface ColumnProfile {
 
 export interface DatasetProfile {
   rowCount: number;
+  /**
+   * Fichiers reliés (US-15) : portée des colonnes propres à un fichier. Une cellule hors de sa portée est vide
+   * par construction : ni valeur manquante, ni anomalie.
+   */
+  scopes?: import("@/lib/ingest/scopes").ColumnScopes | null;
   duplicateRows: number;
   columns: ColumnProfile[];
   warnings: string[];

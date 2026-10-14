@@ -45,7 +45,7 @@ const downloadInBrowser: DownloadCleaned = async (file, plan) => {
 };
 
 // Plusieurs fichiers regroupés dans le navigateur (US-16).
-const combineInBrowser: CombineFiles = async (files) => {
+const combineInBrowser: CombineFiles = async (files, options = {}) => {
   try {
     const datasets = [];
     for (const file of files) {
@@ -55,7 +55,7 @@ const combineInBrowser: CombineFiles = async (files) => {
         throw error instanceof ImportError ? new ImportError(`« ${file.name} » : ${error.message}`) : error;
       }
     }
-    const { dataset, summary } = combineDatasets(datasets);
+    const { dataset, summary } = combineDatasets(datasets, options);
     return { ok: true, file: new File([cleanedCsv(dataset)], dataset.fileName, { type: "text/csv" }), summary };
   } catch (error) {
     return { ok: false, message: error instanceof ImportError || error instanceof CombineError ? error.message : "Les fichiers n'ont pas pu être regroupés." };
