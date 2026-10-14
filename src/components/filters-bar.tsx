@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { describeFilters, isFiltered, NO_FILTERS, type FilterOptions, type Filters } from "@/lib/filters";
 import { formatPeriod } from "@/lib/format";
+import { SOURCE_COLUMN } from "@/lib/ingest/scopes";
+
+/** Codes et identifiants (EAN, référence…) : utiles au moteur, pas comme critère de la barre de filtres. */
+const HIDDEN_FILTER = /(^|[\s_(-])(code|ean|gtin|sku|id|r[ée]f|r[ée]f[ée]rence|n°|num[ée]ro)(?=$|[\s_).:-])/i;
 
 /** Filtres interactifs : période et valeurs par dimension. Chaque application recalcule tout le dashboard. */
 export function FiltersBar({
@@ -56,7 +60,7 @@ export function FiltersBar({
             </label>
           </>
         )}
-        {options.dimensions.map((d) => {
+        {options.dimensions.filter((d) => d.column !== SOURCE_COLUMN && (!HIDDEN_FILTER.test(d.column) || /libell|d[ée]signation|intitul/i.test(d.column))).map((d) => {
           const selected = draft.dimensions[d.column] ?? d.values;
           return (
             <details key={d.column} className="relative text-sm">

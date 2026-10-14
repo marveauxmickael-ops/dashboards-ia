@@ -7,6 +7,8 @@ import type { DashboardResult } from "@/lib/pipeline";
 import type { QuestionAnswer } from "@/lib/questions";
 import type { ViewState } from "@/lib/view";
 import { DashboardView, type SaveView } from "./dashboard-view";
+import { LossToggle } from "./loss-toggle";
+import { lossesOnly, lossPreset, withLossesOnly } from "@/lib/losses";
 import { FiltersBar } from "./filters-bar";
 import { MergePanel } from "./merge-panel";
 import { QuestionPanel } from "./question-panel";
@@ -134,8 +136,19 @@ export function DashboardWorkspace({
     setShown(outcome.result);
   }
 
+  // Journal de démarque reconnu : bascule « pertes uniquement », filtre prêt à l'emploi.
+  const losses = supported && file ? lossPreset(base.filterOptions) : null;
+
   return (
     <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable} branding={branding} savedView={savedView} saveView={saveView} fixedView={fixedView} habitualApplied={habitualApplied}>
+      {losses && (
+        <LossToggle
+          preset={losses}
+          on={lossesOnly(shown.filters, losses)}
+          busy={busy === "filter"}
+          onChange={(on) => void run("filter", withLossesOnly(shown.filters ?? NO_FILTERS, losses, on))}
+        />
+      )}
       {supported && (
         <section aria-label="Fichier source" className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm print:hidden">
           <div className="flex flex-wrap items-center gap-3">
@@ -228,7 +241,7 @@ export function DashboardWorkspace({
         <QuestionPanel ask={(question) => ask({ file, previous: base, question, dashboardId })} branding={branding} aiAvailable={aiAvailable} />
       )}
       {supported && file && base.filterOptions && (
-        <FiltersBar key={base.fileName + base.profile.rowCount} options={base.filterOptions} applied={shown.filters ?? NO_FILTERS} busy={busy === "filter"} onApply={(f) => void run("filter", f)} />
+        <FiltersBar key={`${base.fileName}${base.profile.rowCount}${JSON.stringify(shown.filters ?? null)}`} options={base.filterOptions} applied={shown.filters ?? NO_FILTERS} busy={busy === "filter"} onApply={(f) => void run("filter", f)} />
       )}
     </DashboardView>
   );
