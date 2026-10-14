@@ -60,8 +60,6 @@ function Check() {
 
 export function LandingPage() {
   const preview = landingPreview();
-  const trend = preview?.trend;
-  const bars = (trend?.data ?? []).slice(-8).map((d) => d.value ?? 0);
   const shares = (preview?.breakdown?.data ?? []).slice(0, 4).map((d) => Math.max(0, d.value ?? 0));
 
   return (
@@ -132,7 +130,7 @@ export function LandingPage() {
               </li>
             </ul>
           </div>
-          <RiveHero className="mx-auto aspect-[5/4] w-full max-w-[560px]" fallback={<HeroVisual kpis={preview?.kpis ?? []} bars={bars.length ? bars : [3, 5, 4, 6, 7, 6, 8, 9]} shares={shares.length ? shares : [4, 3, 2, 1]} />} />
+          <RiveHero className="mx-auto w-full max-w-[560px] sm:aspect-[5/4.9]" fallback={<HeroVisual months={preview?.months ?? []} total={preview?.total ?? null} shares={shares.length ? shares : [4, 3, 2, 1]} />} />
         </section>
 
         {/* Comment ça marche */}
