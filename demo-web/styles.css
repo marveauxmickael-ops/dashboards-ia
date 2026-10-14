@@ -2,12 +2,17 @@
 @source "../src";
 @source "./main.tsx";
 
-/* Tokens de la direction artistique, partagés avec l'application ; police Geist si installée, sinon police système. */
+/* Tokens de la direction artistique, partagés avec l'application. */
 @import "../src/styles/design-tokens.css";
+
+/* Police Geist servie par le site (site/fonts, licence OFL) ; à défaut, police système. */
+@font-face { font-family: "Geist"; src: url("../fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("../fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
 
 @theme {
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 
