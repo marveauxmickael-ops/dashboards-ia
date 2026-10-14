@@ -21,6 +21,8 @@ const LABEL_PREFIX = /^(libell[ée]s?|lib\.?|intitul[ée]|d[ée]signation|nom)\s
 const CODE_PREFIX = /^(code|n[°o]|num[ée]ro|id)\s+(de\s+|du\s+|d')?/i;
 export const PERCENT_HEADER = /taux|%|pourcent|ratio/i;
 
+// Clé de rapprochement code ↔ libellé : sans accents, préfixes, suffixe « (2) » des en-têtes en double ni espaces ;
+// « ss » abrège « sous » (« Sous famille » ↔ « Libellé ssfamille »).
 const pairKey = (name: string) =>
   name
     .normalize("NFD")
@@ -28,8 +30,44 @@ const pairKey = (name: string) =>
     .toLowerCase()
     .replace(LABEL_PREFIX, "")
     .replace(CODE_PREFIX, "")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/\s*\(\d+\)$/, "")
+    .replace(/[^a-z0-9]/g, "")
+    .replace(/^ss(?!ous)/, "sous");
+
+// Quantité et prix unitaires : un prix unitaire ne s'additionne pas ; la valeur d'une ligne vaut quantité × prix.
+const QUANTITY_HEADER = /^(qt[ée]s?|quantit[ée]s?)(\s|$|\.|\()/i;
+const UNIT_PRICE_HEADER = /^(prix|p\.?\s?u\.?)(\s|$|\.|\()/i;
+// Valeurs par unité ou par colis : jamais additionnées.
+const PER_UNIT_HEADER = /^(pcb|colisage)(\s|$)/i;
+
+/**
+ * Fichier avec une quantité et des prix unitaires (ex. régularisations de stock) : ajoute, ligne par ligne,
+ * « Valeur <prix> » = quantité × prix. Calcul du moteur, sans IA ; le fichier d'origine n'est pas modifié.
+ */
+function withUnitValues(ds: RawDataset): { ds: RawDataset; derived: Map<string, string> } {
+  const derived = new Map<string, string>();
+  const quantity = ds.columns.find((c) => QUANTITY_HEADER.test(c));
+  if (!quantity) return { ds, derived };
+  const prices = ds.columns.filter((c) => UNIT_PRICE_HEADER.test(c));
+  if (prices.length === 0) return { ds, derived };
+  for (const price of prices) {
+    const name = `Valeur ${price.charAt(0).toLowerCase()}${price.slice(1)}`;
+    if (!ds.columns.includes(name)) derived.set(name, price);
+  }
+  if (derived.size === 0) return { ds, derived };
+  const rows = ds.rows.map((r) => {
+    const out = { ...r };
+    const q = parseNumber(r[quantity]);
+    for (const [name, price] of derived) {
+      const p = parseNumber(r[price]);
+      out[name] = q === null || p === null ? null : Math.round(q * p * 100) / 100;
+    }
+    return out;
+  });
+  const columns = [...ds.columns, ...derived.keys()];
+  const note = `Valeurs calculées ligne par ligne : ${[...derived].map(([name, price]) => `« ${name} » = ${quantity} × ${price}`).join(" ; ")}. Les prix unitaires ne sont pas additionnés.`;
+  return { ds: { ...ds, columns, rows, notes: [...(ds.notes ?? []), note] }, derived };
+}
 
 /**
  * Codes doublés d'un libellé (« Rayon » et « Libellé rayon ») : seul le libellé est utilisé.
@@ -50,8 +88,16 @@ function reclassifyCodes(columns: ColumnProfile[]): ColumnProfile[] {
   });
 }
 
-export function profileDataset(ds: RawDataset): { profile: DatasetProfile; rows: TypedRow[] } {
-  const columns = reclassifyCodes(ds.columns.map((name) => profileColumn(name, ds.rows.map((r) => r[name]))));
+export function profileDataset(input: RawDataset): { profile: DatasetProfile; rows: TypedRow[] } {
+  const { ds, derived } = withUnitValues(input);
+  const unitPrices = new Map([...derived].map(([name, price]) => [price, name]));
+  const columns = reclassifyCodes(ds.columns.map((name) => profileColumn(name, ds.rows.map((r) => r[name])))).map((c) => {
+    if (c.role !== "measure") return c;
+    const value = unitPrices.get(c.name);
+    if (value) return { ...c, role: "ignored" as const, reason: `Prix unitaire : jamais additionné ; utilisé pour calculer « ${value} ».` };
+    if (PER_UNIT_HEADER.test(c.name)) return { ...c, role: "ignored" as const, reason: "Quantité par colis : jamais additionnée." };
+    return c;
+  });
   const rows: TypedRow[] = ds.rows.map((r) => {
     const out: TypedRow = {};
     for (const c of columns) out[c.name] = typeValue(r[c.name], c.type);

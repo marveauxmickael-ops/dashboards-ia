@@ -22,10 +22,11 @@ export async function parseFile(fileName: string, data: ArrayBuffer): Promise<Ra
 }
 
 export function parseCsv(fileName: string, text: string): RawDataset {
+  const seen = new Map<string, number>();
   const result = Papa.parse<Record<string, string>>(text.replace(/^﻿/, ""), {
     header: true,
     skipEmptyLines: "greedy",
-    transformHeader: (h) => h.trim(),
+    transformHeader: (h) => distinctName(h.trim(), seen),
   });
   const columns = (result.meta.fields ?? []).filter((c) => c !== "");
   if (columns.length === 0) throw new ImportError("Aucune colonne détectée : la première ligne doit contenir les en-têtes.");
@@ -34,7 +35,7 @@ export function parseCsv(fileName: string, text: string): RawDataset {
     for (const c of columns) row[c] = normalizeCell(r[c]);
     return row;
   });
-  return checkRows({ fileName, columns: uniqueColumns(columns), rows });
+  return withRenameNote(checkRows({ fileName, columns: uniqueColumns(columns), rows }), seen);
 }
 
 export async function parseXlsx(fileName: string, data: ArrayBuffer): Promise<RawDataset> {
@@ -52,7 +53,8 @@ export async function parseXlsx(fileName: string, data: ArrayBuffer): Promise<Ra
   header.eachCell({ includeEmpty: false }, (cell, col) => {
     columns[col - 1] = String(cellToValue(cell.value) ?? "").trim();
   });
-  const named = columns.map((c, i) => c || `Colonne ${i + 1}`);
+  const seen = new Map<string, number>();
+  const named = columns.map((c, i) => distinctName(c || `Colonne ${i + 1}`, seen));
   if (named.length === 0) throw new ImportError("Aucune colonne détectée : la première ligne doit contenir les en-têtes.");
 
   const rows: Row[] = [];
@@ -67,7 +69,7 @@ export async function parseXlsx(fileName: string, data: ArrayBuffer): Promise<Ra
     });
     if (!empty) rows.push(row);
   });
-  return checkRows({ fileName, columns: uniqueColumns(named), rows });
+  return withRenameNote(checkRows({ fileName, columns: uniqueColumns(named), rows }), seen);
 }
 
 /**
@@ -108,7 +110,8 @@ export async function parseXls(fileName: string, data: ArrayBuffer): Promise<Raw
   }
   const [header = [], ...body] = table;
   const width = Math.max(header.length, ...body.map((r) => r.length));
-  const named = Array.from({ length: width }, (_, i) => String(header[i] ?? "").trim() || `Colonne ${i + 1}`);
+  const seen = new Map<string, number>();
+  const named = Array.from({ length: width }, (_, i) => distinctName(String(header[i] ?? "").trim() || `Colonne ${i + 1}`, seen));
   if (header.length === 0) throw new ImportError("Aucune colonne détectée : la première ligne doit contenir les en-têtes.");
   const rows: Row[] = [];
   for (const r of body) {
@@ -121,7 +124,7 @@ export async function parseXls(fileName: string, data: ArrayBuffer): Promise<Raw
     });
     if (!empty) rows.push(row);
   }
-  return checkRows({ fileName, columns: uniqueColumns(named), rows });
+  return withRenameNote(checkRows({ fileName, columns: uniqueColumns(named), rows }), seen);
 }
 
 /** PDF : tableau reconstruit par le moteur à partir de la position du texte (sans IA). */
@@ -142,6 +145,29 @@ function checkRows(ds: RawDataset): RawDataset {
     throw new ImportError(`Le fichier contient ${ds.rows.length} lignes ; la limite actuelle est de ${MAX_ROWS}.`);
   }
   return ds;
+}
+
+/**
+ * Nom de colonne unique : deux colonnes au même en-tête (fréquent dans les exports, ex. « Article » interne et
+ * « Article » commercial) deviennent « Article » et « Article (2) », dans l'ordre du fichier.
+ */
+function distinctName(name: string, seen: Map<string, number>): string {
+  const n = (seen.get(name) ?? 0) + 1;
+  seen.set(name, n);
+  if (n === 1) return name;
+  let k = n;
+  while (seen.has(`${name} (${k})`)) k++;
+  const candidate = `${name} (${k})`;
+  seen.set(candidate, 1);
+  return candidate;
+}
+
+/** Signale les colonnes renommées dans les points d'attention du fichier. */
+function withRenameNote(ds: RawDataset, seen: Map<string, number>): RawDataset {
+  const duplicated = [...seen].filter(([name, n]) => n > 1 && !/ \(\d+\)$/.test(name)).map(([name, n]) => `« ${name} » (${n} fois)`);
+  if (duplicated.length === 0) return ds;
+  const note = `En-têtes en double renommés : ${duplicated.join(", ")} ; la 2e colonne devient « … (2) ». Vérifiez laquelle utiliser.`;
+  return { ...ds, notes: [...(ds.notes ?? []), note] };
 }
 
 function uniqueColumns(columns: string[]): string[] {

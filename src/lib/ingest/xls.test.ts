@@ -65,3 +65,18 @@ describe("import .xls (Excel 97-2003)", () => {
     await expect(parseFile("casse.xls", new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 1, 2, 3]).buffer)).rejects.toBeInstanceOf(ImportError);
   });
 });
+
+describe("en-têtes en double", () => {
+  it("renomme la 2e colonne au lieu de refuser le fichier (CSV et Excel)", async () => {
+    const csv = await parseFile("doublons.csv", new TextEncoder().encode("Article;Article;Libellé\n5987506;743554;Tarte\n").buffer as ArrayBuffer);
+    expect(csv.columns).toEqual(["Article", "Article (2)", "Libellé"]);
+    expect(csv.rows[0]).toEqual({ Article: "5987506", "Article (2)": "743554", Libellé: "Tarte" });
+    expect(csv.notes?.[0]).toContain("« Article » (2 fois)");
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Article", "Article", "Qté"], [5987506, "743554", 3]]), "MRG");
+    const xls = await parseFile("doublons.xls", XLSX.write(wb, { type: "array", bookType: "biff8" }) as ArrayBuffer);
+    expect(xls.columns).toEqual(["Article", "Article (2)", "Qté"]);
+    expect(xls.rows[0]["Article (2)"]).toBe("743554");
+  });
+});
