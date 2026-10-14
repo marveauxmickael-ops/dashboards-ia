@@ -26,7 +26,9 @@ export type Branding = z.infer<typeof BrandingSchema>;
 export const NO_BRANDING: Branding = { logo: null, colors: [] };
 
 /** Palette Lisio par défaut (ardoise, cuivre, sauge, brume, sable, prune, ardoise claire), utilisée sans charte ou pour compléter une charte courte. */
-export const DEFAULT_PALETTE = ["#1f3a4d", "#c8743a", "#5e8c7a", "#8fb3c9", "#d9b26f", "#7a5c7e", "#4a738d"];
+// Palette par défaut (sans charte d'organisation) : bleu électrique, violet IA, puis des teintes distinctes ;
+// chacune contraste à au moins 3:1 sur fond blanc (WCAG, éléments graphiques).
+export const DEFAULT_PALETTE = ["#245bdb", "#7955e8", "#0b8a6a", "#1f86c9", "#c96a12", "#c2459a", "#5a6b85"];
 
 export function parseBranding(value: unknown): Branding {
   const parsed = BrandingSchema.safeParse(value ?? {});

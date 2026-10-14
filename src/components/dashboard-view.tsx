@@ -203,7 +203,7 @@ export function DashboardView({
       </div>
 
       {customizing && !locked && (
-        <section aria-label="Personnaliser l'affichage" className="flex flex-col gap-4 rounded-xl border border-brand-200 bg-brand-50/40 p-4 print:hidden">
+        <section aria-label="Personnaliser l'affichage" className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-brand-200 bg-brand-50/40 p-4 print:hidden">
           <p className="text-sm text-slate-700">
             Cochez ce que vous voulez voir. Les valeurs ne changent pas : les éléments décochés sont seulement masqués, à l&apos;écran comme dans les
             téléchargements (PDF, Excel, CSV). Les catégories de chaque graphique se choisissent depuis le graphique.
@@ -266,15 +266,16 @@ export function DashboardView({
           aria-label="Indicateurs clés"
           className={`kpi-grid ${compactLayout ? "grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}
         >
-          {kpis.map((k) => (
+          {kpis.map((k, i) => (
+            // Apparition progressive (« les indicateurs prennent forme »), sans effet si l'utilisateur réduit les animations.
             <article
               key={k.id}
-              className={`group relative rounded-xl border border-t-[3px] border-slate-200 bg-white print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-4"}`}
-              style={{ borderTopColor: palette[0] }}
+              className={`group relative rounded-[var(--radius-card)] border border-t-[3px] border-slate-200 bg-white shadow-card motion-safe:animate-rise print:break-inside-avoid print:shadow-none ${compactLayout ? "p-2.5" : "p-4"}`}
+              style={{ borderTopColor: palette[0], animationDelay: `${Math.min(i, 8) * 45}ms` }}
             >
               {!locked && <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />}
               <p className="pr-6 text-sm font-medium text-slate-600">{k.label}</p>
-              <p className={`mt-1 font-semibold tabular-nums text-slate-900 ${compactLayout ? "text-lg" : "text-2xl"}`}>{formatValue(k.value, k.format)}</p>
+              <p className={`mt-1 font-semibold tracking-tight tabular-nums text-slate-900 ${compactLayout ? "text-lg" : "text-[1.7rem] leading-tight"}`}>{formatValue(k.value, k.format)}</p>
               {k.value === null && <p className="mt-1 text-xs text-amber-800">Donnée indisponible : aucune valeur exploitable, rien n&apos;est estimé.</p>}
               {!compactLayout && <p className="mt-2 text-xs text-slate-500">{k.description}</p>}
               {compactLayout && k.quality && (
@@ -315,7 +316,7 @@ export function DashboardView({
       )}
 
       {!view.hideInsights && result.insights.length > 0 && (
-        <section aria-label="Constats" className="rounded-xl border border-slate-200 bg-white p-4">
+        <section aria-label="Constats" className="rounded-[var(--radius-card)] border border-slate-200 bg-white p-4 shadow-card">
           <h3 className="text-base font-semibold text-slate-900">Constats</h3>
           <ul className="mt-3 flex flex-col gap-3">
             {result.insights.map((insight, i) => (
@@ -930,7 +931,7 @@ function ChartCard({
 
   return (
     <article
-      className={`group relative min-w-0 rounded-xl border bg-white transition print:break-inside-avoid ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""} ${
+      className={`group relative min-w-0 rounded-[var(--radius-card)] border bg-white shadow-card transition motion-safe:animate-rise print:break-inside-avoid print:shadow-none ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""} ${
         drag?.target ? "border-brand-600 ring-2 ring-brand-600/40" : "border-slate-200"
       } ${drag?.active ? "opacity-40" : ""}`}
       onDragOver={

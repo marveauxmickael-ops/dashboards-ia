@@ -9,6 +9,9 @@ import type { ViewState } from "@/lib/view";
 import type { SaveView } from "./dashboard-view";
 import { DashboardWorkspace, recomputeOnServer, type AskQuestion, type Recompute } from "./dashboard-workspace";
 import { PrivacyPanel } from "./privacy-panel";
+import { AIProcessing } from "./animations/ai-processing";
+import { Button } from "./ui/button";
+import { FileUpload } from "./ui/file-upload";
 import { analyzeOnServer, downloadCleanedOnServer, QualityPanel, type AnalyzeQuality, type DownloadCleaned } from "./quality-panel";
 
 type Quality = { status: "idle" } | { status: "loading" } | { status: "ready"; report: QualityReport } | { status: "error"; message: string };
@@ -116,28 +119,20 @@ export function Studio({
   return (
     <div className="flex flex-col gap-8">
       <form
-        className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 print:hidden"
+        className="flex flex-col gap-5 rounded-[var(--radius-card)] border border-slate-200 bg-white p-5 shadow-card sm:p-6 print:hidden"
         onSubmit={(e) => {
           e.preventDefault();
           if (file) void generate(file);
         }}
       >
         <div className="flex flex-col gap-2">
-          <label htmlFor="file" className="text-sm font-medium text-slate-800">
-            Fichier CSV, Excel ou PDF (20 Mo maximum)
-          </label>
+          <h2 className="text-lg font-semibold text-slate-900">1. Importez vos données</h2>
+          <FileUpload id="file" file={file} disabled={loading} onChange={(f) => void select(f)} />
           <p className="text-xs text-slate-500">PDF : export d&apos;un logiciel ou d&apos;un tableur, avec une ligne d&apos;en-têtes. Les documents scannés ne sont pas lus.</p>
-          <input
-            id="file"
-            type="file"
-            accept=".csv,.xlsx,.pdf"
-            onChange={(e) => void select(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-800 hover:file:bg-slate-200"
-          />
         </div>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-sm font-medium text-slate-800">Données transmises à l&apos;IA</legend>
+          <legend className="mb-2 text-lg font-semibold text-slate-900">2. Choisissez ce que l&apos;IA reçoit</legend>
           <div className="flex flex-col gap-2 sm:flex-row">
             {(
               [
@@ -147,10 +142,10 @@ export function Studio({
             ).map(([value, label, hint]) => (
               <label
                 key={value}
-                className={`flex flex-1 cursor-pointer flex-col rounded-lg border p-3 text-sm ${mode === value ? "border-brand-700 bg-brand-50" : "border-slate-200"}`}
+                className={`flex flex-1 cursor-pointer flex-col rounded-xl border p-3 text-sm transition-colors duration-150 ${mode === value ? "border-accent-500 bg-accent-50 ring-1 ring-accent-500" : "border-slate-200 hover:border-accent-200"}`}
               >
                 <span className="flex items-center gap-2 font-medium text-slate-900">
-                  <input id={`mode-${value}`} type="radio" name="mode" value={value} checked={mode === value} onChange={() => setMode(value)} />
+                  <input id={`mode-${value}`} type="radio" name="mode" value={value} checked={mode === value} onChange={() => setMode(value)} className="accent-accent-600" />
                   {label}
                 </span>
                 <span className="mt-1 text-slate-600">{hint}</span>
@@ -160,21 +155,13 @@ export function Studio({
         </fieldset>
 
         <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="submit"
-            disabled={!file || loading}
-            className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button type="submit" disabled={!file || loading}>
             {withCorrections ? "Générer le dashboard avec les corrections" : "Générer le dashboard"}
-          </button>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => void loadDemo()}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-800 disabled:opacity-50"
-          >
+            <span aria-hidden="true">→</span>
+          </Button>
+          <Button variant="secondary" disabled={loading} onClick={() => void loadDemo()}>
             Essayer avec le fichier de démonstration
-          </button>
+          </Button>
         </div>
         {file && quality.status === "loading" && (
           <p role="status" className="text-sm text-slate-600">
@@ -196,9 +183,16 @@ export function Studio({
       )}
 
       {state.status === "loading" && (
-        <p role="status" className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-700 print:hidden">
-          Analyse de {state.fileName} : pseudonymisation, conception par l&apos;IA puis calcul des indicateurs…
-        </p>
+        <div role="status" className="flex items-center gap-4 rounded-[var(--radius-card)] border border-accent-200 bg-white p-5 shadow-card print:hidden">
+          <AIProcessing active />
+          <div className="flex min-w-0 flex-col gap-1 text-sm">
+            <p className="font-semibold text-slate-900">Analyse de {state.fileName} en cours…</p>
+            <p className="text-slate-600">
+              Les données identifiantes sont pseudonymisées, l&apos;IA conçoit le dashboard, puis le moteur calcule chaque indicateur sur vos données.
+              Selon la taille du fichier, cela peut prendre jusqu&apos;à une minute.
+            </p>
+          </div>
+        </div>
       )}
       {state.status === "error" && (
         <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
@@ -208,7 +202,10 @@ export function Studio({
       {state.status === "done" && (
         <>
           {state.dashboardId && (
-            <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 print:hidden">
+            <p role="status" className="flex items-center gap-2 rounded-xl bg-mint px-3 py-2 text-sm text-success-strong print:hidden">
+              <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="m5 12 5 5 9-10" />
+              </svg>
               Dashboard enregistré dans votre organisation.{" "}
               <a href={`/dashboards/${state.dashboardId}`} className="font-medium underline">
                 Le retrouver

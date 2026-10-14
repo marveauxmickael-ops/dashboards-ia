@@ -12,7 +12,10 @@ export default async function Home() {
       <AppHeader workspace={workspace} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
         <header className="flex flex-col gap-2 print:hidden">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Votre fichier devient un tableau de bord</h1>
+          <p className="w-fit rounded-full bg-accent-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent-700">IA · Données · Dashboards</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Votre fichier devient un <span className="text-gradient-ai">tableau de bord</span>
+          </h1>
           <p className="max-w-2xl text-slate-600">
             Importez un export Excel, CSV ou PDF. Les données identifiantes sont pseudonymisées avant que l&apos;IA ne conçoive le dashboard ;
             chaque chiffre est ensuite recalculé sur vos données et affiché en clair. Le fichier n&apos;est pas conservé : seul le dashboard est

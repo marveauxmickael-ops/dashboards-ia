@@ -79,7 +79,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
           </Link>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
-              <h1 className="text-2xl font-bold tracking-tight text-brand-800 sm:text-3xl">{dashboard.title}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{dashboard.title}</h1>
               <p className="text-sm text-slate-600">
                 {result.fileName} · <strong className="font-medium text-slate-800">dernière actualisation réussie</strong> le {dateFormat.format(refreshedAt)} · créé le{" "}
                 {dateFormat.format(new Date(dashboard.created_at))}
@@ -117,7 +117,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
                 key={t.id}
                 href={tabHref(t.id)}
                 aria-current={t.id === tab ? "page" : undefined}
-                className={`-mb-px whitespace-nowrap border-b-[3px] px-4 py-3 text-sm ${t.id === tab ? "border-accent-500 font-semibold text-brand-800" : "border-transparent text-slate-600 hover:text-brand-800"}`}
+                className={`-mb-px whitespace-nowrap border-b-[3px] px-4 py-3 text-sm ${t.id === tab ? "border-brand-800 font-semibold text-slate-900" : "border-transparent text-slate-600 hover:text-brand-800"}`}
               >
                 {t.label}
               </Link>

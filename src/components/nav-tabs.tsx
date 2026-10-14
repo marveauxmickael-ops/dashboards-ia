@@ -9,7 +9,7 @@ function isActive(pathname: string, tab: NavTab): boolean {
   return tab.match.some((m) => (tab.exact ? pathname === m : pathname === m || pathname.startsWith(`${m}/`)));
 }
 
-/** Onglets du menu principal : l'onglet de la page courante est souligné (cuivre). */
+/** Onglets du menu principal : l'onglet de la page courante est souligné (bleu). */
 export function NavTabs({ tabs, label }: { tabs: NavTab[]; label: string }) {
   const pathname = usePathname();
   return (
@@ -21,7 +21,7 @@ export function NavTabs({ tabs, label }: { tabs: NavTab[]; label: string }) {
             key={tab.href}
             href={tab.href}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap border-b-[3px] px-3 py-4 text-sm ${active ? "border-accent-500 font-semibold text-brand-800" : "border-transparent text-slate-600 hover:text-brand-800"}`}
+            className={`whitespace-nowrap border-b-[3px] px-3 py-4 text-sm ${active ? "border-brand-800 font-semibold text-slate-900" : "border-transparent text-slate-600 hover:text-brand-800"}`}
           >
             {tab.label}
           </Link>
@@ -46,7 +46,7 @@ export function SideTabs({ groups, label }: { groups: { title: string; tabs: Nav
                 key={tab.href}
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-lg px-3 py-2.5 ${active ? "bg-brand-50 font-semibold text-brand-800 shadow-[inset_3px_0_0_var(--color-accent-500)]" : "text-slate-800 hover:bg-slate-50"}`}
+                className={`rounded-lg px-3 py-2.5 ${active ? "bg-brand-50 font-semibold text-brand-800 shadow-[inset_3px_0_0_var(--color-brand-800)]" : "text-slate-800 hover:bg-slate-50"}`}
               >
                 {tab.label}
               </Link>

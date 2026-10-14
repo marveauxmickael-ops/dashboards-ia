@@ -17,6 +17,7 @@
     "@anthropic-ai/bedrock-sdk": "^0.34.4",
     "@anthropic-ai/sdk": "^0.133.0",
     "@anthropic-ai/vertex-sdk": "^0.20.4",
+    "@rive-app/react-canvas": "^4.36.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "exceljs": "^4.4.0",

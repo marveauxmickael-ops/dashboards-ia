@@ -1,0 +1,83 @@
+/*
+ * Direction artistique « Data in motion » : thème clair, bleu électrique pour les actions, violet pour les fonctions
+ * d'IA, vert pour les succès. Les échelles brand-* et slate-* sont redéfinies : tous les composants suivent.
+ * Contrastes vérifiés (WCAG AA) : bleu #245BDB sur blanc 5,8:1, violet #7955E8 sur blanc 4,9:1,
+ * texte #182338 sur fond #F7F9FC 14,9:1, vert #087E61 sur blanc 5,0:1 (#06694F sur fond menthe).
+ */
+@theme {
+  /* Electric Blue : actions, liens, éléments actifs. */
+  --color-brand-50: #eef3fd;
+  --color-brand-100: #dce6fb;
+  --color-brand-200: #b9cdf6;
+  --color-brand-300: #8eadef;
+  --color-brand-400: #6a91ea;
+  --color-brand-500: #4f7ee6;
+  --color-brand-600: #3a6ce1;
+  --color-brand-700: #2d62de;
+  --color-brand-800: #245bdb;
+  --color-brand-900: #1d4ab3;
+  --color-brand-950: #15357f;
+  /* Neural Violet : tout ce qui relève de l'IA (analyse, questions, génération). */
+  --color-accent-50: #f3effd;
+  --color-accent-100: #e7dffb;
+  --color-accent-200: #cfc0f7;
+  --color-accent-500: #7955e8;
+  --color-accent-600: #6640d9;
+  --color-accent-700: #5532b8;
+  /* Succès. */
+  --color-mint: #ddf8ed;
+  --color-success: #087e61;
+  --color-success-strong: #06694f;
+  /* Neutres : Cloud (fond), Border (séparateurs), Midnight (texte). */
+  --color-slate-50: #f7f9fc;
+  --color-slate-100: #eef2f8;
+  --color-slate-200: #e4eaf3;
+  --color-slate-300: #cdd6e4;
+  --color-slate-800: #25324a;
+  --color-slate-900: #182338;
+  --color-slate-950: #0f1626;
+  /* Cartes : bordure fine, ombre très légère réservée au premier plan. */
+  --radius-card: 14px;
+  --shadow-card: 0 1px 2px rgb(24 35 56 / 0.04), 0 4px 12px -6px rgb(24 35 56 / 0.08);
+  --shadow-float: 0 12px 32px -12px rgb(36 91 219 / 0.25);
+  /* Mouvement : transitions courtes, désactivées si l'utilisateur réduit les animations. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-rise: rise 420ms var(--ease-out-soft) both;
+  --animate-pulse-core: pulse-core 1.8s ease-in-out infinite;
+  --animate-orbit: orbit 3.2s linear infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pulse-core {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 0.85;
+    }
+  }
+  @keyframes orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* Dégradé bleu → violet : réservé aux zones de mise en avant (titre, noyau IA). */
+@utility text-gradient-ai {
+  background-image: linear-gradient(90deg, var(--color-brand-800), var(--color-accent-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
