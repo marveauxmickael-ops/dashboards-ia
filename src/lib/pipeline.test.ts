@@ -21,7 +21,7 @@ describe("profilage du fichier de démonstration", () => {
       "Email contact": "drop",
       Commercial: "tokenize",
       Région: "send",
-      Produit: "send",
+      Produit: "tokenize",
       "Montant HT": "send",
       Coût: "send",
       Commentaire: "exclude",
@@ -120,5 +120,26 @@ describe("choix des indicateurs du concepteur de démonstration", () => {
     expect(kpi.k_additionnel).toBe(150);
     expect(r.profile.columns.find((c) => c.name === "Segment client")?.treatment).toBe("send");
     expect(r.profile.columns.find((c) => c.name === "Commercial")?.treatment).toBe("tokenize");
+  });
+});
+
+describe("secret des affaires : produits, marques et catégories", () => {
+  const sales = readFileSync(path.resolve(import.meta.dirname, "../../public/demo/multi/ventes-septembre-2026-bastille.csv"), "utf-8");
+
+  it("remplace par des jetons les articles, marques, rayons, familles et codes produit avant l'IA", () => {
+    const { profile, rows } = profileDataset(parseCsv("ventes.csv", sales));
+    const treatment = (name: string) => profile.columns.find((c) => c.name === name)?.treatment;
+    for (const c of ["Libellé article", "Libellé Marque", "Libellé rayon", "Libellé famille", "Libellé département", "EAN"]) expect(treatment(c)).toBe("tokenize");
+    // Les montants et les dates restent analysables ; le magasin n'est pas un produit.
+    expect(treatment("Montant vente HT")).toBe("send");
+    expect(treatment("Libellé site")).toBe("send");
+    const ctx = JSON.stringify(buildAiContext(profile, rows, "standard", Pseudonymizer.forOrganization("cle-test", "org")));
+    for (const clear of ["BANANES BIO", "MARQUE PROPRE", "FRUITS&LÉG", "FRUITS ET LEGUMES", "3760100007"]) expect(ctx).not.toContain(clear);
+  });
+
+  it("garde les libellés en clair sur le dashboard", async () => {
+    const result = await generateDashboard({ fileName: "ventes.csv", data: new TextEncoder().encode(sales).buffer as ArrayBuffer, mode: "standard", organizationId: "org" });
+    const rayon = result.charts.find((c) => c.dimension === "Libellé rayon")!;
+    expect(rayon.data.map((d) => d.category)).toContain("FRUITS&LÉG");
   });
 });

@@ -13,6 +13,9 @@ const DIRECT_ID_HEADER = /e-?mail|courriel|t[ée]l[ée]phone|phone|portable|mobi
 const FREE_TEXT_HEADER = /comment|remarque|\bnotes?\b|observation|description|descriptif|motif|message/i;
 // Personnes ou entités identifiables : remplacées par des jetons.
 const PERSON_HEADER = /\bnom\b|name|pr[ée]nom|client|contact|commercial|vendeur|salari[ée]|employ[ée]|collaborateur|fournisseur|soci[ée]t[ée]|entreprise|raison sociale|\bid\b|identifiant|siret|siren/i;
+// Produits, marques et catégories de produits : secret des affaires (assortiment, performances par article),
+// remplacés par des jetons avant l'IA comme les personnes. Les calculs et l'affichage restent en clair.
+const BUSINESS_HEADER = /produit|article|d[ée]signation|marque|brand|famille|rayon|cat[ée]gor|gamme|assortiment|d[ée]partement|\bsku\b|r[ée]f[ée]rence/i;
 // Classifications qui mentionnent une personne sans l'identifier (« Segment client », « Type de contact ») : transmises.
 const CLASSIFICATION_HEADER = /segment|type|cat[ée]gor|canal|statut|r[ée]gion|secteur|taille|famille|gamme|niveau/i;
 // Codes et identifiants numériques (EAN, code article, n° de commande) : des étiquettes, jamais des quantités.
@@ -83,7 +86,8 @@ function reclassifyCodes(columns: ColumnProfile[]): ColumnProfile[] {
       return { ...c, role: "ignored", treatment: "exclude", reason: `Code associé à « ${label} » : le libellé est utilisé à sa place.` };
     }
     if (c.type === "number" && CODE_HEADER.test(c.name)) {
-      return { ...c, type: "category", role: "dimension", invalid: 0, reason: "Code ou identifiant : traité comme une catégorie, jamais additionné." };
+      // Un code (EAN, code article) désigne un produit aussi sûrement que son libellé : jamais en clair pour l'IA.
+      return { ...c, type: "category", role: "dimension", treatment: "tokenize", invalid: 0, reason: "Code ou identifiant : traité comme une catégorie, jamais additionné, remplacé par des jetons avant l'IA." };
     }
     return c;
   });
@@ -174,6 +178,9 @@ function profileColumn(name: string, values: (string | number | null)[]): Column
   } else if (type === "text") {
     treatment = "exclude";
     reason = "Texte libre : peut contenir des données personnelles, exclu de l'IA.";
+  } else if (type === "category" && BUSINESS_HEADER.test(name)) {
+    treatment = "tokenize";
+    reason = "Produit, marque ou catégorie : remplacé par des jetons avant l'IA (secret des affaires).";
   } else if (type === "category" && PERSON_HEADER.test(name) && !CLASSIFICATION_HEADER.test(name)) {
     treatment = "tokenize";
     reason = "Personne ou entité identifiable : remplacée par des jetons avant l'IA.";
