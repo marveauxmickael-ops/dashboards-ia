@@ -1,5 +1,9 @@
+"use client";
+
 import { comparisonTitle, gapToAverage, type Comparison } from "@/lib/engine/comparison";
 import { formatValue } from "@/lib/format";
+import { useCollapsed } from "@/hooks/use-collapsed";
+import { CollapseToggle } from "./ui/collapse-toggle";
 
 /** Au-delà, les indicateurs suivants restent consultables sur les cartes : le tableau doit se lire d'un coup d'œil. */
 const MAX_COLUMNS = 4;
@@ -16,6 +20,8 @@ function gapLabel(gap: { gap: number; unit: "points" | "percent" }): string {
  * Le premier indicateur classe les lignes ; la barre montre sa part de la valeur la plus forte.
  */
 export function ComparisonPanel({ comparison, hiddenKpis, accent, compact }: { comparison: Comparison; hiddenKpis: Set<string>; accent: string; compact: boolean }) {
+  // Réduit ou déplié : choix de chaque personne, mémorisé dans son navigateur (voir useCollapsed).
+  const [collapsed, setCollapsed] = useCollapsed("lisio:comparaison-reduite");
   const columns = comparison.kpis.map((k, i) => ({ ...k, index: i })).filter((k) => !hiddenKpis.has(k.id));
   if (columns.length === 0) return null;
   const shown = columns.slice(0, MAX_COLUMNS);
@@ -26,17 +32,46 @@ export function ComparisonPanel({ comparison, hiddenKpis, accent, compact }: { c
   const best = rows[0];
   const worst = rows.at(-1)!;
   const title = comparisonTitle(comparison.column);
+  const toggle = <CollapseToggle collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} controls="comparaison-contenu" tone="neutral" />;
+
+  // Réduit : une seule ligne avec le premier et le dernier.
+  if (collapsed) {
+    return (
+      <section aria-label={title} className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-card)] border border-slate-200 bg-white px-3 py-2 print:hidden">
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-slate-700">
+          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>
+            {title}
+          </span>
+          {best.values[lead.index] !== null && (
+            <>
+              <span>
+                En tête : <strong className="font-semibold text-slate-900">{best.value}</strong> ({formatValue(best.values[lead.index], lead.format)})
+              </span>
+              <span>
+                Dernier : <strong className="font-semibold text-slate-900">{worst.value}</strong> ({formatValue(worst.values[lead.index], lead.format)})
+              </span>
+            </>
+          )}
+        </p>
+        {toggle}
+      </section>
+    );
+  }
 
   return (
     <section aria-label={title} className={`flex flex-col rounded-[var(--radius-card)] border border-slate-200 bg-white shadow-card print:break-inside-avoid print:shadow-none ${compact ? "gap-2 p-3" : "gap-3 p-4"}`}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className={`font-semibold uppercase tracking-wide ${compact ? "text-xs" : "text-sm"}`} style={{ color: accent }}>
           {title}
         </h3>
-        <p className="text-xs text-slate-500">
-          {rows.length} valeurs de « {comparison.column} » · classées par {lead.label}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-xs text-slate-500">
+            {rows.length} valeurs de « {comparison.column} » · classées par {lead.label}
+          </p>
+          {toggle}
+        </div>
       </div>
+      <div id="comparaison-contenu" className={`flex flex-col ${compact ? "gap-2" : "gap-3"}`}>
       {!compact && best.values[lead.index] !== null && (
         <p className="text-sm text-slate-700">
           <strong className="font-semibold text-slate-900">{best.value}</strong> arrive en tête ({formatValue(best.values[lead.index], lead.format)}),{" "}
@@ -107,6 +142,7 @@ export function ComparisonPanel({ comparison, hiddenKpis, accent, compact }: { c
         comparées. Écart en points pour un pourcentage, en % de la moyenne sinon.
         {columns.length > MAX_COLUMNS && ` ${columns.length - MAX_COLUMNS} autre(s) indicateur(s) non repris ici : masquez-en pour choisir ceux à comparer.`}
       </p>
+      </div>
     </section>
   );
 }
