@@ -1,5 +1,6 @@
 import { formatValue } from "@/lib/format";
 import type { ShrinkageReport } from "@/lib/shrinkage";
+import type { ShrinkagePart } from "@/lib/view";
 
 const pct = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 1 });
 const euros = (v: number | null) => formatValue(v, "currency");
@@ -34,8 +35,11 @@ function Bars({ title, rows }: { title: string; rows: { label: string; lost: num
  * Démarque en perte de chiffre (US-18) : ce que la démarque a coûté, en euros et en positif, d'où elle vient
  * (motifs, rayons) et les articles à surveiller. Pertes uniquement : inventaire et comptage ne sont pas comptés.
  */
-export function ShrinkagePanel({ report, compact }: { report: ShrinkageReport; compact: boolean }) {
+export function ShrinkagePanel({ report, compact, hidden = [] }: { report: ShrinkageReport; compact: boolean; hidden?: ShrinkagePart[] }) {
   const main = report.lostSales ?? report.lostCost;
+  const show = (part: ShrinkagePart) => !hidden.includes(part);
+  const figures = [show("lostSales"), show("lostCost") && report.lostSales !== null && report.lostCost !== null, show("share")].filter(Boolean).length;
+  const breakdowns = [show("byType") && report.byType.length > 0, show("byAisle") && report.byAisle.length > 0].filter(Boolean).length;
   return (
     <section aria-label="Démarque" className={`flex flex-col rounded-[var(--radius-card)] border border-red-200 bg-white shadow-card print:break-inside-avoid print:shadow-none ${compact ? "gap-3 p-3" : "gap-4 p-4"}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -45,19 +49,23 @@ export function ShrinkagePanel({ report, compact }: { report: ShrinkageReport; c
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {figures > 0 && (
+      <div className={`grid grid-cols-1 gap-3 ${figures === 3 ? "sm:grid-cols-3" : figures === 2 ? "sm:grid-cols-2" : ""}`}>
+        {show("lostSales") && (
         <div className="rounded-xl bg-red-50 p-3">
           <p className="text-sm font-medium text-red-900">{report.lostSales !== null ? "Chiffre perdu" : "Marchandise perdue"}</p>
           <p className="mt-1 text-[1.7rem] font-semibold leading-tight tracking-tight tabular-nums text-red-900">{euros(main)}</p>
           <p className="mt-1 text-xs text-red-900/80">{report.lostSales !== null ? `Au prix de vente (« ${report.saleColumn} »)` : `Au prix d'achat (« ${report.costColumn} »)`}</p>
         </div>
-        {report.lostSales !== null && report.lostCost !== null && (
+        )}
+        {show("lostCost") && report.lostSales !== null && report.lostCost !== null && (
           <div className="rounded-xl bg-slate-50 p-3">
             <p className="text-sm font-medium text-slate-700">Marchandise payée et perdue</p>
             <p className="mt-1 text-[1.7rem] font-semibold leading-tight tracking-tight tabular-nums text-slate-900">{euros(report.lostCost)}</p>
             <p className="mt-1 text-xs text-slate-500">Au prix d&apos;achat (« {report.costColumn} »)</p>
           </div>
         )}
+        {show("share") && (
         <div className="rounded-xl bg-slate-50 p-3">
           <p className="text-sm font-medium text-slate-700">Part du chiffre d&apos;affaires</p>
           {report.sales ? (
@@ -71,14 +79,18 @@ export function ShrinkagePanel({ report, compact }: { report: ShrinkageReport; c
             <p className="mt-2 text-xs text-slate-500">Déposez l&apos;export des ventes avec le journal de démarque pour la calculer.</p>
           )}
         </div>
+        )}
       </div>
+      )}
 
-      <div className={`grid grid-cols-1 gap-4 ${report.byAisle.length > 0 ? "md:grid-cols-2" : ""}`}>
-        <Bars title="Par motif" rows={report.byType.map((t) => ({ label: t.type, lost: t.lost, share: t.share }))} />
-        <Bars title="Par rayon" rows={report.byAisle.map((a) => ({ label: a.aisle, lost: a.lost, share: a.share }))} />
-      </div>
+      {breakdowns > 0 && (
+        <div className={`grid grid-cols-1 gap-4 ${breakdowns === 2 ? "md:grid-cols-2" : ""}`}>
+          {show("byType") && <Bars title="Par motif" rows={report.byType.map((t) => ({ label: t.type, lost: t.lost, share: t.share }))} />}
+          {show("byAisle") && <Bars title="Par rayon" rows={report.byAisle.map((a) => ({ label: a.aisle, lost: a.lost, share: a.share }))} />}
+        </div>
+      )}
 
-      {report.items.length > 0 && (
+      {show("items") && report.items.length > 0 && (
         <div className="flex flex-col gap-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">À surveiller : les {report.items.length} articles qui font perdre le plus</h4>
           <ol className="flex flex-col divide-y divide-slate-100 rounded-lg border border-slate-200">

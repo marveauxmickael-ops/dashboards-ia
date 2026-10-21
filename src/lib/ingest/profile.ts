@@ -34,7 +34,8 @@ const pairKey = (name: string) =>
     .toLowerCase()
     .replace(LABEL_PREFIX, "")
     .replace(CODE_PREFIX, "")
-    .replace(/\s*\(\d+\)$/, "")
+    // « Article (2) », « Article (demarque-septembre) » : suffixe d'un en-tête en double ou renommé au rapprochement.
+    .replace(/\s*\([^)]*\)$/, "")
     .replace(/[^a-z0-9]/g, "")
     .replace(/^ss(?!ous)/, "sous");
 

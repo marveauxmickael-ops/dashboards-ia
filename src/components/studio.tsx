@@ -45,6 +45,7 @@ async function generateOnServer(file: File, mode: AiMode, cleaning?: CleaningPla
 export function Studio({
   generateDashboard = generateOnServer,
   demoFileUrl = "/demo/ventes-demo.csv",
+  demoShrinkageUrls = ["/demo/multi/ventes-septembre-2026-bastille.csv", "/demo/multi/demarque-septembre-2026-bastille.csv"],
   exportable = true,
   recompute = recomputeOnServer,
   branding,
@@ -59,6 +60,8 @@ export function Studio({
   /** Regroupement de plusieurs fichiers (US-16) ; la démo navigateur le fait localement. */
   combineFiles?: CombineFiles;
   demoFileUrl?: string;
+  /** Exemple « ventes + démarque » : fichiers fictifs reliés par le code article. */
+  demoShrinkageUrls?: string[];
   /** Affiche les boutons de téléchargement (désactivé dans la démo navigateur). */
   exportable?: boolean;
   /** Recalcul (filtres, mise à jour) ; la démo navigateur le fait localement. */
@@ -84,9 +87,8 @@ export function Studio({
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  async function generate(selected: File, corrections: CleaningPlan = plan) {
+  async function generate(selected: File, corrections: CleaningPlan = plan, compareBy: string | null = combined.status === "ready" ? combined.summary.column : null) {
     setState({ status: "loading", fileName: selected.name });
-    const compareBy = combined.status === "ready" ? combined.summary.column : null;
     const outcome = await generateDashboard(selected, mode, isEmptyPlan(corrections) ? undefined : corrections, compareBy);
     setState(outcome.ok ? { status: "done", result: outcome.result, dashboardId: outcome.dashboardId, display: outcome.display, habitualApplied: outcome.habitualApplied } : { status: "error", message: outcome.message });
   }
@@ -134,6 +136,25 @@ export function Studio({
     // Fichier sans anomalie (ou contrôle indisponible) : génération directe ; sinon, les propositions d'abord.
     const report = await select(demo);
     if (!report || report.issueCount === 0) await generate(demo, EMPTY_PLAN);
+  }
+
+  // Exemple « ventes + démarque » (US-15, US-18) : deux fichiers fictifs reliés par le code article, générés d'un clic.
+  async function loadShrinkageDemo() {
+    setState({ status: "idle" });
+    const files = await Promise.all(
+      demoShrinkageUrls.map(async (url) => new File([await (await fetch(url)).blob()], url.split("/").pop() ?? "demo.csv", { type: "text/csv" })),
+    );
+    setSelected(files);
+    setCombined({ status: "loading", count: files.length });
+    await select(null);
+    const outcome = await combineFiles(files);
+    if (!outcome.ok) {
+      setCombined({ status: "error", message: outcome.message });
+      return;
+    }
+    setCombined({ status: "ready", summary: outcome.summary });
+    await select(outcome.file);
+    await generate(outcome.file, EMPTY_PLAN, outcome.summary.column);
   }
 
   async function download() {
@@ -193,6 +214,9 @@ export function Studio({
           </Button>
           <Button variant="secondary" disabled={loading} onClick={() => void loadDemo()}>
             Essayer avec le fichier de démonstration
+          </Button>
+          <Button variant="secondary" disabled={loading || combined.status === "loading"} onClick={() => void loadShrinkageDemo()}>
+            Exemple ventes + démarque
           </Button>
         </div>
         {combined.status === "loading" && (

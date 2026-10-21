@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ComputedChart, ComputedKpi } from "@/lib/engine/compute";
-import { allowedChartTypes, EMPTY_VIEW, type ChartSize, type ChartType, type ViewState } from "@/lib/view";
+import { allowedChartTypes, EMPTY_VIEW, SHRINKAGE_PARTS, type ChartSize, type ChartType, type ViewState } from "@/lib/view";
 
 // Affichage habituel d'un utilisateur (US-13) : seulement des réglages indépendants du fichier. Aucune valeur
 // (catégorie, nom de client, montant) ni aucun identifiant d'indicateur ou de graphique n'y figure.
@@ -19,6 +19,10 @@ export const PreferencesSchema = z.object({
   hideAnalysis: z.boolean().default(false),
   hideExplanations: z.boolean().default(false),
   hideSuggestions: z.boolean().default(false),
+  /** Comparaison (US-17) et démarque (US-18) : sections et éléments de la démarque masqués d'un dashboard à l'autre. */
+  hideComparison: z.boolean().default(false),
+  hideShrinkage: z.boolean().default(false),
+  shrinkageHidden: z.array(z.enum(SHRINKAGE_PARTS)).max(SHRINKAGE_PARTS.length).default([]),
   /** Vue essentielle d'office : indicateurs et graphiques principaux, le reste dans « Personnaliser l'affichage ». */
   essential: z.boolean().default(true),
   /** Calculs masqués (« k:Somme(Montant achat) », « c:Somme(Montant achat) par Libellé marque »). */
@@ -106,6 +110,9 @@ export function preferencesFromView(view: ViewState, charts: ChartLike[], kpis: 
     hideAnalysis: view.hideAnalysis,
     hideExplanations: view.hideExplanations,
     hideSuggestions: view.hideSuggestions,
+    hideComparison: view.hideComparison,
+    hideShrinkage: view.hideShrinkage,
+    shrinkageHidden: view.shrinkageHidden,
     essential: true,
     hiddenItems: [...new Set(hiddenItems)],
     shownItems: [...new Set(shownItems)],
@@ -157,5 +164,8 @@ export function viewFromPreferences(raw: unknown, charts: ComputedChart[], kpis:
     hideAnalysis: p.hideAnalysis,
     hideExplanations: p.hideExplanations,
     hideSuggestions: p.hideSuggestions,
+    hideComparison: p.hideComparison,
+    hideShrinkage: p.hideShrinkage,
+    shrinkageHidden: p.shrinkageHidden,
   };
 }

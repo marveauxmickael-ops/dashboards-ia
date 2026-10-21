@@ -9,6 +9,18 @@ import type { DashboardResult } from "@/lib/pipeline";
 
 export type ChartType = ComputedChart["type"];
 
+/** Éléments du bloc Démarque (US-18), affichables un par un. */
+export const SHRINKAGE_PARTS = ["lostSales", "lostCost", "share", "byType", "byAisle", "items"] as const;
+export type ShrinkagePart = (typeof SHRINKAGE_PARTS)[number];
+export const SHRINKAGE_PART_LABELS: Record<ShrinkagePart, string> = {
+  lostSales: "Chiffre perdu",
+  lostCost: "Marchandise payée et perdue",
+  share: "Part du chiffre d'affaires",
+  byType: "Par motif",
+  byAisle: "Par rayon",
+  items: "À surveiller (articles)",
+};
+
 export const ViewSchema = z.object({
   hiddenKpis: z.array(z.string().max(64)).max(50).default([]),
   hiddenCharts: z.array(z.string().max(64)).max(50).default([]),
@@ -24,6 +36,8 @@ export const ViewSchema = z.object({
   hideComparison: z.boolean().default(false),
   /** Démarque en perte de chiffre (US-18). */
   hideShrinkage: z.boolean().default(false),
+  /** Éléments du bloc Démarque masqués. */
+  shrinkageHidden: z.array(z.enum(SHRINKAGE_PARTS)).max(SHRINKAGE_PARTS.length).default([]),
   /** Mise en page : « compact » resserre tout (indicateurs, graphiques, sections) pour tenir sur un écran ou une page. */
   layout: z.enum(["standard", "compact"]).default("standard"),
   /** Taille de chaque graphique : petit (1/4 de largeur), moyen (1/2), grand (pleine largeur). */
@@ -40,7 +54,7 @@ export const ViewSchema = z.object({
 
 export type ViewState = z.infer<typeof ViewSchema>;
 
-export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, hideShrinkage: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
+export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, hideShrinkage: false, shrinkageHidden: [], layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
 
 /** Affichage enregistré avec le dashboard (colonne `display`) : vue par défaut si absent ou invalide. */
 export function parseView(raw: unknown): ViewState {
@@ -135,7 +149,8 @@ export function isDefaultView(v: ViewState): boolean {
     !v.hideExplanations &&
     !v.hideSuggestions &&
     !v.hideComparison &&
-    !v.hideShrinkage
+    !v.hideShrinkage &&
+    v.shrinkageHidden.length === 0
   );
 }
 

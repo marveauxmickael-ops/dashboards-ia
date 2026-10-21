@@ -119,7 +119,7 @@ function App() {
           />
         </div>
       </details>
-      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" exportable={false} branding={branding} ask={askInBrowser} aiAvailable={false} analyzeQuality={analyzeInBrowser} downloadCleaned={downloadInBrowser} combineFiles={combineInBrowser} />
+      <Studio generateDashboard={generateInBrowser} recompute={recomputeInBrowser} demoFileUrl="ventes-demo.csv" demoShrinkageUrls={["multi/ventes-septembre-2026-bastille.csv", "multi/demarque-septembre-2026-bastille.csv"]} exportable={false} branding={branding} ask={askInBrowser} aiAvailable={false} analyzeQuality={analyzeInBrowser} downloadCleaned={downloadInBrowser} combineFiles={combineInBrowser} />
     </main>
   );
 }

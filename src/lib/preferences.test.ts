@@ -126,3 +126,14 @@ describe("vue essentielle : graphiques peu parlants", () => {
     expect(essentialHidden([], charts as never).charts).toEqual(["evo", "ean", "num"]);
   });
 });
+
+describe("démarque : éléments retenus d'un dashboard à l'autre", () => {
+  it("retient les éléments masqués du bloc Démarque et les réapplique", () => {
+    const view = { ...EMPTY_VIEW, shrinkageHidden: ["lostCost" as const, "byAisle" as const] };
+    const prefs = mergePreferences(null, preferencesFromView(view, []));
+    expect(prefs.shrinkageHidden).toEqual(["lostCost", "byAisle"]);
+    const next = viewFromPreferences(prefs, []);
+    expect(next.shrinkageHidden).toEqual(["lostCost", "byAisle"]);
+    expect(viewFromPreferences({ ...prefs, hideShrinkage: true }, []).hideShrinkage).toBe(true);
+  });
+});

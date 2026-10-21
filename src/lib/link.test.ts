@@ -94,3 +94,12 @@ describe("rapprochement de fichiers différents (US-15)", () => {
     expect(summary.link).toBeNull();
   });
 });
+
+describe("code homonyme renommé au rapprochement", () => {
+  it("n'est jamais additionné", async () => {
+    const { dataset } = combineDatasets([sales, shrink]);
+    const result = await generateDashboard({ ...asFile(dataset), mode: "standard", organizationId: "test" });
+    expect(result.profile.columns.find((c) => c.name.startsWith("Article (demarque"))?.role).toBe("ignored");
+    expect(result.kpis.some((k) => k.label.startsWith("Article ("))).toBe(false);
+  });
+});

@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactN
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
-import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, dropInSection, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, ViewSchema, visibleData, type ChartType, type ViewState } from "@/lib/view";
+import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, dropInSection, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, SHRINKAGE_PART_LABELS, SHRINKAGE_PARTS, ViewSchema, visibleData, type ShrinkagePart, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ComparisonPanel } from "./comparison-panel";
 import { ShrinkagePanel } from "./shrinkage-panel";
@@ -96,6 +96,7 @@ export function DashboardView({
   const maskedCount =
     view.hiddenKpis.length + view.hiddenCharts.length +
     [view.hideInsights, view.hideAnalysis, view.hideExplanations, view.hideSuggestions, view.hideComparison && !!result.comparison, view.hideShrinkage && !!result.shrinkage].filter(Boolean).length +
+    (result.shrinkage && !view.hideShrinkage ? view.shrinkageHidden.length : 0) +
     Object.values(view.hiddenCategories).reduce((n, l) => n + l.length, 0);
   const periodLabel = result.period ? (result.period.from === result.period.to ? formatPeriod(result.period.from) : `${formatPeriod(result.period.from)} → ${formatPeriod(result.period.to)}`) : "Pas de colonne de date";
   const filtersLabel = result.filters && isFiltered(result.filters) ? describeFilters(result.filters, formatPeriod).join(" · ") : "Aucun (toutes les lignes)";
@@ -233,7 +234,18 @@ export function DashboardView({
             <CheckGroup
               legend="Sections"
               items={[
-                ...(result.shrinkage ? [{ id: "shrinkage", label: "Démarque : le chiffre perdu", checked: !view.hideShrinkage }] : []),
+                ...(result.shrinkage
+                  ? [
+                      { id: "shrinkage", label: "Démarque : le chiffre perdu", checked: !view.hideShrinkage },
+                      ...SHRINKAGE_PARTS.filter((part) => part !== "lostCost" || result.shrinkage!.lostCost !== null).map((part) => ({
+                        id: `shrinkage:${part}`,
+                        label: SHRINKAGE_PART_LABELS[part],
+                        checked: !view.shrinkageHidden.includes(part),
+                        disabled: view.hideShrinkage,
+                        indent: true,
+                      })),
+                    ]
+                  : []),
                 ...(result.comparison ? [{ id: "comparison", label: "Comparaison", checked: !view.hideComparison }] : []),
                 ...(result.insights.length > 0 ? [{ id: "insights", label: "Constats", checked: !view.hideInsights }] : []),
                 ...(hasAnalysis
@@ -244,8 +256,13 @@ export function DashboardView({
                     ]
                   : []),
               ]}
-              onToggle={(id) => setView({ ...view, [SECTION_FLAG[id]]: !view[SECTION_FLAG[id]] })}
-              onAll={(on) => setView({ ...view, hideInsights: !on, hideAnalysis: !on, hideExplanations: !on, hideSuggestions: !on, hideComparison: !on, hideShrinkage: !on })}
+              onToggle={(id) => {
+                if (id.startsWith("shrinkage:")) {
+                  const part = id.slice("shrinkage:".length) as ShrinkagePart;
+                  setView({ ...view, shrinkageHidden: toggle(view.shrinkageHidden, part) as ShrinkagePart[] });
+                } else setView({ ...view, [SECTION_FLAG[id]]: !view[SECTION_FLAG[id]] });
+              }}
+              onAll={(on) => setView({ ...view, hideInsights: !on, hideAnalysis: !on, hideExplanations: !on, hideSuggestions: !on, hideComparison: !on, hideShrinkage: !on, shrinkageHidden: [] })}
             />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -270,7 +287,7 @@ export function DashboardView({
       )}
 
       {/* Démarque d'abord : c'est la question du lecteur quand un journal de démarque est déposé. */}
-      {!view.hideShrinkage && result.shrinkage && <ShrinkagePanel report={result.shrinkage} compact={compactLayout} />}
+      {!view.hideShrinkage && result.shrinkage && <ShrinkagePanel report={result.shrinkage} compact={compactLayout} hidden={view.shrinkageHidden} />}
 
       {kpis.length > 0 && (
         <section
