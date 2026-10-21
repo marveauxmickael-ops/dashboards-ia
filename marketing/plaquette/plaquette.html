@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Lisio — plaquette commerciale</title>
+<!-- Plaquette commerciale (2 pages A4). Données des captures : fictives. Rendu PDF : node marketing/plaquette/render.mjs -->
+<style>
+@font-face{font-family:Geist;src:url(geist-latin-wght-normal.woff2) format("woff2");font-weight:100 900}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Geist,sans-serif;color:#182338;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:210mm;height:297mm;padding:16mm 15mm 14mm;position:relative;overflow:hidden;page-break-after:always;background:#f6f8fc}
+.page:last-child{page-break-after:auto}
+.glow{position:absolute;inset:0;background:radial-gradient(90mm 70mm at 100% 0%,rgba(121,85,232,.16),transparent 70%),radial-gradient(90mm 70mm at 0% 100%,rgba(36,91,219,.12),transparent 70%);z-index:0}
+.in{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;gap:6mm}
+.brand{display:flex;align-items:center;justify-content:space-between}
+.brand .logo{display:flex;align-items:center;gap:3mm;font-size:9mm;font-weight:800;letter-spacing:-.3mm}
+.brand .tag{font-size:3.2mm;color:#4a5670}
+h1{font-size:9.6mm;line-height:1.08;letter-spacing:-.35mm;font-weight:780}
+h1 em,h2 em{font-style:normal;background:linear-gradient(90deg,#245bdb,#7955e8);-webkit-background-clip:text;color:transparent}
+.lead{font-size:4.1mm;line-height:1.45;color:#3d4963;max-width:165mm}
+h2{font-size:6.2mm;letter-spacing:-.2mm;font-weight:750}
+.shot{border-radius:4mm;overflow:hidden;border:.3mm solid #e1e6f0;box-shadow:0 3mm 8mm rgba(24,35,56,.10);background:#fff}
+.shot{height:86mm;position:relative}
+.shot img{display:block;width:100%}
+.shot:after{content:"";position:absolute;left:0;right:0;bottom:0;height:14mm;background:linear-gradient(rgba(255,255,255,0),#fff)}
+.caption{font-size:2.8mm;color:#6a7590;margin-top:1.5mm}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:3.5mm}
+.feat{background:#fff;border:.3mm solid #e3e8f2;border-radius:3mm;padding:3.5mm 4mm}
+.feat b{display:block;font-size:3.8mm;margin-bottom:1mm}
+.feat span{font-size:3.2mm;line-height:1.4;color:#4a5670}
+.roi{display:flex;gap:4mm;align-items:stretch}
+.roi div{flex:1;border-radius:3mm;padding:4mm;background:#fff;border:.3mm solid #e3e8f2}
+.roi strong{display:block;font-size:6.5mm;letter-spacing:-.2mm}
+.roi small{font-size:3mm;color:#4a5670;line-height:1.35;display:block;margin-top:1mm}
+.roi .loss strong{color:#b4232a}.roi .win strong{color:#0f7a4a}
+.note{font-size:2.7mm;color:#6a7590}
+.protect{background:#182338;color:#fff;border-radius:4mm;padding:6mm 6mm}
+.protect h2{color:#fff;margin-bottom:3mm}
+.protect ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:3mm 5mm}
+.protect li{display:flex;gap:2.5mm;font-size:3.3mm;line-height:1.45;color:#d9e0ef}
+.protect li b{color:#fff}
+.protect svg{flex-shrink:0;margin-top:.4mm}
+.steps{display:flex;gap:3.5mm}
+.step{flex:1;background:#fff;border:.3mm solid #e3e8f2;border-radius:3mm;padding:3.5mm 4mm}
+.step i{font-style:normal;display:inline-flex;width:6mm;height:6mm;border-radius:50%;align-items:center;justify-content:center;background:#245bdb;color:#fff;font-size:3.2mm;font-weight:700;margin-bottom:1.5mm}
+.step b{display:block;font-size:3.6mm}.step span{font-size:3.1mm;line-height:1.4;color:#4a5670}
+.plans{display:flex;gap:3.5mm}
+.plan{flex:1;background:#fff;border:.3mm solid #e3e8f2;border-radius:3mm;padding:4mm}
+.plan.hi{border:.6mm solid #245bdb}
+.plan h3{font-size:4.2mm}.plan .price{font-size:7mm;font-weight:780;letter-spacing:-.2mm;margin:1.5mm 0 .5mm}
+.plan .unit{font-size:2.8mm;color:#6a7590}
+.plan ul{list-style:none;margin-top:2.5mm;display:flex;flex-direction:column;gap:1.2mm}
+.plan li{font-size:2.95mm;line-height:1.35;color:#3d4963;padding-left:3.5mm;position:relative}
+.plan li:before{content:"";position:absolute;left:0;top:1.2mm;width:1.8mm;height:1.8mm;border-radius:50%;background:#2fae6b}
+.soon{display:inline-block;font-size:2.4mm;font-weight:600;color:#5532b8;background:#efeafd;border-radius:1mm;padding:0 1mm;margin-left:.5mm}
+.opts{display:flex;gap:3.5mm;font-size:3mm;color:#3d4963}
+.opts div{flex:1;background:#eef2fb;border-radius:2.5mm;padding:2.5mm 3.5mm}
+.cta{margin-top:auto;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(90deg,#245bdb,#7955e8);color:#fff;border-radius:4mm;padding:5mm 6mm}
+.cta b{font-size:5mm}.cta span{font-size:3.3mm;opacity:.95}
+.cta .links{text-align:right;font-size:3.3mm;line-height:1.6}
+</style>
+</head>
+<body>
+<!-- Page 1 -->
+<section class="page"><div class="glow"></div><div class="in">
+  <div class="brand">
+    <div class="logo"><svg width="34" height="34" viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#245bdb"/><stop offset="1" stop-color="#7955e8"/></linearGradient></defs><rect x="9" y="6" width="6" height="36" rx="3" fill="#182338"/><path d="M12 39 L22 30 L29 34 L40 18" fill="none" stroke="url(#g)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="40" cy="18" r="4.2" fill="#7955e8"/></svg>Lisio</div>
+    <div class="tag">Vos chiffres, enfin lisibles</div>
+  </div>
+  <h1>Vos exports deviennent des tableaux de bord qui montrent <em>où vous perdez</em> et <em>où vous gagnez</em></h1>
+  <p class="lead">Déposez vos fichiers de ventes et de démarque (Excel, CSV, PDF) : Lisio les relie, calcule chaque indicateur et vous dit en euros ce que coûte la démarque, magasin par magasin, rayon par rayon, article par article.</p>
+  <div>
+    <div class="shot"><img src="capture-demarque.png" alt="Bloc Démarque de Lisio : chiffre perdu, motifs, rayons et articles à surveiller"></div>
+    <p class="caption">Le bloc « Démarque : le chiffre perdu » de Lisio, sur des données de démonstration.</p>
+  </div>
+  <div class="grid">
+    <div class="feat"><b>La démarque en perte de chiffre</b><span>Chiffre perdu, marchandise payée et perdue, part du CA, par motif et par rayon.</span></div>
+    <div class="feat"><b>Des recommandations concrètes</b><span>Réduire le périmé, ajuster les commandes, sécuriser les meilleures ventes, mettre en avant les fortes marges.</span></div>
+    <div class="feat"><b>Tous vos magasins côte à côte</b><span>Classement et écart à la moyenne, sur chaque indicateur clé.</span></div>
+    <div class="feat"><b>Plusieurs fichiers d'un coup</b><span>Ventes et démarque reliées par le code article ; mois et trimestres ; mises à jour sans doublon.</span></div>
+  </div>
+  <div class="roi">
+    <div class="loss"><strong>2 500 €</strong><small>perdus chaque mois en démarque par un magasin (exemple)</small></div>
+    <div class="win"><strong>−12 %</strong><small>de démarque suffisent à rentabiliser l'offre Magasin à 299 € HT par mois</small></div>
+    <div class="win"><strong>500 € / mois</strong><small>récupérés avec 20 % de démarque en moins, soit 6 000 € par an</small></div>
+  </div>
+  <p class="note">Exemple illustratif, à recalculer avec vos propres chiffres.</p>
+</div></section>
+
+<!-- Page 2 -->
+<section class="page"><div class="glow"></div><div class="in">
+  <div class="protect">
+    <h2>Vos données protégées</h2>
+    <ul>
+      <li><svg width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#8fb0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6zM9 12l2 2 4-4"/></svg><span><b>Pseudonymisées avant l’IA</b> : les noms de clients, d’articles, de marques et de rayons sont remplacés par des jetons. L’IA ne voit jamais vos informations en clair.</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#8fb0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6zM9 12l2 2 4-4"/></svg><span><b>Chiffres calculés et vérifiés</b> : chaque indicateur est calculé par le moteur de Lisio sur vos données, jamais inventé par l’IA.</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#8fb0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6zM9 12l2 2 4-4"/></svg><span><b>Fichiers jamais conservés</b> : vos fichiers sont lus pour le calcul puis oubliés.</span></li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="#8fb0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6zM9 12l2 2 4-4"/></svg><span><b>Accès maîtrisé</b> : chaque organisation ne voit que ses dashboards, avec la double authentification et des liens de partage sécurisés.</span></li>
+    </ul>
+  </div>
+  <div>
+    <h2 style="margin-bottom:3mm">Comment ça marche</h2>
+    <div class="steps">
+      <div class="step"><i>1</i><b>Déposez vos exports</b><span>Ventes, démarque, un ou plusieurs magasins, un mois ou un trimestre.</span></div>
+      <div class="step"><i>2</i><b>Lisio relie et calcule</b><span>Contrôle qualité, rapprochement par code article, indicateurs vérifiés.</span></div>
+      <div class="step"><i>3</i><b>Agissez et partagez</b><span>Recommandations, filtres, partage sécurisé, exports PDF et Excel.</span></div>
+    </div>
+  </div>
+  <div>
+    <h2 style="margin-bottom:3mm">Nos offres <em>lecteurs illimités</em></h2>
+    <div class="plans">
+      <div class="plan"><h3>Magasin</h3><div class="price">299 €</div><div class="unit">HT / mois · 1 site</div><ul><li>3 éditeurs, lecteurs illimités</li><li>Démarque et articles à surveiller</li><li>Recommandations</li><li>Multi-fichiers, partage sécurisé, exports</li><li>IA hébergée en Europe <span class="soon">bientôt</span></li></ul></div>
+      <div class="plan hi"><h3>Enseigne</h3><div class="price">Sur devis</div><div class="unit">à partir de 15 sites</div><ul><li>Tout le Magasin, sur plusieurs sites</li><li>Éditeurs illimités, comparaison des magasins</li><li>Accompagnement dédié et formation</li><li>Contrat de sous-traitance (DPA) dédié</li><li>Connexion automatique aux exports de caisse <span class="soon">bientôt</span></li><li>SSO <span class="soon">bientôt</span></li><li>Engagement de service (SLA) <span class="soon">bientôt</span></li></ul></div>
+    </div>
+  </div>
+  <div class="opts">
+    <div><b>Mise en service</b> : 490 € HT une fois (offerte en annuel), paramétrage avec vos exports et formation</div>
+    <div><b>Engagement annuel</b> : −15 %</div>
+    <div><b>Programme pilote</b> : 3 mois à demi-tarif</div>
+  </div>
+  <div class="cta">
+    <div><b>Voyez Lisio sur vos propres chiffres</b><br><span>Démonstration en ligne, sans compte et sans envoi de fichier.</span></div>
+    <div class="links">lisio.netlify.app/demo<br>dashboards-ia-creetacrea.vercel.app/tarifs</div>
+  </div>
+</div></section>
+</body>
+</html>

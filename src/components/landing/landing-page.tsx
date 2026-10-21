@@ -82,6 +82,9 @@ export function LandingPage() {
             <a href="#confidentialite" className="hover:text-brand-800">
               Confidentialité
             </a>
+            <Link href="/tarifs" className="hover:text-brand-800">
+              Tarifs
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/connexion" className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-white">
