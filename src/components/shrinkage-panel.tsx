@@ -1,6 +1,10 @@
+"use client";
+
 import { formatValue } from "@/lib/format";
 import type { ShrinkageReport } from "@/lib/shrinkage";
 import type { ShrinkagePart } from "@/lib/view";
+import { useCollapsed } from "@/hooks/use-collapsed";
+import { CollapseToggle } from "./ui/collapse-toggle";
 
 const pct = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 1 });
 const euros = (v: number | null) => formatValue(v, "currency");
@@ -40,14 +44,42 @@ export function ShrinkagePanel({ report, compact, hidden = [] }: { report: Shrin
   const show = (part: ShrinkagePart) => !hidden.includes(part);
   const figures = [show("lostSales"), show("lostCost") && report.lostSales !== null && report.lostCost !== null, show("share")].filter(Boolean).length;
   const breakdowns = [show("byType") && report.byType.length > 0, show("byAisle") && report.byAisle.length > 0].filter(Boolean).length;
+  const [collapsed, setCollapsed] = useCollapsed("lisio:demarque-reduite");
+  const toggle = <CollapseToggle collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} controls="demarque-contenu" tone="red" />;
+
+  // Réduit : une seule ligne avec l'essentiel (chiffre perdu, part du CA).
+  if (collapsed) {
+    return (
+      <section aria-label="Démarque" className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-card)] border border-red-200 bg-white px-3 py-2 print:hidden">
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+          <span className="text-xs font-semibold uppercase tracking-wide text-red-800">Démarque</span>
+          <span className="font-semibold tabular-nums text-red-900">
+            {euros(main)} {report.lostSales !== null ? "de chiffre perdu" : "de marchandise perdue"}
+          </span>
+          {report.sales && <span className="tabular-nums text-slate-700">{pct.format(report.sales.share)} du chiffre d&apos;affaires</span>}
+          {report.byType[0] && (
+            <span className="text-slate-600">
+              {pct.format(report.byType[0].share)} en {report.byType[0].type.toLowerCase()}
+            </span>
+          )}
+        </p>
+        {toggle}
+      </section>
+    );
+  }
+
   return (
     <section aria-label="Démarque" className={`flex flex-col rounded-[var(--radius-card)] border border-red-200 bg-white shadow-card print:break-inside-avoid print:shadow-none ${compact ? "gap-3 p-3" : "gap-4 p-4"}`}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className={`font-semibold uppercase tracking-wide text-red-800 ${compact ? "text-xs" : "text-sm"}`}>Démarque : le chiffre perdu</h3>
-        <p className="text-xs text-slate-500">
-          {report.lossTypes.join(", ")} · {report.lines.toLocaleString("fr-FR")} mouvement(s) · inventaire et comptage non comptés
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-xs text-slate-500">
+            {report.lossTypes.join(", ")} · {report.lines.toLocaleString("fr-FR")} mouvement(s) · inventaire et comptage non comptés
+          </p>
+          {toggle}
+        </div>
       </div>
+      <div id="demarque-contenu" className={`flex flex-col ${compact ? "gap-3" : "gap-4"}`}>
 
       {figures > 0 && (
       <div className={`grid grid-cols-1 gap-3 ${figures === 3 ? "sm:grid-cols-3" : figures === 2 ? "sm:grid-cols-2" : ""}`}>
@@ -113,6 +145,7 @@ export function ShrinkagePanel({ report, compact, hidden = [] }: { report: Shrin
       <p className="text-xs text-slate-500">
         Calculé par le moteur sur les lignes de démarque, sans IA. Une perte enregistrée en négatif (sortie de stock) est affichée en positif.
       </p>
+      </div>
     </section>
   );
 }
