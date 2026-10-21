@@ -3,7 +3,17 @@ import { DashboardWorkspace } from "@/components/dashboard-workspace";
 import { parseBranding } from "@/lib/branding";
 import { loadSharedDashboard } from "@/lib/dashboards/shared";
 
-export const metadata: Metadata = { title: "Dashboard partagé", robots: { index: false, follow: false } };
+// Aperçu du lien sur les réseaux et messageries : logo Lisio (image du dossier racine) et texte générique, jamais
+// le nom du dashboard ni ses chiffres, que le service d'aperçu récupérerait sans authentification.
+// Une page qui définit son propre openGraph n'hérite plus de l'image du dossier racine : elle est reprise ici.
+const shareImage = { url: "/opengraph-image.png", width: 1200, height: 630, alt: "Lisio : vos fichiers Excel, CSV et PDF deviennent des tableaux de bord clairs et partageables" };
+
+export const metadata: Metadata = {
+  title: "Dashboard partagé",
+  robots: { index: false, follow: false },
+  openGraph: { type: "website", locale: "fr_FR", siteName: "Lisio", title: "Un tableau de bord a été partagé avec vous", description: "Consultez-le avec Lisio : vos chiffres, enfin lisibles.", images: [shareImage] },
+  twitter: { card: "summary_large_image", images: [shareImage], title: "Un tableau de bord a été partagé avec vous", description: "Consultez-le avec Lisio : vos chiffres, enfin lisibles." },
+};
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Paris" });
 const link = "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50";
