@@ -51,13 +51,15 @@ export const ViewSchema = z.object({
   chartOrder: z.array(z.string().max(64)).max(100).default([]),
   /** Graphiques déposés dans une autre section que la leur (identifiant → titre de la section), pour combler un espace libre. */
   chartSections: z.record(z.string().max(64), z.string().max(200)).default({}),
+  /** Évolutions dans le temps : par mois ou par trimestre. */
+  timeGranularity: z.enum(["month", "quarter"]).default("month"),
   /** Disposition : par sections (évolutions, puis une section par dimension) ou libre (une seule grille, tout se déplace). */
   grouping: z.enum(["sections", "free"]).default("sections"),
 });
 
 export type ViewState = z.infer<typeof ViewSchema>;
 
-export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, hideShrinkage: false, shrinkageHidden: [], hideRecommendations: false, recommendationsHidden: [], layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
+export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, hideShrinkage: false, shrinkageHidden: [], hideRecommendations: false, recommendationsHidden: [], layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, timeGranularity: "month", grouping: "sections" };
 
 /** Affichage enregistré avec le dashboard (colonne `display`) : vue par défaut si absent ou invalide. */
 export function parseView(raw: unknown): ViewState {
@@ -147,6 +149,7 @@ export function isDefaultView(v: ViewState): boolean {
     v.chartOrder.length === 0 &&
     Object.keys(v.chartSections).length === 0 &&
     v.grouping === "sections" &&
+    v.timeGranularity === "month" &&
     !v.hideInsights &&
     !v.hideAnalysis &&
     !v.hideExplanations &&
@@ -173,10 +176,34 @@ export function chartTypeOf(chart: ComputedChart, view: ViewState): ChartType {
   return wanted && allowedChartTypes(chart).includes(wanted) ? wanted : chart.type;
 }
 
+/** Données affichées : par trimestre si demandé (et calculé), sinon telles que calculées. */
+export function periodData(chart: ComputedChart, view: ViewState) {
+  return view.timeGranularity === "quarter" && chart.byQuarter ? chart.byQuarter : chart.data;
+}
+
+/** Titre affiché : « Évolution mensuelle » devient « Évolution trimestrielle » en vue par trimestre. */
+export function chartTitleOf(chart: ComputedChart, view: ViewState): string {
+  if (view.timeGranularity !== "quarter" || !chart.byQuarter) return chart.title;
+  return chart.title.replace(/mensuelle/gi, "trimestrielle").replace(/par mois/gi, "par trimestre");
+}
+
+const GRANULARITY_LABEL: Record<string, string> = { day: "jour", week: "semaine", month: "mois", quarter: "trimestre", year: "année" };
+
+/**
+ * Formule affichée, en français et selon la vue Mois / Trimestre. La formule du moteur (« … (month) ») reste
+ * inchangée : elle sert de clé aux préférences retenues.
+ */
+export function chartFormulaOf(chart: ComputedChart, view: ViewState): string {
+  return chart.formula.replace(/ \((day|week|month|quarter|year)\)$/, (_, g: string) => {
+    const shown = g === "month" && view.timeGranularity === "quarter" && chart.byQuarter ? "quarter" : g;
+    return ` (${GRANULARITY_LABEL[shown]})`;
+  });
+}
+
 /** Données d'un graphique après masquage des catégories décochées. */
 export function visibleData(chart: ComputedChart, view: ViewState) {
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
-  return chart.data.filter((d) => !hidden.has(d.category));
+  return periodData(chart, view).filter((d) => !hidden.has(d.category));
 }
 
 /** Applique la sélection au résultat (exports) : éléments masqués retirés, valeurs inchangées. */
@@ -190,7 +217,7 @@ export function applyView(result: DashboardResult, view: ViewState): DashboardRe
       .filter((c) => !hiddenCharts.has(c.id))
       .map((c) => {
         const data = visibleData(c, view);
-        return { ...c, type: chartTypeOf(c, view), data, maskedCount: c.data.length - data.length };
+        return { ...c, title: chartTitleOf(c, view), formula: chartFormulaOf(c, view), type: chartTypeOf(c, view), data, maskedCount: periodData(c, view).length - data.length };
       }),
     insights: view.hideInsights ? [] : result.insights,
     comparison: view.hideComparison ? null : result.comparison,

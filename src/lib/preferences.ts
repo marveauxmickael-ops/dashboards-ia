@@ -10,6 +10,8 @@ import { allowedChartTypes, EMPTY_VIEW, SHRINKAGE_PARTS, type ChartSize, type Ch
 export const PreferencesSchema = z.object({
   layout: z.enum(["standard", "compact"]).default("standard"),
   grouping: z.enum(["sections", "free"]).default("sections"),
+  /** Évolutions par mois ou par trimestre. */
+  timeGranularity: z.enum(["month", "quarter"]).default("month"),
   /** Taille par défaut des graphiques (absente : celle de la mise en page). */
   chartSize: z.enum(["s", "m", "l"]).nullable().default(null),
   /** Type préféré pour les évolutions (graphiques chronologiques) et pour les répartitions. */
@@ -105,6 +107,7 @@ export function preferencesFromView(view: ViewState, charts: ChartLike[], kpis: 
   return {
     layout: view.layout,
     grouping: view.grouping,
+    timeGranularity: view.timeGranularity,
     chartSize: mostFrequent(Object.values(view.chartSizes)),
     evolutionType: evolution === "pie" ? null : evolution,
     breakdownType: breakdown === "line" ? null : breakdown,
@@ -162,6 +165,7 @@ export function viewFromPreferences(raw: unknown, charts: ComputedChart[], kpis:
     hiddenCharts,
     layout: p.layout,
     grouping: p.grouping,
+    timeGranularity: p.timeGranularity,
     chartSizes,
     chartTypes,
     hideInsights: p.hideInsights,

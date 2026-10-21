@@ -23,3 +23,15 @@ export function formatPeriod(key: string): string {
   if (day) return `${day[3]}/${day[2]}/${day[1]}`;
   return key;
 }
+
+/** Trimestres couverts par des mois (AAAA-MM) : clé « 2026-T3 », premier et dernier mois présents. */
+export function quartersOf(periods: string[]): { key: string; label: string; from: string; to: string }[] {
+  const byQuarter = new Map<string, string[]>();
+  for (const p of [...periods].sort()) {
+    const m = /^(\d{4})-(\d{2})$/.exec(p);
+    if (!m) continue;
+    const key = `${m[1]}-T${Math.ceil(Number(m[2]) / 3)}`;
+    byQuarter.set(key, [...(byQuarter.get(key) ?? []), p]);
+  }
+  return [...byQuarter].map(([key, months]) => ({ key, label: formatPeriod(key), from: months[0], to: months.at(-1)! }));
+}

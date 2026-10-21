@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { describeFilters, isFiltered, NO_FILTERS, type FilterOptions, type Filters } from "@/lib/filters";
-import { formatPeriod } from "@/lib/format";
+import { formatPeriod, quartersOf } from "@/lib/format";
 import { SOURCE_COLUMN } from "@/lib/ingest/scopes";
 
 /** Codes et identifiants (EAN, référence…) : utiles au moteur, pas comme critère de la barre de filtres. */
@@ -22,6 +22,7 @@ export function FiltersBar({
 }) {
   const [draft, setDraft] = useState<Filters>(applied);
   const changed = JSON.stringify(draft) !== JSON.stringify(applied);
+  const quarters = quartersOf(options.periods);
   const select = "rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800";
 
   const setDimension = (column: string, values: string[], all: string[]) => {
@@ -34,6 +35,26 @@ export function FiltersBar({
   return (
     <section aria-label="Filtres" className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 print:hidden">
       <div className="flex flex-wrap items-end gap-3">
+        {options.dateColumn && quarters.length >= 2 && (
+          <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
+            Trimestre
+            <select
+              className={select}
+              value={quarters.find((q) => q.from === draft.from && q.to === draft.to)?.key ?? ""}
+              onChange={(e) => {
+                const q = quarters.find((x) => x.key === e.target.value);
+                setDraft({ ...draft, from: q?.from ?? null, to: q?.to ?? null });
+              }}
+            >
+              <option value="">Tous</option>
+              {quarters.map((q) => (
+                <option key={q.key} value={q.key}>
+                  {q.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {options.dateColumn && options.periods.length > 1 && (
           <>
             <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">

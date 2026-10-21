@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactN
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
-import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, dropInSection, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, SHRINKAGE_PART_LABELS, SHRINKAGE_PARTS, ViewSchema, visibleData, type ShrinkagePart, type ChartType, type ViewState } from "@/lib/view";
+import { allowedChartTypes, analysisView, chartFormulaOf, chartSizeOf, chartTitleOf, chartTypeOf, dropInSection, periodData, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, SHRINKAGE_PART_LABELS, SHRINKAGE_PARTS, ViewSchema, visibleData, type ShrinkagePart, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ComparisonPanel } from "./comparison-panel";
 import { ShrinkagePanel } from "./shrinkage-panel";
@@ -97,6 +97,8 @@ export function DashboardView({
   const charts = result.charts.filter((c) => !hiddenCharts.has(c.id));
   // Suggestions affichées au survol des graphiques et indicateurs (US-19), selon la personnalisation.
   const recommendationItems = !view.hideRecommendations && result.recommendations ? result.recommendations.items.filter((r) => !view.recommendationsHidden.includes(r.group)) : [];
+  // Bascule Mois / Trimestre : seulement si au moins une évolution couvre plusieurs trimestres.
+  const hasQuarters = result.charts.some((c) => (c.byQuarter?.length ?? 0) >= 2);
   const hasAnalysis = !!result.analysis && (result.analysis.variations.length > 0 || result.analysis.notes.length > 0);
   const maskedCount =
     view.hiddenKpis.length + view.hiddenCharts.length +
@@ -202,6 +204,27 @@ export function DashboardView({
             </button>
           ))}
         </div>
+        {hasQuarters && (
+          <div role="group" aria-label="Évolutions dans le temps" className="inline-flex overflow-hidden rounded-lg border border-slate-300 text-sm">
+            {(
+              [
+                ["month", "Mois"],
+                ["quarter", "Trimestre"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={view.timeGranularity === value}
+                title={value === "quarter" ? "Évolutions par trimestre, recalculées sur les lignes" : "Évolutions mois par mois"}
+                onClick={() => setView({ ...view, timeGranularity: value })}
+                className={`px-3 py-1.5 font-medium ${view.timeGranularity === value ? "bg-brand-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           aria-expanded={customizing}
@@ -1016,6 +1039,9 @@ function ChartCard({
 }) {
   const type = chartTypeOf(chart, view);
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
+  // Vue par trimestre (évolutions) : séries recalculées par le moteur, titre adapté.
+  const periods = periodData(chart, view);
+  const title = chartTitleOf(chart, view);
   const data = visibleData(chart, view).map((d) => ({ ...d, label: chart.chronological ? formatPeriod(d.category) : d.category }));
   const total = data.reduce((sum, d) => sum + (d.value ?? 0), 0);
   const fmt = (v: unknown) => formatValue(typeof v === "number" ? v : null, chart.format);
@@ -1024,7 +1050,7 @@ function ChartCard({
     new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(chart.format === "percent" ? v * 100 : v);
   const toggleCategory = (category: string) => onCategories(hidden.has(category) ? [...hidden].filter((x) => x !== category) : [...hidden, category]);
   // Catégories masquées présentes dans les données affichées (une vue filtrée peut en exclure).
-  const hiddenCount = chart.data.filter((d) => hidden.has(d.category)).length;
+  const hiddenCount = periods.filter((d) => hidden.has(d.category)).length;
 
   const small = size === "s" || compactLayout;
   const height = Math.round(BASE_HEIGHT[size] * (compactLayout ? 0.8 : 1));
@@ -1058,15 +1084,15 @@ function ChartCard({
       }
     >
       <div>
-        <h3 className={`min-w-0 font-semibold text-slate-900 ${small ? "text-sm" : "text-base"}`} title={chart.formula}>
-          {chart.title}
+        <h3 className={`min-w-0 font-semibold text-slate-900 ${small ? "text-sm" : "text-base"}`} title={chartFormulaOf(chart, view)}>
+          {title}
         </h3>
         {/* Commandes de disposition : visibles au survol ou au clavier, toujours visibles sur écran tactile. */}
         {!readOnly && (
         <div
           className="absolute right-1.5 top-1.5 z-10 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white/95 px-1 py-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 print:hidden"
           role="group"
-          aria-label={`Disposition de ${chart.title}`}
+          aria-label={`Disposition de ${title}`}
         >
           {drag && (
             <span
@@ -1112,7 +1138,7 @@ function ChartCard({
           <button type="button" className={iconButton} onClick={onCollapse} aria-expanded={!collapsed} aria-label={collapsed ? "Agrandir" : "Réduire"} title={collapsed ? "Agrandir" : "Réduire"}>
             {collapsed ? "▸" : "▾"}
           </button>
-          <button type="button" className={iconButton} onClick={onHide} aria-label={`Masquer le graphique ${chart.title}`} title="Masquer">
+          <button type="button" className={iconButton} onClick={onHide} aria-label={`Masquer le graphique ${title}`} title="Masquer">
             ×
           </button>
         </div>
@@ -1120,7 +1146,7 @@ function ChartCard({
       </div>
       {!compactLayout && (
         <p className="mt-0.5 text-xs text-slate-500">
-          {chart.formula}
+          {chartFormulaOf(chart, view)}
           {chart.othersCount > 0 && ` · ${chart.othersCount} autre(s) catégorie(s) non affichée(s)`}
           {hiddenCount > 0 && ` · ${hiddenCount} catégorie(s) masquée(s)`}
         </p>
@@ -1149,22 +1175,22 @@ function ChartCard({
                   </button>
                 ))}
               </div>
-              {chart.data.length > 1 && (
+              {periods.length > 1 && (
                 <details className="min-w-0">
                   <summary className="cursor-pointer rounded-lg border border-slate-200 px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-50">
-                    {chart.chronological ? "Périodes" : "Catégories"} : {chart.data.length - hiddenCount}/{chart.data.length}
+                    {chart.chronological ? "Périodes" : "Catégories"} : {periods.length - hiddenCount}/{periods.length}
                   </summary>
                   <div className="mt-1.5 rounded-lg border border-slate-200 bg-white p-2">
                     <div className="mb-1.5 flex gap-3">
                       <button type="button" onClick={() => onCategories([])} className="text-brand-900 underline">
                         Tout cocher
                       </button>
-                      <button type="button" onClick={() => onCategories(chart.data.map((d) => d.category))} className="text-brand-900 underline">
+                      <button type="button" onClick={() => onCategories(periods.map((d) => d.category))} className="text-brand-900 underline">
                         Tout décocher
                       </button>
                     </div>
                     <ul className="grid max-h-48 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
-                      {chart.data.map((d) => (
+                      {periods.map((d) => (
                         <li key={d.category}>
                           <label className="flex cursor-pointer items-center gap-2 text-slate-800">
                             <input type="checkbox" checked={!hidden.has(d.category)} onChange={() => toggleCategory(d.category)} className="size-3.5 accent-brand-800" />
@@ -1182,7 +1208,7 @@ function ChartCard({
           <div className="mt-2">
             {data.length === 0 ? (
               <p className="py-8 text-center text-sm text-slate-500">
-                {chart.data.length === 0 ? "Pas assez de données pour ce graphique." : "Aucune catégorie cochée."}
+                {periods.length === 0 ? "Pas assez de données pour ce graphique." : "Aucune catégorie cochée."}
               </p>
             ) : type === "table" ? (
               <div className="overflow-x-auto" style={{ maxHeight: barHeight }}>

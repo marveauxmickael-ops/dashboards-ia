@@ -33,6 +33,11 @@ export interface ComputedChart {
   othersCount: number;
   /** Catégories masquées par l'utilisateur (personnalisation de l'affichage, exports). */
   maskedCount?: number;
+  /**
+   * Évolution mensuelle recalculée par trimestre (« 2026-T3 ») sur les lignes, pour la bascule Mois / Trimestre :
+   * jamais une somme de mois, qui serait fausse pour un taux ou une moyenne.
+   */
+  byQuarter?: { category: string; value: number | null }[];
 }
 
 export type InsightStatus = "verified" | "mismatch" | "unverified" | "qualitative";
@@ -198,7 +203,12 @@ export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile:
         data = data.slice(0, limit);
       }
     }
+    const byQuarter =
+      chronological && c.granularity === "month"
+        ? [...groupRows(rows, c.dimension, "quarter")].map(([category, list]) => ({ category, value: valueOf(list, c.measure, c.aggregation) })).sort((a, b) => a.category.localeCompare(b.category))
+        : undefined;
     return {
+      ...(byQuarter ? { byQuarter } : {}),
       id: c.id,
       type: c.type,
       title: c.title,
