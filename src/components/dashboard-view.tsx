@@ -26,7 +26,7 @@ import { ComparisonPanel } from "./comparison-panel";
 import { ShrinkagePanel } from "./shrinkage-panel";
 import { RecommendationsPanel } from "./recommendations-panel";
 import { SuggestionHint } from "./suggestion-hint";
-import { suggestionsFor, type Recommendation } from "@/lib/recommendations";
+import { suggestionsFor, type Recommendation } from "@/lib/recommendations/types";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
 import { CleaningNotice } from "./quality-panel";

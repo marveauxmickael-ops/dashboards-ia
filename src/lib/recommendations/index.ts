@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { activeProvider, AiError, callClaude, type AiUsage } from "@/lib/ai/gateway";
+import type { Recommendation, RecommendationsResult, Signal } from "./types";
+export type { Recommendation, RecommendationGroup, RecommendationsResult, Signal, SignalKind } from "./types";
+export { suggestionsFor } from "./types";
 import { inScope } from "@/lib/ingest/scopes";
 import type { Pseudonymizer } from "@/lib/privacy/pseudonymize";
 import type { ShrinkageReport } from "@/lib/shrinkage";
@@ -18,42 +21,6 @@ const TOP_SELLERS = 3;
 const HIGH_MARGIN_GAP = 0.05;
 const RISING_MIN = 0.2;
 const LOSS_RATE_ALERT = 0.05;
-
-export type SignalKind = "loss_item" | "loss_aisle" | "loss_type" | "sell_but_lose" | "top_seller" | "high_margin" | "rising";
-export type RecommendationGroup = "losses" | "growth";
-
-export interface Signal {
-  id: string;
-  kind: SignalKind;
-  group: RecommendationGroup;
-  /** Article, rayon ou motif concerné (en clair, côté serveur uniquement). */
-  subject: string;
-  /** Colonne du sujet, pour la pseudonymisation. */
-  subjectColumn: string | null;
-  /** Montants concernés (pertes, ventes, marge) : relient la suggestion aux indicateurs qui les affichent. */
-  columns: string[];
-  /** Chiffres calculés par le moteur, transmis à l'IA (sans le sujet en clair) et affichés tels quels. */
-  metrics: Record<string, number | string | null>;
-}
-
-export interface Recommendation {
-  id: string;
-  kind: SignalKind;
-  group: RecommendationGroup;
-  title: string;
-  action: string;
-  /** Pourquoi : les chiffres du moteur, rédigés par des règles (jamais par l'IA). */
-  why: string;
-  /** Article, rayon ou motif concerné, et montants concernés : placent la suggestion près des graphiques et indicateurs. */
-  subject: string;
-  columns: string[];
-}
-
-export interface RecommendationsResult extends AiUsage {
-  writtenBy: "ai" | "rules";
-  items: Recommendation[];
-  notes: string[];
-}
 
 const eur = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 const pct = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 0 });
@@ -264,20 +231,4 @@ export async function recommend(input: {
     if (!(error instanceof AiError)) throw error;
     return { ...none, writtenBy: "rules", items: signals.map(byRules), notes: [`L'IA n'a pas pu rédiger les recommandations (${error.message}) : elles sont rédigées automatiquement.`] };
   }
-}
-
-/**
- * Suggestions à montrer au survol d'un graphique ou d'un indicateur (2 au plus) :
- * - graphique : celles dont l'article, le rayon ou le motif figure parmi ses catégories ;
- * - indicateur : celles qui portent sur le montant qu'il calcule (pertes, ventes, marge).
- */
-export function suggestionsFor(items: Recommendation[], target: { categories?: string[]; formula: string }, max = 2): Recommendation[] {
-  const mentions = (r: Recommendation) => r.columns.some((c) => target.formula.includes(`(${c})`));
-  // Un graphique ne montre que les suggestions sur ses propres catégories : un conseil sur un article n'a pas sa place
-  // sur un graphique par département.
-  if (target.categories) {
-    const categories = new Set(target.categories);
-    return items.filter((r) => categories.has(r.subject)).slice(0, max);
-  }
-  return items.filter(mentions).slice(0, max);
 }

@@ -1,4 +1,4 @@
-import type { Recommendation, RecommendationGroup, RecommendationsResult } from "@/lib/recommendations";
+import type { Recommendation, RecommendationGroup, RecommendationsResult } from "@/lib/recommendations/types";
 
 const GROUPS: { id: RecommendationGroup; title: string; tone: string; dot: string }[] = [
   { id: "losses", title: "Réduire les pertes", tone: "text-red-800", dot: "bg-red-400" },

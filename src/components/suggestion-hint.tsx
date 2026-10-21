@@ -1,4 +1,4 @@
-import type { Recommendation } from "@/lib/recommendations";
+import type { Recommendation } from "@/lib/recommendations/types";
 
 /**
  * Suggestion contextuelle (US-19) : une petite ampoule signale qu'une piste existe ; la bulle apparaît au survol de
