@@ -3,6 +3,7 @@ import { explainVariations, type AnalysisResult } from "@/lib/analysis";
 import { completeSpec } from "@/lib/engine/complete";
 import { comparisonColumn, computeComparison, type Comparison } from "@/lib/engine/comparison";
 import { computeShrinkage, type ShrinkageReport } from "@/lib/shrinkage";
+import { recommend, type RecommendationsResult } from "@/lib/recommendations";
 import { checkInsights, computeDashboard, validateSpec, type CheckedInsight, type ComputedChart, type ComputedKpi } from "@/lib/engine/compute";
 import { ImportError, parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
@@ -34,6 +35,8 @@ export interface DashboardResult {
   comparison?: Comparison | null;
   /** Démarque en perte de chiffre (US-18) : journal de démarque reconnu, pertes seulement. */
   shrinkage?: ShrinkageReport | null;
+  /** Recommandations (US-19) : réduire les pertes, développer ce qui marche. */
+  recommendations?: RecommendationsResult | null;
   /** Analyse des variations (US-10) ; absente des dashboards créés avant le sprint 3. */
   analysis?: AnalysisResult;
   /**
@@ -103,6 +106,8 @@ export async function generateDashboard(input: {
   const analysis = await explainVariations({ spec, rows, profile, mode: input.mode, pseudo });
 
   const clearKpis = kpis.map((k) => ({ ...k, label: clear(k.label), description: clear(k.description) }));
+  const shrinkage = computeShrinkage(profile, rows);
+  const recommendations = await recommend({ profile, rows, shrinkage, mode: input.mode, pseudo, allowAi: true });
   return {
     fileName: raw.fileName,
     profile,
@@ -113,7 +118,8 @@ export async function generateDashboard(input: {
     charts: charts.map((c) => ({ ...c, title: clear(c.title) })),
     insights,
     comparison: computeComparison(spec, rows, comparisonColumn(profile, input.compareBy), clearKpis),
-    shrinkage: computeShrinkage(profile, rows),
+    shrinkage,
+    recommendations,
     analysis,
     spec,
     filterOptions: filterOptions(profile, rows),
@@ -168,6 +174,9 @@ export async function recomputeDashboard(input: {
   }
 
   const clearKpis = kpis.map((k) => ({ ...k, label: kpiById.get(k.id)?.label ?? k.label, description: kpiById.get(k.id)?.description ?? k.description }));
+  const filteredProfile = { ...profile, rowCount: rows.length };
+  const shrinkage = computeShrinkage(filteredProfile, rows);
+  const recommendations = await recommend({ profile: filteredProfile, rows, shrinkage, mode: input.mode, pseudo, allowAi: input.allowAi });
   return {
     ...previous,
     fileName: raw.fileName,
@@ -175,7 +184,8 @@ export async function recomputeDashboard(input: {
     kpis: clearKpis,
     // Même colonne qu'à la création ; un filtre qui ne garde qu'une valeur supprime la comparaison.
     comparison: computeComparison(spec, rows, comparisonColumn(profile, previous.comparison?.column), clearKpis),
-    shrinkage: computeShrinkage({ ...profile, rowCount: rows.length }, rows),
+    shrinkage,
+    recommendations,
     charts: charts.map((c) => ({ ...c, title: chartById.get(c.id)?.title ?? c.title })),
     // Les constats rédigés à la création citent les chiffres d'origine : ils ne valent plus après recalcul.
     insights: [],

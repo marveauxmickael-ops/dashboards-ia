@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   }
 
   // Journal des appels IA : métadonnées uniquement, jamais le contenu.
-  const calls = [result.ai, ...(result.analysis?.writtenBy === "ai" ? [result.analysis] : [])];
+  const calls = [result.ai, ...(result.analysis?.writtenBy === "ai" ? [result.analysis] : []), ...(result.recommendations?.writtenBy === "ai" ? [result.recommendations] : [])];
   const { error: logError } = await supabase.from("ai_calls").insert(
     calls.map((call) => ({
       organization_id: organization.id,

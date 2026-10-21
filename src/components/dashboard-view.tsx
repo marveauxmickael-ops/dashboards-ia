@@ -24,6 +24,9 @@ import { allowedChartTypes, analysisView, chartSizeOf, chartTypeOf, dropInSectio
 import { AnalysisPanel } from "./analysis-panel";
 import { ComparisonPanel } from "./comparison-panel";
 import { ShrinkagePanel } from "./shrinkage-panel";
+import { RecommendationsPanel } from "./recommendations-panel";
+import { SuggestionHint } from "./suggestion-hint";
+import { suggestionsFor, type Recommendation } from "@/lib/recommendations";
 import { ExportActions } from "./export-actions";
 import { ActiveFilters } from "./filters-bar";
 import { CleaningNotice } from "./quality-panel";
@@ -92,10 +95,13 @@ export function DashboardView({
   const hiddenCharts = new Set(view.hiddenCharts);
   const kpis = result.kpis.filter((k) => !hiddenKpis.has(k.id));
   const charts = result.charts.filter((c) => !hiddenCharts.has(c.id));
+  // Suggestions affichées au survol des graphiques et indicateurs (US-19), selon la personnalisation.
+  const recommendationItems = !view.hideRecommendations && result.recommendations ? result.recommendations.items.filter((r) => !view.recommendationsHidden.includes(r.group)) : [];
   const hasAnalysis = !!result.analysis && (result.analysis.variations.length > 0 || result.analysis.notes.length > 0);
   const maskedCount =
     view.hiddenKpis.length + view.hiddenCharts.length +
-    [view.hideInsights, view.hideAnalysis, view.hideExplanations, view.hideSuggestions, view.hideComparison && !!result.comparison, view.hideShrinkage && !!result.shrinkage].filter(Boolean).length +
+    [view.hideInsights, view.hideAnalysis, view.hideExplanations, view.hideSuggestions, view.hideComparison && !!result.comparison, view.hideShrinkage && !!result.shrinkage, view.hideRecommendations && !!result.recommendations?.items.length].filter(Boolean).length +
+    (result.recommendations && !view.hideRecommendations ? view.recommendationsHidden.length : 0) +
     (result.shrinkage && !view.hideShrinkage ? view.shrinkageHidden.length : 0) +
     Object.values(view.hiddenCategories).reduce((n, l) => n + l.length, 0);
   const periodLabel = result.period ? (result.period.from === result.period.to ? formatPeriod(result.period.from) : `${formatPeriod(result.period.from)} → ${formatPeriod(result.period.to)}`) : "Pas de colonne de date";
@@ -246,6 +252,20 @@ export function DashboardView({
                       })),
                     ]
                   : []),
+                ...(result.recommendations && result.recommendations.items.length > 0
+                  ? [
+                      { id: "recommendations", label: "Recommandations", checked: !view.hideRecommendations },
+                      ...(["losses", "growth"] as const)
+                        .filter((g) => result.recommendations!.items.some((r) => r.group === g))
+                        .map((g) => ({
+                          id: `recommendations:${g}`,
+                          label: g === "losses" ? "Réduire les pertes" : "Développer ce qui marche",
+                          checked: !view.recommendationsHidden.includes(g),
+                          disabled: view.hideRecommendations,
+                          indent: true,
+                        })),
+                    ]
+                  : []),
                 ...(result.comparison ? [{ id: "comparison", label: "Comparaison", checked: !view.hideComparison }] : []),
                 ...(result.insights.length > 0 ? [{ id: "insights", label: "Constats", checked: !view.hideInsights }] : []),
                 ...(hasAnalysis
@@ -257,12 +277,15 @@ export function DashboardView({
                   : []),
               ]}
               onToggle={(id) => {
-                if (id.startsWith("shrinkage:")) {
+                if (id.startsWith("recommendations:")) {
+                  const group = id.slice("recommendations:".length) as "losses" | "growth";
+                  setView({ ...view, recommendationsHidden: toggle(view.recommendationsHidden, group) as ("losses" | "growth")[] });
+                } else if (id.startsWith("shrinkage:")) {
                   const part = id.slice("shrinkage:".length) as ShrinkagePart;
                   setView({ ...view, shrinkageHidden: toggle(view.shrinkageHidden, part) as ShrinkagePart[] });
                 } else setView({ ...view, [SECTION_FLAG[id]]: !view[SECTION_FLAG[id]] });
               }}
-              onAll={(on) => setView({ ...view, hideInsights: !on, hideAnalysis: !on, hideExplanations: !on, hideSuggestions: !on, hideComparison: !on, hideShrinkage: !on, shrinkageHidden: [] })}
+              onAll={(on) => setView({ ...view, hideInsights: !on, hideAnalysis: !on, hideExplanations: !on, hideSuggestions: !on, hideComparison: !on, hideShrinkage: !on, shrinkageHidden: [], hideRecommendations: !on, recommendationsHidden: [] })}
             />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -298,7 +321,7 @@ export function DashboardView({
             // Apparition progressive (« les indicateurs prennent forme »), sans effet si l'utilisateur réduit les animations.
             <article
               key={k.id}
-              className={`group relative rounded-[var(--radius-card)] border border-t-[3px] border-slate-200 bg-white shadow-card motion-safe:animate-rise print:break-inside-avoid print:shadow-none ${compactLayout ? "p-2.5" : "p-4"}`}
+              className={`group relative rounded-[var(--radius-card)] border border-t-[3px] border-slate-200 bg-white shadow-card hover:z-20 focus-within:z-20 motion-safe:animate-rise print:break-inside-avoid print:shadow-none ${compactLayout ? "p-2.5" : "p-4"}`}
               style={{ borderTopColor: palette[0], animationDelay: `${Math.min(i, 8) * 45}ms` }}
             >
               {!locked && <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />}
@@ -338,9 +361,14 @@ export function DashboardView({
                   <dd>Calculé par le moteur sur les données importées ; l&apos;IA ne fournit aucune valeur.</dd>
                 </dl>
               </details>
+              <SuggestionHint items={suggestionsFor(recommendationItems, { formula: k.formula })} placement="below" />
             </article>
           ))}
         </section>
+      )}
+
+      {!view.hideRecommendations && result.recommendations && result.recommendations.items.length > 0 && (
+        <RecommendationsPanel result={result.recommendations} hidden={view.recommendationsHidden} compact={compactLayout} />
       )}
 
       {!view.hideComparison && result.comparison && (
@@ -406,6 +434,7 @@ export function DashboardView({
                   canMoveBack={i > 0}
                   canMoveForward={i < group.charts.length - 1}
                   readOnly={locked}
+                  suggestions={suggestionsFor(recommendationItems, { categories: c.data.map((d) => d.category), formula: c.formula })}
                   drag={locked ? undefined : {
                     active: dragging === c.id,
                     target: dropTarget === c.id && dragging !== null && dragging !== c.id,
@@ -924,7 +953,8 @@ function HideButton({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-const SECTION_FLAG: Record<string, "hideInsights" | "hideAnalysis" | "hideExplanations" | "hideSuggestions" | "hideComparison" | "hideShrinkage"> = {
+const SECTION_FLAG: Record<string, "hideInsights" | "hideAnalysis" | "hideExplanations" | "hideSuggestions" | "hideComparison" | "hideShrinkage" | "hideRecommendations"> = {
+  recommendations: "hideRecommendations",
   shrinkage: "hideShrinkage",
   comparison: "hideComparison",
   insights: "hideInsights",
@@ -961,6 +991,7 @@ function ChartCard({
   canMoveForward,
   readOnly = false,
   drag,
+  suggestions = [],
 }: {
   chart: ComputedChart;
   view: ViewState;
@@ -980,6 +1011,8 @@ function ChartCard({
   readOnly?: boolean;
   /** Glisser-déposer : saisie par la poignée ⠿, dépôt sur un autre graphique de la même grille. */
   drag?: { active: boolean; target: boolean; onStart: () => void; onEnd: () => void; onEnter: () => void; onDrop: () => void };
+  /** Suggestions (US-19) affichées au survol du graphique. */
+  suggestions?: Recommendation[];
 }) {
   const type = chartTypeOf(chart, view);
   const hidden = new Set(view.hiddenCategories[chart.id] ?? []);
@@ -1003,7 +1036,7 @@ function ChartCard({
 
   return (
     <article
-      className={`group relative min-w-0 rounded-[var(--radius-card)] border bg-white shadow-card transition motion-safe:animate-rise print:break-inside-avoid print:shadow-none ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""} ${
+      className={`group relative min-w-0 rounded-[var(--radius-card)] border bg-white shadow-card transition hover:z-20 focus-within:z-20 motion-safe:animate-rise print:break-inside-avoid print:shadow-none ${compactLayout ? "p-2.5" : "p-3.5"} ${SPAN[size]} ${collapsed ? "self-start" : ""} ${
         drag?.target ? "border-brand-600 ring-2 ring-brand-600/40" : "border-slate-200"
       } ${drag?.active ? "opacity-40" : ""}`}
       onDragOver={
@@ -1220,6 +1253,7 @@ function ChartCard({
           </div>
         </>
       )}
+      <SuggestionHint items={suggestions} placement="inside" />
     </article>
   );
 }

@@ -36,6 +36,9 @@ export const ViewSchema = z.object({
   hideComparison: z.boolean().default(false),
   /** Démarque en perte de chiffre (US-18). */
   hideShrinkage: z.boolean().default(false),
+  /** Recommandations (US-19) et groupe masqué : réduire les pertes, développer ce qui marche. */
+  hideRecommendations: z.boolean().default(false),
+  recommendationsHidden: z.array(z.enum(["losses", "growth"])).max(2).default([]),
   /** Éléments du bloc Démarque masqués. */
   shrinkageHidden: z.array(z.enum(SHRINKAGE_PARTS)).max(SHRINKAGE_PARTS.length).default([]),
   /** Mise en page : « compact » resserre tout (indicateurs, graphiques, sections) pour tenir sur un écran ou une page. */
@@ -54,7 +57,7 @@ export const ViewSchema = z.object({
 
 export type ViewState = z.infer<typeof ViewSchema>;
 
-export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, hideShrinkage: false, shrinkageHidden: [], layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
+export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, hideShrinkage: false, shrinkageHidden: [], hideRecommendations: false, recommendationsHidden: [], layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
 
 /** Affichage enregistré avec le dashboard (colonne `display`) : vue par défaut si absent ou invalide. */
 export function parseView(raw: unknown): ViewState {
@@ -150,7 +153,9 @@ export function isDefaultView(v: ViewState): boolean {
     !v.hideSuggestions &&
     !v.hideComparison &&
     !v.hideShrinkage &&
-    v.shrinkageHidden.length === 0
+    v.shrinkageHidden.length === 0 &&
+    !v.hideRecommendations &&
+    v.recommendationsHidden.length === 0
   );
 }
 
@@ -190,6 +195,7 @@ export function applyView(result: DashboardResult, view: ViewState): DashboardRe
     insights: view.hideInsights ? [] : result.insights,
     comparison: view.hideComparison ? null : result.comparison,
     shrinkage: view.hideShrinkage ? null : result.shrinkage,
+    recommendations: view.hideRecommendations || !result.recommendations ? null : { ...result.recommendations, items: result.recommendations.items.filter((r) => !view.recommendationsHidden.includes(r.group)) },
     analysis: view.hideAnalysis || !result.analysis ? undefined : analysisView(result.analysis, view),
   };
 }

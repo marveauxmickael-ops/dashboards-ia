@@ -88,17 +88,21 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
     }
     await saveVersion(workspace, id, result, { fingerprint, label: "Remplacement des données" });
     await logEvent(workspace, "dashboard.refreshed", { type: "dashboard", id }, { file: result.fileName, rows: result.profile.rowCount });
-    if (result.analysis?.writtenBy === "ai") {
-      await supabase.from("ai_calls").insert({
-        organization_id: organization.id,
-        user_id: user.id,
-        dashboard_id: id,
-        provider: result.analysis.provider,
-        model: result.analysis.model,
-        ai_mode: mode,
-        input_tokens: result.analysis.inputTokens,
-        output_tokens: result.analysis.outputTokens,
-      });
+    // Journal des appels IA (analyse des variations, recommandations) : métadonnées uniquement.
+    const calls = [result.analysis, result.recommendations].filter((call) => call?.writtenBy === "ai");
+    if (calls.length > 0) {
+      await supabase.from("ai_calls").insert(
+        calls.map((call) => ({
+          organization_id: organization.id,
+          user_id: user.id,
+          dashboard_id: id,
+          provider: call!.provider,
+          model: call!.model,
+          ai_mode: mode,
+          input_tokens: call!.inputTokens,
+          output_tokens: call!.outputTokens,
+        })),
+      );
     }
   }
 

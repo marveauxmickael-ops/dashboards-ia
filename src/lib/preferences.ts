@@ -23,6 +23,8 @@ export const PreferencesSchema = z.object({
   hideComparison: z.boolean().default(false),
   hideShrinkage: z.boolean().default(false),
   shrinkageHidden: z.array(z.enum(SHRINKAGE_PARTS)).max(SHRINKAGE_PARTS.length).default([]),
+  hideRecommendations: z.boolean().default(false),
+  recommendationsHidden: z.array(z.enum(["losses", "growth"])).max(2).default([]),
   /** Vue essentielle d'office : indicateurs et graphiques principaux, le reste dans « Personnaliser l'affichage ». */
   essential: z.boolean().default(true),
   /** Calculs masqués (« k:Somme(Montant achat) », « c:Somme(Montant achat) par Libellé marque »). */
@@ -113,6 +115,8 @@ export function preferencesFromView(view: ViewState, charts: ChartLike[], kpis: 
     hideComparison: view.hideComparison,
     hideShrinkage: view.hideShrinkage,
     shrinkageHidden: view.shrinkageHidden,
+    hideRecommendations: view.hideRecommendations,
+    recommendationsHidden: view.recommendationsHidden,
     essential: true,
     hiddenItems: [...new Set(hiddenItems)],
     shownItems: [...new Set(shownItems)],
@@ -167,5 +171,7 @@ export function viewFromPreferences(raw: unknown, charts: ComputedChart[], kpis:
     hideComparison: p.hideComparison,
     hideShrinkage: p.hideShrinkage,
     shrinkageHidden: p.shrinkageHidden,
+    hideRecommendations: p.hideRecommendations,
+    recommendationsHidden: p.recommendationsHidden,
   };
 }

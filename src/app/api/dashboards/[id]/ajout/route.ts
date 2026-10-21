@@ -114,17 +114,21 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
     const label = `Ajout : ${summary.added.toLocaleString("fr-FR")} ligne(s)${keep === "new" && summary.modified > 0 ? `, ${summary.modified.toLocaleString("fr-FR")} modifiée(s)` : ""}`;
     await saveVersion(workspace, id, result, { fingerprint, label });
     await logEvent(workspace, "dashboard.data_added", { type: "dashboard", id }, { file: file.name, added: summary.added, modified: summary.modified, ignored: summary.alreadyPresent, rows: result.profile.rowCount });
-    if (result.analysis?.writtenBy === "ai") {
-      await supabase.from("ai_calls").insert({
-        organization_id: organization.id,
-        user_id: user.id,
-        dashboard_id: id,
-        provider: result.analysis.provider,
-        model: result.analysis.model,
-        ai_mode: mode,
-        input_tokens: result.analysis.inputTokens,
-        output_tokens: result.analysis.outputTokens,
-      });
+    // Journal des appels IA (analyse des variations, recommandations) : métadonnées uniquement.
+    const calls = [result.analysis, result.recommendations].filter((call) => call?.writtenBy === "ai");
+    if (calls.length > 0) {
+      await supabase.from("ai_calls").insert(
+        calls.map((call) => ({
+          organization_id: organization.id,
+          user_id: user.id,
+          dashboard_id: id,
+          provider: call!.provider,
+          model: call!.model,
+          ai_mode: mode,
+          input_tokens: call!.inputTokens,
+          output_tokens: call!.outputTokens,
+        })),
+      );
     }
     return Response.json({ result, summary });
   } catch (error) {
