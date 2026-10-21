@@ -22,6 +22,8 @@ export const ViewSchema = z.object({
   hideSuggestions: z.boolean().default(false),
   /** Comparaison par magasin, rayon, produit… (US-17). */
   hideComparison: z.boolean().default(false),
+  /** Démarque en perte de chiffre (US-18). */
+  hideShrinkage: z.boolean().default(false),
   /** Mise en page : « compact » resserre tout (indicateurs, graphiques, sections) pour tenir sur un écran ou une page. */
   layout: z.enum(["standard", "compact"]).default("standard"),
   /** Taille de chaque graphique : petit (1/4 de largeur), moyen (1/2), grand (pleine largeur). */
@@ -38,7 +40,7 @@ export const ViewSchema = z.object({
 
 export type ViewState = z.infer<typeof ViewSchema>;
 
-export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
+export const EMPTY_VIEW: ViewState = { hiddenKpis: [], hiddenCharts: [], hiddenCategories: {}, chartTypes: {}, hideInsights: false, hideAnalysis: false, hideExplanations: false, hideSuggestions: false, hideComparison: false, hideShrinkage: false, layout: "standard", chartSizes: {}, collapsedCharts: [], chartOrder: [], chartSections: {}, grouping: "sections" };
 
 /** Affichage enregistré avec le dashboard (colonne `display`) : vue par défaut si absent ou invalide. */
 export function parseView(raw: unknown): ViewState {
@@ -132,7 +134,8 @@ export function isDefaultView(v: ViewState): boolean {
     !v.hideAnalysis &&
     !v.hideExplanations &&
     !v.hideSuggestions &&
-    !v.hideComparison
+    !v.hideComparison &&
+    !v.hideShrinkage
   );
 }
 
@@ -171,6 +174,7 @@ export function applyView(result: DashboardResult, view: ViewState): DashboardRe
       }),
     insights: view.hideInsights ? [] : result.insights,
     comparison: view.hideComparison ? null : result.comparison,
+    shrinkage: view.hideShrinkage ? null : result.shrinkage,
     analysis: view.hideAnalysis || !result.analysis ? undefined : analysisView(result.analysis, view),
   };
 }

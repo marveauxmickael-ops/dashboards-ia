@@ -2,6 +2,7 @@ import { designDashboard, type DesignResult } from "@/lib/ai/gateway";
 import { explainVariations, type AnalysisResult } from "@/lib/analysis";
 import { completeSpec } from "@/lib/engine/complete";
 import { comparisonColumn, computeComparison, type Comparison } from "@/lib/engine/comparison";
+import { computeShrinkage, type ShrinkageReport } from "@/lib/shrinkage";
 import { checkInsights, computeDashboard, validateSpec, type CheckedInsight, type ComputedChart, type ComputedKpi } from "@/lib/engine/compute";
 import { ImportError, parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
@@ -31,6 +32,8 @@ export interface DashboardResult {
    * Absente : aucune colonne de comparaison (ou dashboard antérieur).
    */
   comparison?: Comparison | null;
+  /** Démarque en perte de chiffre (US-18) : journal de démarque reconnu, pertes seulement. */
+  shrinkage?: ShrinkageReport | null;
   /** Analyse des variations (US-10) ; absente des dashboards créés avant le sprint 3. */
   analysis?: AnalysisResult;
   /**
@@ -110,6 +113,7 @@ export async function generateDashboard(input: {
     charts: charts.map((c) => ({ ...c, title: clear(c.title) })),
     insights,
     comparison: computeComparison(spec, rows, comparisonColumn(profile, input.compareBy), clearKpis),
+    shrinkage: computeShrinkage(profile, rows),
     analysis,
     spec,
     filterOptions: filterOptions(profile, rows),
@@ -171,6 +175,7 @@ export async function recomputeDashboard(input: {
     kpis: clearKpis,
     // Même colonne qu'à la création ; un filtre qui ne garde qu'une valeur supprime la comparaison.
     comparison: computeComparison(spec, rows, comparisonColumn(profile, previous.comparison?.column), clearKpis),
+    shrinkage: computeShrinkage({ ...profile, rowCount: rows.length }, rows),
     charts: charts.map((c) => ({ ...c, title: chartById.get(c.id)?.title ?? c.title })),
     // Les constats rédigés à la création citent les chiffres d'origine : ils ne valent plus après recalcul.
     insights: [],

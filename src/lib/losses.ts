@@ -25,6 +25,20 @@ export function lossPreset(options: FilterOptions | undefined): LossPreset | nul
   return candidates.sort((a, b) => Number(TYPE_HEADER.test(b.column)) - Number(TYPE_HEADER.test(a.column)) || b.losses.length - a.losses.length)[0] ?? null;
 }
 
+/**
+ * Colonne de motif d'un journal de démarque, au sens large : comme `lossPreset`, ou une colonne de motif
+ * (« Motif », « Code regul »…) dont les valeurs sont toutes des pertes. Sert au bilan de la démarque (US-18).
+ */
+export function lossColumn(dimensions: { column: string; values: string[] }[]): LossPreset | null {
+  const strict = lossPreset({ dateColumn: null, periods: [], dimensions });
+  if (strict) return strict;
+  return (
+    dimensions
+      .filter((d) => TYPE_HEADER.test(d.column) && d.values.length > 0 && d.values.every((v) => LOSS.test(v) && !NOT_LOSS.test(v)))
+      .map((d) => ({ column: d.column, losses: d.values, others: [] }))[0] ?? null
+  );
+}
+
 /** Le filtre « pertes uniquement » est-il exactement celui appliqué sur la colonne ? */
 export function lossesOnly(filters: Filters | undefined, preset: LossPreset): boolean {
   const applied = filters?.dimensions[preset.column];
