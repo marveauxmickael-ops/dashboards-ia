@@ -115,9 +115,6 @@ export function LandingPage() {
               <ButtonLink href="/inscription" className="px-5 py-3 text-base">
                 Créer mon dashboard <span aria-hidden="true">→</span>
               </ButtonLink>
-              <ButtonLink href="/tarifs" variant="secondary" className="px-5 py-3 text-base">
-                Voir les tarifs
-              </ButtonLink>
             </div>
             <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
               <li className="flex items-center gap-2">
@@ -222,9 +219,6 @@ export function LandingPage() {
             <div className="flex flex-wrap gap-3">
               <ButtonLink href="/inscription" className="px-5 py-3 text-base">
                 Créer mon dashboard <span aria-hidden="true">→</span>
-              </ButtonLink>
-              <ButtonLink href="/tarifs" variant="secondary" className="px-5 py-3 text-base">
-                Voir les tarifs
               </ButtonLink>
             </div>
           </div>

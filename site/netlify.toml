@@ -17,7 +17,7 @@
     Cache-Control = "public, max-age=31536000, immutable"
 
 # Le site vitrine est remplacé par la landing page de l'application (v2) : toute adresse du site y redirige,
-# sauf ses polices. Plus de démo publique : un essai de 14 jours est ouvert sur demande dans l'application.
+# sauf ses polices. Plus de démo publique.
 # Redirection temporaire (302) : réversible sans cache permanent chez les visiteurs, et à mettre à jour
 # le jour où l'application a son propre domaine. Les règles s'appliquent dans l'ordre : la première trouvée l'emporte.
 [[redirects]]
