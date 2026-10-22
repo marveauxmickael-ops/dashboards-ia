@@ -1,4 +1,4 @@
-// Génère la plaquette PDF (public/plaquette-lisio.pdf) à partir de plaquette.html : node marketing/plaquette/render.mjs
+// Génère la plaquette PDF (public/plaquette-lisio.pdf, retirée du site en attendant la nouvelle présentation) à partir de plaquette.html : node marketing/plaquette/render.mjs
 import { chromium } from "playwright";
 import path from "node:path";
 

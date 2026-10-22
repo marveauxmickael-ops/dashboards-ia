@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LisioLogo } from "@/components/lisio-logo";
 import { ButtonLink } from "@/components/ui/button-link";
-import { BROCHURE_URL, OPTIONS, PLANS, PROTECTION, PROTECTION_TITLE } from "@/lib/marketing/offer";
+import { OPTIONS, PLANS, PROTECTION, PROTECTION_TITLE } from "@/lib/marketing/offer";
 
 export const metadata: Metadata = {
   title: "Tarifs — Lisio",
@@ -125,18 +125,7 @@ export default function PricingPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-14">
-          <div className="flex flex-col items-start gap-5 rounded-2xl bg-slate-900 p-8 text-white sm:p-12 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">La plaquette Lisio</h2>
-              <p className="text-slate-300">Emportez-la pour la partager.</p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <a href={BROCHURE_URL} download className="inline-flex items-center gap-2 rounded-full border border-white/40 px-5 py-3 text-base font-semibold text-white hover:bg-white/10">
-                Télécharger la plaquette (PDF)
-              </a>
-            </div>
-          </div>
-          <p className="mt-6 text-xs text-slate-500">Prix hors taxes, par mois et par organisation. Les éditeurs créent et modifient les dashboards ; les lecteurs les consultent.</p>
+          <p className="text-xs text-slate-500">Prix hors taxes, par mois et par organisation. Les éditeurs créent et modifient les dashboards ; les lecteurs les consultent.</p>
         </section>
       </main>
     </div>
