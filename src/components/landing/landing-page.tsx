@@ -11,8 +11,6 @@ import { HeroVisual } from "./hero-visual";
 // Landing page (visiteurs non connectés). Uniquement des fonctionnalités réelles : aucun chiffre de performance,
 // aucun témoignage ni logo client. L'aperçu est un vrai dashboard calculé sur des données fictives.
 
-// Démonstration complète dans le navigateur (sans compte, aucun fichier envoyé).
-const DEMO_URL = "https://lisio.netlify.app/demo/";
 
 const icon = (d: string) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -117,8 +115,8 @@ export function LandingPage() {
               <ButtonLink href="/inscription" className="px-5 py-3 text-base">
                 Créer mon dashboard <span aria-hidden="true">→</span>
               </ButtonLink>
-              <ButtonLink href={DEMO_URL} variant="secondary" className="px-5 py-3 text-base">
-                Voir la démonstration
+              <ButtonLink href="/tarifs" variant="secondary" className="px-5 py-3 text-base">
+                Voir les tarifs
               </ButtonLink>
             </div>
             <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-600">
@@ -192,7 +190,7 @@ export function LandingPage() {
                 </div>
               </div>
               <figcaption className="border-t border-slate-200 px-4 py-2 text-xs text-slate-500">
-                Aperçu réel calculé par le moteur sur un fichier de démonstration ({preview.rowCount.toLocaleString("fr-FR")} lignes de données fictives).
+                Aperçu réel calculé par le moteur sur un fichier d&apos;exemple ({preview.rowCount.toLocaleString("fr-FR")} lignes de données fictives).
               </figcaption>
             </figure>
           )}
@@ -225,8 +223,8 @@ export function LandingPage() {
               <ButtonLink href="/inscription" className="px-5 py-3 text-base">
                 Créer mon dashboard <span aria-hidden="true">→</span>
               </ButtonLink>
-              <ButtonLink href={DEMO_URL} variant="secondary" className="px-5 py-3 text-base">
-                Voir la démonstration
+              <ButtonLink href="/tarifs" variant="secondary" className="px-5 py-3 text-base">
+                Voir les tarifs
               </ButtonLink>
             </div>
           </div>

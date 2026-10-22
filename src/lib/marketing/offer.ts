@@ -61,5 +61,4 @@ export const PROTECTION = [
   { lead: "Accès maîtrisé", text: "chaque organisation ne voit que ses dashboards, avec la double authentification et des liens de partage sécurisés." },
 ];
 
-export const DEMO_URL = "https://lisio.netlify.app/demo/";
 export const BROCHURE_URL = "/plaquette-lisio.pdf";

@@ -15,8 +15,12 @@ describe("safeNextPath", () => {
 });
 
 describe("isPublicPath", () => {
-  it("laisse publiques les pages d'authentification et le fichier de démonstration", () => {
-    for (const p of ["/connexion", "/inscription", "/mot-de-passe-oublie", "/auth/confirm", "/demo/ventes-demo.csv"]) expect(isPublicPath(p)).toBe(true);
+  it("laisse publiques les pages d'authentification", () => {
+    for (const p of ["/connexion", "/inscription", "/mot-de-passe-oublie", "/auth/confirm"]) expect(isPublicPath(p)).toBe(true);
+  });
+
+  it("réserve les fichiers d'exemple aux personnes connectées (pas de démo publique)", () => {
+    expect(isPublicPath("/demo/ventes-demo.csv")).toBe(false);
   });
 
   it("protège les pages de l'application", () => {

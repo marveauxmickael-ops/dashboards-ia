@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LisioLogo } from "@/components/lisio-logo";
 import { ButtonLink } from "@/components/ui/button-link";
-import { BROCHURE_URL, DEMO_URL, OPTIONS, PLANS, PROTECTION, PROTECTION_TITLE } from "@/lib/marketing/offer";
+import { BROCHURE_URL, OPTIONS, PLANS, PROTECTION, PROTECTION_TITLE } from "@/lib/marketing/offer";
 
 export const metadata: Metadata = {
   title: "Tarifs — Lisio",
@@ -88,9 +88,15 @@ export default function PricingPage() {
                   );
                 })}
               </ul>
-              <ButtonLink href={plan.id === "enseigne" ? DEMO_URL : "/inscription"} variant={plan.highlighted ? "primary" : "secondary"} className="justify-center">
-                {plan.id === "enseigne" ? "Voir la démonstration" : "Commencer"}
-              </ButtonLink>
+              {plan.id === "enseigne" ? (
+                <a href={BROCHURE_URL} download className="inline-flex justify-center rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50">
+                  Télécharger la plaquette
+                </a>
+              ) : (
+                <ButtonLink href="/inscription" variant={plan.highlighted ? "primary" : "secondary"} className="justify-center">
+                  Commencer
+                </ButtonLink>
+              )}
             </article>
           ))}
         </section>
@@ -125,13 +131,10 @@ export default function PricingPage() {
         <section className="mx-auto max-w-6xl px-4 py-14">
           <div className="flex flex-col items-start gap-5 rounded-2xl bg-slate-900 p-8 text-white sm:p-12 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Voyez Lisio sur vos propres chiffres</h2>
-              <p className="text-slate-300">Essayez la démonstration ou emportez la plaquette pour la partager.</p>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Essayez Lisio 14 jours sur vos propres chiffres</h2>
+              <p className="text-slate-300">Accès d&apos;essai ouvert sur demande, avec une mise en route accompagnée. Emportez la plaquette pour la partager.</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <ButtonLink href={DEMO_URL} className="px-5 py-3 text-base">
-                Voir la démonstration
-              </ButtonLink>
               <a href={BROCHURE_URL} download className="inline-flex items-center gap-2 rounded-full border border-white/40 px-5 py-3 text-base font-semibold text-white hover:bg-white/10">
                 Télécharger la plaquette (PDF)
               </a>
