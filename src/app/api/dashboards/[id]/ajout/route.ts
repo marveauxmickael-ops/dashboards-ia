@@ -5,6 +5,7 @@ import { saveVersion } from "@/lib/dashboards/versions";
 import { NO_FILTERS } from "@/lib/filters";
 import { ImportError, MAX_FILE_BYTES, parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
+import { restoreTaxLabels } from "@/lib/ingest/tax";
 import { mergeDatasets, mergedFileName, type KeepPolicy, type MergePreview, type MergeSnapshot } from "@/lib/merge";
 import { compatibilityProblems, IncompatibleFileError, recomputeDashboard, type DashboardResult } from "@/lib/pipeline";
 import { cleanedCsv } from "@/lib/quality";
@@ -60,7 +61,11 @@ export async function POST(request: Request, { params }: RouteContext<"/api/dash
   const mode = dashboard.ai_mode === "strict" ? "strict" : "standard";
 
   try {
-    const [before, next] = await Promise.all([parseFile(previousFile.name, await previousFile.arrayBuffer()), parseFile(file.name, await file.arrayBuffer())]);
+    // Les colonnes gardent les noms de la création du dashboard (« Montant vente » d'avant la reconnaissance du TTC).
+    const columns = previous.profile.columns.map((c) => c.name);
+    const [before, next] = (
+      await Promise.all([parseFile(previousFile.name, await previousFile.arrayBuffer()), parseFile(file.name, await file.arrayBuffer())])
+    ).map((ds) => restoreTaxLabels(ds, columns));
 
     // Le fichier précédent doit être celui de la version en cours, reconnu par son empreinte.
     if (dashboard.source_fingerprint && sourceFingerprint(before, organization.id) !== dashboard.source_fingerprint) {

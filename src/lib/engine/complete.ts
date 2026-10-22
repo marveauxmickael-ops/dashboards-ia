@@ -106,6 +106,7 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
       aggregation,
     });
   }
+  placeTaxIncluded(kpis, measures);
   if (!hasKpi("rows", "count") && kpis.length < MAX_KPIS) {
     kpis.push({ id: nextId("auto_k", kpiIds), label: "Nombre de lignes", description: "Nombre d'enregistrements dans le fichier.", measure: "rows", aggregation: "count" });
   }
@@ -214,4 +215,22 @@ function rank(order: string[], id: string): number {
 
 function measureColumn(columns: ColumnProfile[], m: Measure): ColumnProfile | undefined {
   return m.column === null ? undefined : columns.find((c) => c.name === m.column);
+}
+
+/**
+ * Montant TTC (« Montant vente TTC ») : juste après son HT (et le taux entre fichiers reliés), pour qu'ils se lisent ensemble
+ * et que la vue essentielle les affiche tous les deux.
+ */
+function placeTaxIncluded(kpis: Kpi[], measures: Measure[]) {
+  const columnOf = (k: Kpi) => (k.aggregation === "sum" ? measures.find((m) => m.id === k.measure)?.column ?? null : null);
+  for (const ttc of kpis.filter((k) => / TTC$/.test(columnOf(k) ?? ""))) {
+    const base = columnOf(ttc)!.slice(0, -" TTC".length);
+    const isHt = (k: Kpi) => (columnOf(k) ?? "").toLowerCase() === `${base} ht`.toLowerCase();
+    if (!kpis.some(isHt)) continue;
+    kpis.splice(kpis.indexOf(ttc), 1);
+    // Le taux entre fichiers reliés garde sa place, juste après le premier indicateur.
+    let at = kpis.findIndex(isHt) + 1;
+    while (kpis[at]?.id.startsWith("link_k")) at++;
+    kpis.splice(at, 0, ttc);
+  }
 }

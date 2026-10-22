@@ -2,6 +2,7 @@ import Papa from "papaparse";
 import ExcelJS from "exceljs";
 import type { CellValue, RawDataset, Row } from "@/lib/types";
 import { extractPdfTable, PdfTableError } from "./pdf";
+import { withTaxLabels } from "./tax";
 
 export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 export const MAX_ROWS = 200_000;
@@ -13,6 +14,11 @@ export async function parseFile(fileName: string, data: ArrayBuffer): Promise<Ra
   if (data.byteLength > MAX_FILE_BYTES) {
     throw new ImportError("Le fichier dépasse 20 Mo. Réduisez la période ou le nombre de colonnes.");
   }
+  // Montants TTC non nommés (« Montant vente » à côté de « Montant vente HT ») : renommés « … TTC ».
+  return withTaxLabels(await readFile(fileName, data));
+}
+
+async function readFile(fileName: string, data: ArrayBuffer): Promise<RawDataset> {
   const lower = fileName.toLowerCase();
   if (lower.endsWith(".csv")) return parseCsv(fileName, new TextDecoder("utf-8").decode(data));
   if (lower.endsWith(".xlsx")) return parseXlsx(fileName, data);

@@ -7,6 +7,7 @@ import { recommend, type RecommendationsResult } from "@/lib/recommendations";
 import { checkInsights, computeDashboard, validateSpec, type CheckedInsight, type ComputedChart, type ComputedKpi } from "@/lib/engine/compute";
 import { ImportError, parseFile } from "@/lib/ingest/parse";
 import { profileDataset } from "@/lib/ingest/profile";
+import { restoreTaxLabels } from "@/lib/ingest/tax";
 import { buildAiContext, type AiContext } from "@/lib/privacy/ai-context";
 import { Pseudonymizer } from "@/lib/privacy/pseudonymize";
 import type { DashboardSpec } from "@/lib/ai/spec";
@@ -155,7 +156,7 @@ export async function recomputeDashboard(input: {
   if (!previous.spec) throw new IncompatibleFileError("Ce dashboard a été créé avant les filtres : générez-le à nouveau pour pouvoir le filtrer ou le mettre à jour.");
   const spec = previous.spec;
 
-  const { raw, cleaning } = await loadDataset(input.source, previous.cleaning?.plan, input.onSource);
+  const { raw, cleaning } = await loadDataset(input.source, previous.cleaning?.plan, input.onSource, previous.profile);
   const { profile, rows: allRows } = profileDataset(raw);
   const problems = compatibilityProblems(spec, previous.profile, profile);
   if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
@@ -209,7 +210,7 @@ export async function askDashboardQuestion(input: {
   organizationId: string;
 }): Promise<QuestionAnswer> {
   if (!input.previous.spec) throw new IncompatibleFileError("Ce dashboard a été créé avant les questions : générez-le à nouveau.");
-  const { raw } = await loadDataset({ fileName: input.fileName, data: input.data }, input.previous.cleaning?.plan);
+  const { raw } = await loadDataset({ fileName: input.fileName, data: input.data }, input.previous.cleaning?.plan, undefined, input.previous.profile);
   const { profile, rows } = profileDataset(raw);
   const problems = compatibilityProblems(input.previous.spec, input.previous.profile, profile);
   if (problems.length > 0) throw new IncompatibleFileError(`Ce fichier n'est pas compatible avec le dashboard : ${problems.join(" ; ")}.`);
@@ -217,13 +218,18 @@ export async function askDashboardQuestion(input: {
   return answerQuestion({ question: input.question, spec: input.previous.spec, profile, rows, mode: input.mode, pseudo });
 }
 
-/** Lit le fichier puis applique les corrections validées (copie en mémoire : le fichier n'est ni modifié ni conservé). */
+/**
+ * Lit le fichier puis applique les corrections validées (copie en mémoire : le fichier n'est ni modifié ni conservé).
+ * Mise à jour d'un dashboard (`previous`) : les colonnes gardent les noms de sa création (voir restoreTaxLabels).
+ */
 async function loadDataset(
   source: { fileName: string; data: ArrayBuffer } | RawDataset,
   plan: CleaningPlan | undefined,
   onSource?: (raw: RawDataset) => void,
+  previous?: DatasetProfile,
 ): Promise<{ raw: RawDataset; cleaning?: DashboardResult["cleaning"] }> {
-  const raw = "data" in source ? await parseFile(source.fileName, source.data) : source;
+  const read = "data" in source ? await parseFile(source.fileName, source.data) : source;
+  const raw = previous ? restoreTaxLabels(read, previous.columns.map((c) => c.name)) : read;
   onSource?.(raw);
   if (!plan || isEmptyPlan(plan)) return { raw };
   const { dataset, log } = applyCleaning(raw, plan);
