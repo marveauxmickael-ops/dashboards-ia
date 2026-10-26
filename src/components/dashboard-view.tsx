@@ -23,6 +23,7 @@ import type { DashboardResult } from "@/lib/pipeline";
 import { allowedChartTypes, analysisView, chartFormulaOf, chartSizeOf, chartTitleOf, chartTypeOf, dropInSection, periodData, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, SHRINKAGE_PART_LABELS, SHRINKAGE_PARTS, ViewSchema, visibleData, type ShrinkagePart, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ComparisonPanel } from "./comparison-panel";
+import { isNetwork, NetworkView } from "./network-view";
 import { CockpitSummary, LostSalesCard } from "./cockpit-summary";
 import { RecommendationsPanel } from "./recommendations-panel";
 import { SuggestionHint } from "./suggestion-hint";
@@ -32,7 +33,7 @@ import { ActiveFilters } from "./filters-bar";
 import { CleaningNotice } from "./quality-panel";
 import { chartPalette, readableOnWhite, type Branding } from "@/lib/branding";
 import { describeFilters, isFiltered } from "@/lib/filters";
-import { displayNameInSentence } from "@/lib/display";
+import { displayName, displayNameInSentence } from "@/lib/display";
 import { preferencesFromView, viewFromPreferences, type PreferencesUpdate as Preferences } from "@/lib/preferences";
 
 
@@ -53,6 +54,7 @@ export function DashboardView({
   exportable = false,
   children,
   sidebar,
+  onOpenStore,
   branding,
   savedView,
   saveView,
@@ -68,6 +70,8 @@ export function DashboardView({
   children?: ReactNode;
   /** Colonne de gauche sur grand écran (filtres) ; au-dessus du dashboard sur mobile. */
   sidebar?: ReactNode;
+  /** Vue Réseau : ouvre le dashboard d'un magasin (valeur), ou revient au réseau (null). Absent sans fichier source. */
+  onOpenStore?: (column: string, value: string | null) => void;
   /** Charte graphique de l'organisation : logo et couleurs. */
   branding?: Branding;
   /** Affichage enregistré avec le dashboard, modifiable et enregistré par `saveView` (éditeurs). */
@@ -101,6 +105,10 @@ export function DashboardView({
   // qui mélange pertes et corrections de stock.
   const cockpit = !!result.shrinkage && !view.hideShrinkage;
   const hasTools = Children.toArray(children).length > 0;
+  // Vue Réseau : plusieurs magasins regroupés. Magasin ouvert : filtre sur un seul magasin du dashboard complet.
+  const network = isNetwork(result.comparison);
+  const networkColumn = isNetwork(base.comparison) ? base.comparison.column : null;
+  const openedStore = networkColumn && result.filters?.dimensions[networkColumn]?.length === 1 ? result.filters.dimensions[networkColumn][0] : null;
   const kpis = result.kpis.filter((k) => !hiddenKpis.has(k.id) && !(cockpit && k.id.startsWith("link_k")));
   const charts = result.charts.filter((c) => !hiddenCharts.has(c.id) && !(cockpit && c.id.startsWith("link_c")));
   // Suggestions affichées au survol des graphiques et indicateurs (US-19), selon la personnalisation.
@@ -125,6 +133,7 @@ export function DashboardView({
     <aside aria-label="Navigation et filtres" className="flex flex-col gap-4 print:hidden">
       <nav aria-label="Sections du dashboard" className="hidden flex-col gap-1 rounded-[var(--radius-card)] border border-slate-200 bg-white p-2 text-sm lg:flex">
         {[
+          ["#reseau", "Réseau", network],
           ["#synthese", "Synthèse", kpis.length > 0 || cockpit],
           ["#demarque", "Démarque", cockpit && (result.shrinkage!.byAisle.length > 0 || result.shrinkage!.byType.length > 0)],
           ["#articles", "Articles", cockpit && result.shrinkage!.items.length > 0 && !view.shrinkageHidden.includes("items")],
@@ -359,6 +368,28 @@ export function DashboardView({
         </section>
       )}
 
+      {openedStore && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[var(--radius-card)] border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900 print:hidden">
+          <span>
+            {displayName(networkColumn!)} : <strong className="font-semibold">{openedStore}</strong> · chiffres recalculés sur ce seul magasin
+          </span>
+          {onOpenStore && (
+            <button type="button" onClick={() => onOpenStore(networkColumn!, null)} className="font-semibold underline underline-offset-4">
+              ← Revenir au réseau ({base.comparison!.rows.length})
+            </button>
+          )}
+        </p>
+      )}
+
+      {/* Plusieurs magasins : le réseau d'abord, c'est la question du directeur multi-sites. */}
+      {network && (
+        <NetworkView
+          comparison={result.comparison!}
+          hiddenKpis={(id) => hiddenKpis.has(id) || (cockpit && id.startsWith("link_k"))}
+          onOpen={onOpenStore ? (value) => onOpenStore(result.comparison!.column, value) : undefined}
+        />
+      )}
+
       {/* Démarque d'abord : c'est la question du lecteur quand un journal de démarque est déposé. */}
       {(kpis.length > 0 || cockpit) && (
         <section
@@ -431,7 +462,7 @@ export function DashboardView({
         </div>
       )}
 
-      {!view.hideComparison && result.comparison && (
+      {!view.hideComparison && result.comparison && !network && (
         <ComparisonPanel comparison={result.comparison} hiddenKpis={hiddenKpis} accent={accent} compact={compactLayout} />
       )}
 

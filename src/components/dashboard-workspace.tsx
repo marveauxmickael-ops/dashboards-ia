@@ -150,6 +150,18 @@ export function DashboardWorkspace({
       saveView={saveView}
       fixedView={fixedView}
       habitualApplied={habitualApplied}
+      onOpenStore={
+        supported && file
+          ? (column, value) => {
+              const current = shown.filters ?? NO_FILTERS;
+              const dimensions = { ...current.dimensions };
+              if (value === null) delete dimensions[column];
+              else dimensions[column] = [value];
+              void run("filter", { ...current, dimensions });
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          : undefined
+      }
       sidebar={
         (losses || (supported && file && base.filterOptions)) && (
           <>
