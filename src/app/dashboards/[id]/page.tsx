@@ -72,7 +72,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   return (
     <>
       <AppHeader workspace={workspace} />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
         <div className="flex flex-col gap-3 print:hidden">
           <Link href="/dashboards" className="self-start text-sm text-brand-800 underline">
             ← Mes dashboards

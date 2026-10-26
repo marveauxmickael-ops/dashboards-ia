@@ -11,7 +11,24 @@ function list(values: string[]): string {
  * Bascule « Tous les mouvements / Pertes uniquement » d'un journal de démarque : une seule commande, à deux positions,
  * plutôt qu'un critère de plus à composer. Elle applique le filtre du moteur sur la colonne de type de mouvement.
  */
-export function LossToggle({ preset, on, busy, onChange }: { preset: LossPreset; on: boolean; busy: boolean; onChange: (on: boolean) => void }) {
+export function LossToggle({ preset, on, busy, onChange, stacked = false }: { preset: LossPreset; on: boolean; busy: boolean; onChange: (on: boolean) => void; stacked?: boolean }) {
+  const hint = busy
+    ? "Recalcul…"
+    : on
+      ? `${list(preset.losses)} seulement : ${list(preset.others).toLowerCase()} écartés.`
+      : `Pertes et corrections de stock (${list(preset.others).toLowerCase()}) confondues.`;
+  // Colonne de filtres : une case à cocher, plus étroite que la bascule à deux positions.
+  if (stacked) {
+    return (
+      <div className="flex flex-col gap-1 print:hidden" aria-busy={busy}>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-900">
+          <input type="checkbox" checked={on} disabled={busy} onChange={(e) => onChange(e.target.checked)} className="size-4 accent-brand-800" />
+          Pertes uniquement
+        </label>
+        <p className="text-xs text-slate-500">{hint}</p>
+      </div>
+    );
+  }
   const options = [
     [false, "Tous les mouvements"],
     [true, "Pertes uniquement"],
@@ -34,13 +51,7 @@ export function LossToggle({ preset, on, busy, onChange }: { preset: LossPreset;
           </button>
         ))}
       </div>
-      <p className="text-xs text-slate-500">
-        {busy
-          ? "Recalcul…"
-          : on
-            ? `${list(preset.losses)} seulement : ${list(preset.others).toLowerCase()} écartés.`
-            : `Pertes et corrections de stock (${list(preset.others).toLowerCase()}) confondues.`}
-      </p>
+      <p className="text-xs text-slate-500">{hint}</p>
     </div>
   );
 }

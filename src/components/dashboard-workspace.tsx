@@ -140,15 +140,44 @@ export function DashboardWorkspace({
   const losses = supported && file ? lossPreset(base.filterOptions) : null;
 
   return (
-    <DashboardView result={shown} base={base} dashboardId={dashboardId} exportable={exportable} branding={branding} savedView={savedView} saveView={saveView} fixedView={fixedView} habitualApplied={habitualApplied}>
-      {losses && (
-        <LossToggle
-          preset={losses}
-          on={lossesOnly(shown.filters, losses)}
-          busy={busy === "filter"}
-          onChange={(on) => void run("filter", withLossesOnly(shown.filters ?? NO_FILTERS, losses, on))}
-        />
-      )}
+    <DashboardView
+      result={shown}
+      base={base}
+      dashboardId={dashboardId}
+      exportable={exportable}
+      branding={branding}
+      savedView={savedView}
+      saveView={saveView}
+      fixedView={fixedView}
+      habitualApplied={habitualApplied}
+      sidebar={
+        (losses || (supported && file && base.filterOptions)) && (
+          <>
+            {losses && (
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <LossToggle
+                  stacked
+                  preset={losses}
+                  on={lossesOnly(shown.filters, losses)}
+                  busy={busy === "filter"}
+                  onChange={(on) => void run("filter", withLossesOnly(shown.filters ?? NO_FILTERS, losses, on))}
+                />
+              </div>
+            )}
+            {supported && file && base.filterOptions && (
+              <FiltersBar
+                stacked
+                key={`${base.fileName}${base.profile.rowCount}${JSON.stringify(shown.filters ?? null)}`}
+                options={base.filterOptions}
+                applied={shown.filters ?? NO_FILTERS}
+                busy={busy === "filter"}
+                onApply={(f) => void run("filter", f)}
+              />
+            )}
+          </>
+        )
+      }
+    >
       {supported && (
         <section aria-label="Fichier source" className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm print:hidden">
           <div className="flex flex-wrap items-center gap-3">
@@ -239,9 +268,6 @@ export function DashboardWorkspace({
       )}
       {supported && file && base.filterOptions && (
         <QuestionPanel ask={(question) => ask({ file, previous: base, question, dashboardId })} branding={branding} aiAvailable={aiAvailable} />
-      )}
-      {supported && file && base.filterOptions && (
-        <FiltersBar key={`${base.fileName}${base.profile.rowCount}${JSON.stringify(shown.filters ?? null)}`} options={base.filterOptions} applied={shown.filters ?? NO_FILTERS} busy={busy === "filter"} onApply={(f) => void run("filter", f)} />
       )}
     </DashboardView>
   );

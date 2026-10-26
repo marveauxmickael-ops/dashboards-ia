@@ -16,14 +16,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Children, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ComputedChart, InsightStatus } from "@/lib/engine/compute";
 import { formatPeriod, formatValue } from "@/lib/format";
 import type { DashboardResult } from "@/lib/pipeline";
 import { allowedChartTypes, analysisView, chartFormulaOf, chartSizeOf, chartTitleOf, chartTypeOf, dropInSection, periodData, isDefaultView, moveChart, orderCharts, placeChart, type ChartSize, EMPTY_VIEW, SHRINKAGE_PART_LABELS, SHRINKAGE_PARTS, ViewSchema, visibleData, type ShrinkagePart, type ChartType, type ViewState } from "@/lib/view";
 import { AnalysisPanel } from "./analysis-panel";
 import { ComparisonPanel } from "./comparison-panel";
-import { ShrinkagePanel } from "./shrinkage-panel";
+import { CockpitSummary, LostSalesCard } from "./cockpit-summary";
 import { RecommendationsPanel } from "./recommendations-panel";
 import { SuggestionHint } from "./suggestion-hint";
 import { suggestionsFor, type Recommendation } from "@/lib/recommendations/types";
@@ -52,6 +52,7 @@ export function DashboardView({
   dashboardId,
   exportable = false,
   children,
+  sidebar,
   branding,
   savedView,
   saveView,
@@ -63,8 +64,10 @@ export function DashboardView({
   base?: DashboardResult;
   dashboardId?: string | null;
   exportable?: boolean;
-  /** Outils affichés sous le titre (fichier source, filtres, questions). */
+  /** Outils sur le fichier source (mise à jour, questions), sous les chiffres. */
   children?: ReactNode;
+  /** Colonne de gauche sur grand écran (filtres) ; au-dessus du dashboard sur mobile. */
+  sidebar?: ReactNode;
   /** Charte graphique de l'organisation : logo et couleurs. */
   branding?: Branding;
   /** Affichage enregistré avec le dashboard, modifiable et enregistré par `saveView` (éditeurs). */
@@ -94,8 +97,12 @@ export function DashboardView({
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const hiddenKpis = new Set(view.hiddenKpis);
   const hiddenCharts = new Set(view.hiddenCharts);
-  const kpis = result.kpis.filter((k) => !hiddenKpis.has(k.id));
-  const charts = result.charts.filter((c) => !hiddenCharts.has(c.id));
+  // Cockpit : journal de démarque reconnu. Le chiffre perdu (pertes uniquement) remplace le ratio brut démarque / CA,
+  // qui mélange pertes et corrections de stock.
+  const cockpit = !!result.shrinkage && !view.hideShrinkage;
+  const hasTools = Children.toArray(children).length > 0;
+  const kpis = result.kpis.filter((k) => !hiddenKpis.has(k.id) && !(cockpit && k.id.startsWith("link_k")));
+  const charts = result.charts.filter((c) => !hiddenCharts.has(c.id) && !(cockpit && c.id.startsWith("link_c")));
   // Suggestions affichées au survol des graphiques et indicateurs (US-19), selon la personnalisation.
   const recommendationItems = !view.hideRecommendations && result.recommendations ? result.recommendations.items.filter((r) => !view.recommendationsHidden.includes(r.group)) : [];
   // Bascule Mois / Trimestre : seulement si au moins une évolution couvre plusieurs trimestres.
@@ -114,7 +121,27 @@ export function DashboardView({
   const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
   return (
-    <div id="dashboard-print-root" className={`flex flex-col ${compactLayout ? "gap-3" : "gap-6"}`}>
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start print:block">
+    <aside aria-label="Navigation et filtres" className="flex flex-col gap-4 print:hidden">
+      <nav aria-label="Sections du dashboard" className="hidden flex-col gap-1 rounded-[var(--radius-card)] border border-slate-200 bg-white p-2 text-sm lg:flex">
+        {[
+          ["#synthese", "Synthèse", kpis.length > 0 || cockpit],
+          ["#demarque", "Démarque", cockpit && (result.shrinkage!.byAisle.length > 0 || result.shrinkage!.byType.length > 0)],
+          ["#articles", "Articles", cockpit && result.shrinkage!.items.length > 0 && !view.shrinkageHidden.includes("items")],
+          ["#recommandations", "Recommandations", recommendationItems.length > 0],
+          ["#graphiques", "Ventes et marge", charts.length > 0],
+          ["#donnees", "Données et questions", hasTools],
+        ]
+          .filter(([, , shown]) => shown)
+          .map(([href, label]) => (
+            <a key={href as string} href={href as string} className="rounded-lg px-3 py-2 font-medium text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-900">
+              {label}
+            </a>
+          ))}
+      </nav>
+      {sidebar}
+    </aside>
+    <div id="dashboard-print-root" className={`@container flex min-w-0 flex-col ${compactLayout ? "gap-3" : "gap-6"}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 pb-2" style={{ borderColor: palette[0] }}>
         <div className="flex min-w-0 items-center gap-3">
           {branding?.logo && (
@@ -130,7 +157,6 @@ export function DashboardView({
         </p>
       </div>
 
-      {children}
       {habitualNotice && !locked && (
         <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-900 print:hidden">
           Votre affichage habituel a été appliqué : {view.hiddenKpis.length + view.hiddenCharts.length} élément(s) masqué(s), à retrouver dans « Personnaliser
@@ -334,13 +360,13 @@ export function DashboardView({
       )}
 
       {/* Démarque d'abord : c'est la question du lecteur quand un journal de démarque est déposé. */}
-      {!view.hideShrinkage && result.shrinkage && <ShrinkagePanel report={result.shrinkage} compact={compactLayout} hidden={view.shrinkageHidden} />}
-
-      {kpis.length > 0 && (
+      {(kpis.length > 0 || cockpit) && (
         <section
+          id="synthese"
           aria-label="Indicateurs clés"
-          className={`kpi-grid ${compactLayout ? "grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}
+          className={`kpi-grid scroll-mt-4 ${compactLayout ? "grid grid-cols-2 gap-2 @xl:grid-cols-3 @5xl:grid-cols-6" : "grid grid-cols-2 gap-3 @3xl:grid-cols-3 @6xl:grid-cols-4"}`}
         >
+          {cockpit && !view.shrinkageHidden.includes("lostSales") && <LostSalesCard report={result.shrinkage!} hidden={view.shrinkageHidden} />}
           {kpis.map((k, i) => (
             // Apparition progressive (« les indicateurs prennent forme »), sans effet si l'utilisateur réduit les animations.
             <article
@@ -350,7 +376,7 @@ export function DashboardView({
             >
               {!locked && <HideButton label={`Masquer l'indicateur ${k.label}`} onClick={() => setView({ ...view, hiddenKpis: [...view.hiddenKpis, k.id] })} />}
               <p className="pr-6 text-sm font-medium text-slate-600">{k.label}</p>
-              <p className={`mt-1 font-semibold tracking-tight tabular-nums text-slate-900 ${compactLayout ? "text-lg" : "text-[1.7rem] leading-tight"}`}>{formatValue(k.value, k.format)}</p>
+              <p className={`mt-1 font-semibold tracking-tight tabular-nums text-slate-900 ${compactLayout ? "text-lg" : "text-xl leading-tight @lg:text-[1.7rem]"}`}>{formatValue(k.value, k.format)}</p>
               {k.value === null && <p className="mt-1 text-xs text-amber-800">Donnée indisponible : aucune valeur exploitable, rien n&apos;est estimé.</p>}
               {!compactLayout && <p className="mt-2 text-xs text-slate-500">{k.description}</p>}
               {compactLayout && k.quality && (
@@ -391,38 +417,25 @@ export function DashboardView({
         </section>
       )}
 
+      {cockpit && (
+        <CockpitSummary
+          report={result.shrinkage!}
+          hidden={view.shrinkageHidden}
+          actions={[...recommendationItems.filter((r) => r.group === "losses"), ...recommendationItems.filter((r) => r.group === "growth")]}
+        />
+      )}
+
       {!view.hideRecommendations && result.recommendations && result.recommendations.items.length > 0 && (
-        <RecommendationsPanel result={result.recommendations} hidden={view.recommendationsHidden} compact={compactLayout} />
+        <div id="recommandations" className="scroll-mt-4">
+          <RecommendationsPanel result={result.recommendations} hidden={view.recommendationsHidden} compact={compactLayout} />
+        </div>
       )}
 
       {!view.hideComparison && result.comparison && (
         <ComparisonPanel comparison={result.comparison} hiddenKpis={hiddenKpis} accent={accent} compact={compactLayout} />
       )}
 
-      {!view.hideInsights && result.insights.length > 0 && (
-        <section aria-label="Constats" className="rounded-[var(--radius-card)] border border-slate-200 bg-white p-4 shadow-card">
-          <h3 className="text-base font-semibold text-slate-900">Constats</h3>
-          <ul className="mt-3 flex flex-col gap-3">
-            {result.insights.map((insight, i) => (
-              <li key={i} className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
-                <span className={`inline-flex w-fit shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${STATUS[insight.status].className}`}>
-                  {STATUS[insight.status].label}
-                </span>
-                <div className="min-w-0 text-sm text-slate-800">
-                  {insight.text}
-                  {insight.details.length > 0 && <p className="mt-1 text-xs text-red-700">{insight.details.join(" ")}</p>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {!view.hideAnalysis && hasAnalysis && result.analysis && (
-        <Collapsible enabled={compactLayout} summary={`Analyse des variations (${result.analysis.variations.length})`}>
-          <AnalysisPanel analysis={analysisView(result.analysis, view)} dashboardId={dashboardId} />
-        </Collapsible>
-      )}
+      <div id="graphiques" className={`flex scroll-mt-4 flex-col ${compactLayout ? "gap-3" : "gap-6"}`}>
 
       {(view.grouping === "free" ? [{ title: "Graphiques", charts: orderCharts(charts, view) }] : groupCharts(orderCharts(charts, view), view.chartSections)).map((group) => {
         const siblings = group.charts.map((c) => c.id);
@@ -439,7 +452,7 @@ export function DashboardView({
               {group.title}
             </h3>
             {/* « dense » : un petit graphique vient combler un espace laissé libre plus haut dans la grille. */}
-            <div className={`chart-grid grid grid-flow-row-dense grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${compactLayout ? "gap-2" : "gap-3"}`}>
+            <div className={`chart-grid grid grid-flow-row-dense grid-cols-1 @xl:grid-cols-2 @3xl:grid-cols-4 ${compactLayout ? "gap-2" : "gap-3"}`}>
               {group.charts.map((c, i) => (
                 <ChartCard
                   key={c.id}
@@ -506,6 +519,45 @@ export function DashboardView({
         );
       })}
 
+      </div>
+
+      {hasTools && (
+        <div id="donnees" className="flex scroll-mt-4 flex-col gap-4">
+          {children}
+        </div>
+      )}
+
+      {((!view.hideInsights && result.insights.length > 0) || (!view.hideAnalysis && hasAnalysis)) && (
+      <Collapsible enabled={cockpit} summary="Détails techniques : constats et analyse des variations">
+      <div className="flex flex-col gap-6">
+      {!view.hideInsights && result.insights.length > 0 && (
+        <section aria-label="Constats" className="rounded-[var(--radius-card)] border border-slate-200 bg-white p-4 shadow-card">
+          <h3 className="text-base font-semibold text-slate-900">Constats</h3>
+          <ul className="mt-3 flex flex-col gap-3">
+            {result.insights.map((insight, i) => (
+              <li key={i} className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-3">
+                <span className={`inline-flex w-fit shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${STATUS[insight.status].className}`}>
+                  {STATUS[insight.status].label}
+                </span>
+                <div className="min-w-0 text-sm text-slate-800">
+                  {insight.text}
+                  {insight.details.length > 0 && <p className="mt-1 text-xs text-red-700">{insight.details.join(" ")}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {!view.hideAnalysis && hasAnalysis && result.analysis && (
+        <Collapsible enabled={compactLayout} summary={`Analyse des variations (${result.analysis.variations.length})`}>
+          <AnalysisPanel analysis={analysisView(result.analysis, view)} dashboardId={dashboardId} />
+        </Collapsible>
+      )}
+      </div>
+      </Collapsible>
+      )}
+
       {kpis.length === 0 && charts.length === 0 && (
         <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">
           Tous les indicateurs et graphiques sont masqués.{" "}
@@ -527,6 +579,7 @@ export function DashboardView({
           </ul>
         </section>
       )}
+    </div>
     </div>
   );
 }
@@ -991,7 +1044,7 @@ const TYPE_LABEL: Record<ChartType, string> = { bar: "Barres", line: "Courbe", p
 
 const SIZE_LABEL: Record<ChartSize, string> = { s: "Petit", m: "Moyen", l: "Grand" };
 /** Largeur dans la grille de 4 colonnes : petit = 1, moyen = 2, grand = toute la ligne. */
-const SPAN: Record<ChartSize, string> = { s: "span-s", m: "span-m sm:col-span-2", l: "span-l col-span-full" };
+const SPAN: Record<ChartSize, string> = { s: "span-s", m: "span-m @xl:col-span-2", l: "span-l col-span-full" };
 const BASE_HEIGHT: Record<ChartSize, number> = { s: 190, m: 250, l: 300 };
 
 const iconButton =

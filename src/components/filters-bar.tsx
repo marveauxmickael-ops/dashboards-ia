@@ -15,11 +15,14 @@ export function FiltersBar({
   applied,
   busy,
   onApply,
+  stacked = false,
 }: {
   options: FilterOptions;
   applied: Filters;
   busy: boolean;
   onApply: (filters: Filters) => void;
+  /** Colonne de gauche : un filtre par ligne, pleine largeur. */
+  stacked?: boolean;
 }) {
   const [draft, setDraft] = useState<Filters>(applied);
   const changed = JSON.stringify(draft) !== JSON.stringify(applied);
@@ -34,8 +37,9 @@ export function FiltersBar({
   };
 
   return (
-    <section aria-label="Filtres" className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 print:hidden">
-      <div className="flex flex-wrap items-end gap-3">
+    <section aria-label="Filtres" className={`flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 print:hidden ${stacked ? "[&_details]:w-full [&_label]:w-full [&_select]:w-full [&_summary]:block [&_summary]:w-full" : ""}`}>
+      {stacked && <h2 className="text-sm font-semibold text-slate-900">Filtres</h2>}
+      <div className={stacked ? "flex flex-col items-stretch gap-3" : "flex flex-wrap items-end gap-3"}>
         {options.dateColumn && quarters.length >= 2 && (
           <label className="flex flex-col gap-1 text-xs font-medium text-slate-600">
             Trimestre
@@ -89,7 +93,7 @@ export function FiltersBar({
               <summary className={`${select} cursor-pointer list-none`}>
                 {displayName(d.column)} {selected.length < d.values.length ? `(${selected.length}/${d.values.length})` : "(tous)"} ▾
               </summary>
-              <div className="absolute z-10 mt-1 w-64 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+              <div className="absolute z-10 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
                 <div className="mb-1.5 flex gap-3 text-xs">
                   <button type="button" className="text-brand-900 underline" onClick={() => setDimension(d.column, d.values, d.values)}>
                     Tout cocher

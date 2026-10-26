@@ -32,7 +32,7 @@ describe("dashboard partagé", () => {
     expect(html).not.toContain("Personnaliser l");
     expect(html).not.toContain("Masquer l");
     expect(html).not.toContain(">Constats<");
-    expect(html).toContain("lg:grid-cols-6"); // mise en page compacte
+    expect(html).toContain("@5xl:grid-cols-6"); // mise en page compacte
   });
 
   it("affiche le dashboard complet si aucun affichage n'est enregistré ou s'il est invalide", () => {
