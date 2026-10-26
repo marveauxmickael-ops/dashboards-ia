@@ -4,6 +4,7 @@ import { useState } from "react";
 import { describeFilters, isFiltered, NO_FILTERS, type FilterOptions, type Filters } from "@/lib/filters";
 import { formatPeriod, quartersOf } from "@/lib/format";
 import { SOURCE_COLUMN } from "@/lib/ingest/scopes";
+import { displayName } from "@/lib/display";
 
 /** Codes et identifiants (EAN, référence…) : utiles au moteur, pas comme critère de la barre de filtres. */
 const HIDDEN_FILTER = /(^|[\s_(-])(code|ean|gtin|sku|id|r[ée]f|r[ée]f[ée]rence|n°|num[ée]ro)(?=$|[\s_).:-])/i;
@@ -86,7 +87,7 @@ export function FiltersBar({
           return (
             <details key={d.column} className="relative text-sm">
               <summary className={`${select} cursor-pointer list-none`}>
-                {d.column} {selected.length < d.values.length ? `(${selected.length}/${d.values.length})` : "(tous)"} ▾
+                {displayName(d.column)} {selected.length < d.values.length ? `(${selected.length}/${d.values.length})` : "(tous)"} ▾
               </summary>
               <div className="absolute z-10 mt-1 w-64 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
                 <div className="mb-1.5 flex gap-3 text-xs">

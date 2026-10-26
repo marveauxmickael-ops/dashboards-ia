@@ -56,7 +56,6 @@ export function buildDemoSpec(ctx: AiContext): DashboardSpec {
   }
   if (addOn) kpis.push({ id: "k_additionnel", label: addOn.label, description: `Somme de ${addOn.label} sur la période.`, measure: addOn.id, aggregation: "sum" });
   kpis.push({ id: "k_lignes", label: "Nombre de lignes", description: "Nombre d'enregistrements dans le fichier.", measure: "rows", aggregation: "count" });
-  if (revenue) kpis.push({ id: "k_moyenne", label: `${revenue.label} moyen`, description: `Valeur moyenne de ${revenue.label} par ligne.`, measure: revenue.id, aggregation: "avg" });
 
   const mainMeasure = revenue?.id ?? "rows";
   const mainAgg = revenue ? "sum" : "count";

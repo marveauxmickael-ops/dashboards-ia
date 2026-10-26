@@ -2,6 +2,7 @@
 
 import { comparisonTitle, gapToAverage, type Comparison } from "@/lib/engine/comparison";
 import { formatValue } from "@/lib/format";
+import { displayName } from "@/lib/display";
 import { useCollapsed } from "@/hooks/use-collapsed";
 import { CollapseToggle } from "./ui/collapse-toggle";
 
@@ -66,7 +67,7 @@ export function ComparisonPanel({ comparison, hiddenKpis, accent, compact }: { c
         </h3>
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-xs text-slate-500">
-            {rows.length} valeurs de « {comparison.column} » · classées par {lead.label}
+            {rows.length} valeurs de « {displayName(comparison.column)} » · classées par {lead.label}
           </p>
           {toggle}
         </div>
@@ -86,7 +87,7 @@ export function ComparisonPanel({ comparison, hiddenKpis, accent, compact }: { c
                 Rang
               </th>
               <th scope="col" className="py-2 pr-3 font-medium">
-                {comparison.column}
+                {displayName(comparison.column)}
               </th>
               {shown.map((k) => (
                 <th key={k.id} scope="col" className="py-2 pl-3 text-right font-medium">

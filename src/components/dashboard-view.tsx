@@ -32,6 +32,7 @@ import { ActiveFilters } from "./filters-bar";
 import { CleaningNotice } from "./quality-panel";
 import { chartPalette, readableOnWhite, type Branding } from "@/lib/branding";
 import { describeFilters, isFiltered } from "@/lib/filters";
+import { displayNameInSentence } from "@/lib/display";
 import { preferencesFromView, viewFromPreferences, type PreferencesUpdate as Preferences } from "@/lib/preferences";
 
 
@@ -946,7 +947,7 @@ function CheckList({ items, onToggle }: { items: CheckItem[]; onToggle: (id: str
 /** Sections de graphiques : évolutions dans le temps d'abord, puis une section par dimension. */
 /** Section d'origine d'un graphique : les évolutions, puis une section par dimension. */
 function naturalSection(c: ComputedChart): string {
-  return c.chronological ? "Évolutions dans le temps" : c.dimension ? `Par ${c.dimension}` : "Graphiques";
+  return c.chronological ? "Évolutions dans le temps" : c.dimension ? `Par ${displayNameInSentence(c.dimension)}` : "Graphiques";
 }
 
 /** Graphiques par section ; `moved` : graphiques déposés par l'utilisateur dans une autre section (si elle existe encore). */

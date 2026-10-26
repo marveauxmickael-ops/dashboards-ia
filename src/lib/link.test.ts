@@ -64,9 +64,11 @@ describe("rapprochement de fichiers différents (US-15)", () => {
   it("calcule le taux de démarque, par rayon, et le garde juste quand on filtre sur le type de régularisation", async () => {
     const result = await generateDashboard({ ...asFile(dataset), mode: "standard", organizationId: "test" });
     const ratio = result.kpis[1];
-    expect(ratio.label).toBe("Valeur prix de vente / Montant vente HT");
+    expect(ratio.label).toBe("Démarque / Montant vente HT");
     expect(ratio.format).toBe("percent");
-    expect(ratio.value).toBeCloseTo(sum(dataset, "Valeur prix de vente") / sum(sales, "Montant vente HT"), 6);
+    // Une perte enregistrée en négatif se lit en valeur absolue : le taux est positif.
+    expect(ratio.value).toBeCloseTo(Math.abs(sum(dataset, "Valeur prix de vente")) / Math.abs(sum(sales, "Montant vente HT")), 6);
+    expect(ratio.value!).toBeGreaterThan(0);
     expect(result.kpis.find((k) => k.label.startsWith("Montant vente HT"))?.quality).toBeUndefined();
     const byRayon = result.charts.find((c) => c.id.startsWith("link_c") && c.dimension === "Libellé rayon")!;
     expect(byRayon.data.length).toBeGreaterThan(3);
@@ -83,7 +85,7 @@ describe("rapprochement de fichiers différents (US-15)", () => {
     });
     // Les ventes ne sont pas filtrées par une colonne qu'elles n'ont pas.
     expect(filtered.kpis[0].value).toBeCloseTo(result.kpis[0].value!, 2);
-    expect(filtered.kpis[1].value!).toBeLessThan(0);
+    expect(filtered.kpis[1].value!).toBeGreaterThan(0);
   });
 
   it("écarte un fichier sans clé commune", () => {

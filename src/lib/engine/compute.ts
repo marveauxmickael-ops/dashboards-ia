@@ -124,6 +124,9 @@ export function validateSpec(spec: DashboardSpec, profile: DatasetProfile): { sp
   return { spec: { ...spec, measures, kpis, charts }, issues };
 }
 
+/** Taux entre deux fichiers reliés, ajouté par le moteur (complete.ts : identifiants « link_m… »). */
+export const isLinkedRatio = (measureId: string) => measureId.startsWith("link_m");
+
 /** Calcule la valeur d'une mesure (de base ou dérivée) sur un ensemble de lignes. */
 export function measureEvaluator(spec: DashboardSpec) {
   const byId = new Map(spec.measures.map((m) => [m.id, m]));
@@ -135,7 +138,10 @@ export function measureEvaluator(spec: DashboardSpec) {
     const right = valueOf(list, m.right!, "sum");
     if (left === null || right === null) return null;
     if (m.operation === "difference") return Math.round((left - right) * 1e6) / 1e6;
-    return right === 0 ? null : left / right;
+    if (right === 0) return null;
+    // Taux entre fichiers reliés (US-15, ex. démarque / CA) : une perte est souvent enregistrée en négatif
+    // (sortie de stock) ; le taux se lit en valeur absolue, comme le bloc Démarque.
+    return isLinkedRatio(m.id) ? Math.abs(left) / Math.abs(right) : left / right;
   };
   return valueOf;
 }
@@ -151,6 +157,7 @@ export function computeDashboard(spec: DashboardSpec, rows: TypedRow[], profile:
     if (m.column !== null) return `${AGG_LABEL[aggregation]}(${m.column})`;
     const sign = m.operation === "difference" ? " − " : " ÷ ";
     const operand = (id: string) => (byId.get(id)?.column === null ? `(${formulaOf(id, "sum")})` : formulaOf(id, "sum"));
+    if (isLinkedRatio(measureId)) return `|${operand(m.left!)}| ÷ |${operand(m.right!)}|`;
     return `${operand(m.left!)}${sign}${operand(m.right!)}`;
   };
 

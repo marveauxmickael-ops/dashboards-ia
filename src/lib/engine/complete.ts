@@ -1,5 +1,6 @@
 import type { Aggregation, Chart, DashboardSpec, Kpi, Measure } from "@/lib/ai/spec";
 import type { ColumnProfile, DatasetProfile } from "@/lib/types";
+import { displayName, displayNameInSentence } from "@/lib/display";
 
 // Complétion déterministe du dashboard : après la conception par l'IA (indicateurs clés, mesures dérivées),
 // le moteur ajoute tous les indicateurs et graphiques que les colonnes du fichier permettent de calculer.
@@ -19,6 +20,8 @@ const MONEY = /chiffre|\bca\b|montant|prix|co[uû]t|marge|achat|charge|vente|rev
 /** Colonnes dont la somme n'a pas de sens (taux, prix unitaires, notes…) : agrégées par moyenne. */
 const NON_ADDITIVE = /taux|%|pourcent|ratio|unitaire|moyen|note|score|[âa]ge\b|remise|d[ée]lai|dur[ée]e|temp[ée]rature|anciennet/i;
 const PERCENT = /taux|%|pourcent|ratio/i;
+// Fichier relié qui est un journal de démarque (nom du fichier) : son taux s'appelle « Démarque / … ».
+const LOSS_SOURCE = /d[ée]marque|mrg|perte|casse|r[ée]gul/i;
 
 /**
  * Format d'une mesure tirée d'une colonne : pourcentage si les valeurs sont des fractions (0,37),
@@ -84,12 +87,13 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
   let linkMeasure: Measure | null = null;
   if (link && !measures.some((m) => m.operation === "ratio" && m.left === link.other.id && m.right === link.main.id)) {
     const id = nextId("link_m", measureIds);
-    linkMeasure = { id, label: `${link.other.label} / ${link.main.label}`, column: null, operation: "ratio", left: link.other.id, right: link.main.id, format: "percent" };
+    const ratioLabel = `${LOSS_SOURCE.test(link.otherSource) ? "Démarque" : link.other.label} / ${link.main.label}`;
+    linkMeasure = { id, label: ratioLabel, column: null, operation: "ratio", left: link.other.id, right: link.main.id, format: "percent" };
     measures.push(linkMeasure);
     kpis.splice(Math.min(1, kpis.length), 0, {
       id: nextId("link_k", kpiIds),
-      label: `${link.other.label} / ${link.main.label}`,
-      description: `Somme de ${link.other.label} (${link.otherSource}) rapportée à la somme de ${link.main.label} (${link.mainSource}), sur les mêmes filtres.`,
+      label: ratioLabel,
+      description: `Somme de ${link.other.label} (${link.otherSource}), en valeur absolue, rapportée à la somme de ${link.main.label} (${link.mainSource}), sur les mêmes filtres.`,
       measure: id,
       aggregation: "sum",
     });
@@ -115,21 +119,22 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
     if (kpis.length >= MAX_KPIS) break;
     let m = measures.find((x) => x.column === d.name);
     if (!m) {
-      m = { id: nextId("auto_m", measureIds), label: d.name, column: d.name, operation: null, left: null, right: null, format: "number" };
+      m = { id: nextId("auto_m", measureIds), label: displayName(d.name), column: d.name, operation: null, left: null, right: null, format: "number" };
       measures.push(m);
     }
     if (hasKpi(m.id, "count_distinct")) continue;
     kpis.push({
       id: nextId("auto_k", kpiIds),
-      label: `${d.name} (nombre distinct)`,
-      description: `Nombre de valeurs différentes de ${d.name} dans le fichier.`,
+      label: `${displayName(d.name)} (nombre distinct)`,
+      description: `Nombre de valeurs différentes de ${displayName(d.name)} dans le fichier.`,
       measure: m.id,
       aggregation: "count_distinct",
     });
   }
 
   // 3. Graphiques : évolutions dans le temps, puis ventilation de chaque mesure par chaque dimension.
-  const charts: Chart[] = [...spec.charts];
+  // Titres proposés par l'IA : « par Libellé rayon » devient « par rayon » (la dimension garde son nom exact).
+  const charts: Chart[] = spec.charts.map((c) => ({ ...c, title: readableTitle(c.title, c.dimension) }));
   const chartIds = new Set(charts.map((c) => c.id));
   const seen = new Set(charts.map((c) => `${c.dimension}|${c.measure}|${c.aggregation}`));
   const add = (chart: Omit<Chart, "id">) => {
@@ -160,7 +165,7 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
       const key = `${d.name}|${linkMeasure.id}|sum`;
       if (seen.has(key) || charts.length >= MAX_CHARTS) continue;
       seen.add(key);
-      charts.push({ id: nextId("link_c", chartIds), type: "bar", title: `${linkMeasure.label} par ${d.name}`, dimension: d.name, granularity: null, measure: linkMeasure.id, aggregation: "sum", limit: 12 });
+      charts.push({ id: nextId("link_c", chartIds), type: "bar", title: `${linkMeasure.label} par ${displayName(d.name)}`, dimension: d.name, granularity: null, measure: linkMeasure.id, aggregation: "sum", limit: 12 });
     }
   }
 
@@ -171,7 +176,7 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
     const pie = m === chartMeasures[0] && d.distinct <= 6 && aggregation === "sum" && m.format !== "percent" && m.column !== null;
     add({
       type: pie ? "pie" : "bar",
-      title: `${labelOf(m)}${aggregation === "avg" ? " moyen" : ""} par ${d.name}`,
+      title: `${labelOf(m)}${aggregation === "avg" ? " moyen" : ""} par ${displayName(d.name)}`,
       dimension: d.name,
       granularity: null,
       measure: m.id,
@@ -181,7 +186,7 @@ export function completeSpec(spec: DashboardSpec, profile: DatasetProfile): Dash
   };
   for (const d of dims) for (const m of chartMeasures.slice(0, MAIN_MEASURES)) breakdown(m, d);
   for (const m of chartMeasures.slice(MAIN_MEASURES)) for (const d of dims.filter((x) => x.distinct <= SHORT_DIMENSION)) breakdown(m, d);
-  for (const d of dims) add({ type: "bar", title: `Nombre de lignes par ${d.name}`, dimension: d.name, granularity: null, measure: "rows", aggregation: "count", limit: 12 });
+  for (const d of dims) add({ type: "bar", title: `Nombre de lignes par ${displayName(d.name)}`, dimension: d.name, granularity: null, measure: "rows", aggregation: "count", limit: 12 });
 
   return { ...spec, measures, kpis, charts };
 }
@@ -233,4 +238,10 @@ function placeTaxIncluded(kpis: Kpi[], measures: Measure[]) {
     while (kpis[at]?.id.startsWith("link_k")) at++;
     kpis.splice(at, 0, ttc);
   }
+}
+
+/** Titre lisible : le nom brut de la dimension (« Libellé rayon ») remplacé par son nom affiché. */
+function readableTitle(title: string, dimension: string): string {
+  if (!dimension || displayName(dimension) === dimension) return title;
+  return title.split(`par ${dimension}`).join(`par ${displayNameInSentence(dimension)}`).split(dimension).join(displayName(dimension));
 }

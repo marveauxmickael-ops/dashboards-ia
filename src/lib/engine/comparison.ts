@@ -3,6 +3,7 @@ import { storeColumnOf } from "@/lib/combine";
 import type { DatasetProfile, TypedRow } from "@/lib/types";
 import { groupRows } from "./aggregate";
 import { measureEvaluator, type ComputedKpi, type ValueFormat } from "./compute";
+import { displayNameInSentence } from "@/lib/display";
 
 // Comparaison (US-17) : chaque indicateur clé recalculé par le moteur pour chaque magasin, rayon, produit… (une valeur
 // de la colonne de comparaison), avec le classement et l'écart à la moyenne. Aucun chiffre ne vient de l'IA.
@@ -62,7 +63,5 @@ export function gapToAverage(value: number | null, average: number | null, forma
 
 /** Titre de la section : « Libellé site » → « Comparaison par site ». */
 export function comparisonTitle(column: string): string {
-  const name = column.replace(/^(libell[ée]|nom|d[ée]signation)\s+(du |de la |de l'|des |de |d')?/i, "").trim() || column;
-  // Minuscule initiale, sauf pour un sigle (EAN, PDV).
-  return `Comparaison par ${/^.[a-zà-ÿ]/.test(name) ? name.charAt(0).toLowerCase() + name.slice(1) : name}`;
+  return `Comparaison par ${displayNameInSentence(column.replace(/^(nom|d[ée]signation)\s+(du |de la |de l'|des |de |d')?/i, "").trim() || column)}`;
 }
