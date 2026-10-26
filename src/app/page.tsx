@@ -14,17 +14,15 @@ export default async function Home() {
     <>
       <AppHeader workspace={workspace} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
-        <header className="flex flex-col gap-2 print:hidden">
-          <p className="w-fit rounded-full bg-accent-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent-700">IA · Données · Dashboards</p>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Votre fichier devient un <span className="text-gradient-ai">tableau de bord</span>
+        <header className="flex flex-col items-center gap-3 text-center print:hidden">
+          <p className="w-fit rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-900">Nouveau dashboard</p>
+          <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Voyons ce que la démarque vous a coûté <span className="text-gradient-ai">ce mois-ci</span>
           </h1>
           <p className="max-w-2xl text-slate-600">
-            Importez un export Excel, CSV ou PDF. Les données identifiantes sont pseudonymisées avant que l&apos;IA ne conçoive le dashboard ;
-            chaque chiffre est ensuite recalculé sur vos données et affiché en clair. Le fichier n&apos;est pas conservé : seul le dashboard est
-            enregistré dans votre organisation.
+            Déposez vos extractions de caisse. En deux minutes, vous savez quel rayon, quel article et quel motif vous font perdre du chiffre.
           </p>
-          <p className="max-w-2xl rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p className="max-w-2xl text-xs text-amber-900">
             Prototype : utilisez uniquement des données fictives. Le traitement IA n&apos;est pas encore hébergé en Union européenne.
           </p>
         </header>
